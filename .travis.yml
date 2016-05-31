@@ -36,7 +36,7 @@ before_script:
   # Combined .config link will be = "http://rcn-ee.net/deb/jessie-armhf/v$SOURCE_VERSION/defconfig"
 
   - export SOURCE_VERSION="4.4.8-ti-r22"
-  - export SOURCE_LOCATION="https://github.com/beagleboard/linux/archive"
+  - export SOURCE_LOCATION="https://github.com/RobertCNelson/linux-stable-rcn-ee/archive"
   
   # download and extract the linux source code.
   - wget "$SOURCE_LOCATION/$SOURCE_VERSION.tar.gz"
