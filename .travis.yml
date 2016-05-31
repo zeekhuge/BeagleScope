@@ -36,14 +36,15 @@ before_script:
   # Combined .config link will be = "http://rcn-ee.net/deb/jessie-armhf/v$SOURCE_VERSION/defconfig"
 
   - export SOURCE_VERSION="4.4.8-ti-r22"
-  - export SOURCE_LOCATION="https://github.com/RobertCNelson/linux-stable-rcn-ee/archive"
+  - export SOURCE_REPO="linux-stable-rcn-ee"
+  - export SOURCE_LOCATION="https://github.com/RobertCNelson"
   
   # download and extract the linux source code.
-  - wget "$SOURCE_LOCATION/$SOURCE_VERSION.tar.gz"
+  - wget "$SOURCE_LOCATION/$SOURCE_REPO/archive/$SOURCE_VERSION.tar.gz"
   - tar -zvxf $SOURCE_VERSION.tar.gz
 
   # DST_KERNEL is the path to the linux source code
-  - export DST_KERNEL=$PWD/linux-$SOURCE_VERSION
+  - export DST_KERNEL=$PWD/$SOURCE_REPO-$SOURCE_VERSION
 
 
 #######################################################################################
