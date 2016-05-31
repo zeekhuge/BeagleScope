@@ -1,0 +1,74 @@
+language: c
+
+#######################################################################################
+
+
+os:
+  - linux
+
+
+#######################################################################################
+
+
+before_install:
+
+  - sudo apt-get update -qq
+  - sudo apt-get install -y gcc-arm-linux-gnueabihf
+  - arm-linux-gnueabihf-gcc --version
+  - sudo apt-get install bc
+
+
+#######################################################################################
+
+
+before_script:
+
+  #DST_PROJECT is the beaglescope project directory
+  - export DST_PROJECT=$PWD
+
+  # The SOURCE_VERSION and SOURCE_LOCATION together define the complete link to the gzipped tar file of 
+  # linux source code and its .config file against which the beaglescope project is build to test it.
+  #
+  # SOURCE_VERSION="example-version.x.y.z"
+  # SOURCE_LOCATION="https://example-location.com/source"
+  # Combined source link will be = "https://example-location.com/source/example-version.x.y.z.tar.gz"
+  # and
+  # Combined .config link will be = "http://rcn-ee.net/deb/jessie-armhf/v$SOURCE_VERSION/defconfig"
+
+  - export SOURCE_VERSION="4.4.8-ti-r22"
+  - export SOURCE_LOCATION="https://github.com/beagleboard/linux/archive"
+  
+  # download and extract the linux source code.
+  - wget "$SOURCE_LOCATION/$SOURCE_VERSION.tar.gz"
+  - tar -zvxf $SOURCE_VERSION.tar.gz
+
+  # DST_KERNEL is the path to the linux source code
+  - export DST_KERNEL=$PWD/linux-$SOURCE_VERSION
+
+
+#######################################################################################
+
+
+env:
+
+# exporting the variable to be used by make utility  
+  - ARCH=arm 
+  - CROSS_COMPILE=arm-linux-gnueabihf-
+
+
+#######################################################################################
+
+
+script:
+
+  
+  # download the .config file for the chosen linux version and
+  # preparing the kernel source
+  - cd $DST_KERNEL
+  - make -j3 mrproper
+  - wget -c "http://rcn-ee.net/deb/jessie-armhf/v$SOURCE_VERSION/defconfig" -O .config
+  - make -j3 modules 2>&1 
+
+  # building the project
+  - cd $DST_PROJECT/
+  - make KDIR=$DST_KERNEL
