@@ -29,22 +29,25 @@ before_script:
   # The SOURCE_VERSION and SOURCE_LOCATION together define the complete link to the gzipped tar file of 
   # linux source code and its .config file against which the beaglescope project is build to test it.
   #
-  # SOURCE_VERSION="example-version.x.y.z"
+  # SOURCE_BRANCH="a.branch"
+  # SOURCE_VERSION="x.y.z"
+  # SOURCE_REPO="the_repo"
   # SOURCE_LOCATION="https://example-location.com/source"
-  # Combined source link will be = "https://example-location.com/source/example-version.x.y.z.tar.gz"
+  # Combined source link will be = "https://example-location.com/source/the_repo/archive/a.branch-x.y.z.tar.gz"
   # and
   # Combined .config link will be = "http://rcn-ee.net/deb/jessie-armhf/v$SOURCE_VERSION/defconfig"
-
-  - export SOURCE_VERSION="4.4.8-ti-r22"
+ 
+  - export SOURCE_BRANCH="4.4.8"
+  - export SOURCE_VERSION="ti-r22"
   - export SOURCE_REPO="linux-stable-rcn-ee"
   - export SOURCE_LOCATION="https://github.com/RobertCNelson"
   
   # download and extract the linux source code.
-  - wget "$SOURCE_LOCATION/$SOURCE_REPO/archive/$SOURCE_VERSION.tar.gz"
-  - tar -zvxf $SOURCE_VERSION.tar.gz
+  - wget "$SOURCE_LOCATION/$SOURCE_REPO/archive/$SOURCE_BRANCH-$SOURCE_VERSION.tar.gz"
+  - tar -zvxf $SOURCE_BRANCH-$SOURCE_VERSION.tar.gz
 
   # DST_KERNEL is the path to the linux source code
-  - export DST_KERNEL=$PWD/$SOURCE_REPO-$SOURCE_VERSION
+  - export DST_KERNEL=$PWD/$SOURCE_REPO-$SOURCE_BRANCH-$SOURCE_VERSION
 
 
 #######################################################################################
@@ -60,10 +63,10 @@ script:
   # preparing the kernel source
   
   - cd $DST_KERNEL
-  - make -j3 mrproper
+  - make -j3 mrproper ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- LOCALVERSION=-$SOURCE_VERSION
   - wget -c "http://rcn-ee.net/deb/jessie-armhf/v$SOURCE_VERSION/defconfig" -O .config
-  - make -j3 modules 2>&1 
+  - make -j3 modules ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- LOCALVERSION=-$SOURCE_VERSION 2>&1 
 
   # building the project
   - cd $DST_PROJECT/
-  - make KDIR=$DST_KERNEL
+  - make KDIR=$DST_KERNEL ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- LOCALVERSION=-$SOURCE_VERSION
