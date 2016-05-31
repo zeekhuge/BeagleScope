@@ -64,7 +64,7 @@ script:
   
   - cd $DST_KERNEL
   - make -j3 mrproper ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- LOCALVERSION=-$SOURCE_VERSION
-  - wget -c "http://rcn-ee.net/deb/jessie-armhf/v$SOURCE_VERSION/defconfig" -O .config
+  - wget -c "http://rcn-ee.net/deb/jessie-armhf/v$SOURCE_BRANCH-$SOURCE_VERSION/defconfig" -O .config
   - make -j3 modules ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- LOCALVERSION=-$SOURCE_VERSION 2>&1 
 
   # building the project
