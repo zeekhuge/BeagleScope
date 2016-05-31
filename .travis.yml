@@ -50,21 +50,15 @@ before_script:
 #######################################################################################
 
 
-env:
-
-# exporting the variable to be used by make utility  
-  - ARCH=arm 
-  - CROSS_COMPILE=arm-linux-gnueabihf-
-
-
-#######################################################################################
-
-
 script:
 
-  
+  # exporting the variable to be used by make utility  
+  - export ARCH=arm 
+  - export CROSS_COMPILE=arm-linux-gnueabihf-
+
   # download the .config file for the chosen linux version and
   # preparing the kernel source
+  
   - cd $DST_KERNEL
   - make -j3 mrproper
   - wget -c "http://rcn-ee.net/deb/jessie-armhf/v$SOURCE_VERSION/defconfig" -O .config

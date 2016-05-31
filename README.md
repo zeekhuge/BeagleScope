@@ -2,7 +2,7 @@
 ![Open Source Love](https://badges.frapsoft.com/os/v1/open-source-150x25.png?v=102)
 [![Gitter](https://badges.gitter.im/beagleboard/beagle-gsoc.svg)](https://gitter.im/beagleboard/beagle-gsoc?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
-[![Travis](https://travis-ci.org/ZeekHuge/BeagleScope.svg)(https://travis-ci.org/ZeekHuge/BeagleScope/)]
+[![Travis](https://travis-ci.org/ZeekHuge/BeagleScope.svg)](https://travis-ci.org/ZeekHuge/BeagleScope)
 
     
 
