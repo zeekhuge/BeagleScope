@@ -211,34 +211,6 @@ EXPORT_SYMBOL_GPL(pruss_cfg_gpimode);
 
 static const struct file_operations pru_rproc_debug_regs_ops = {
         .open = pru_rproc_debug_regs_open,
-
-
-
-
-int pruss_cfg_gpimode(struct pruss *pruss, struct rproc *rproc,
-                      enum pruss_gpi_mode mode)
-{
-        u32 reg;
-        int pru_id;
-
-        pru_id = pruss_rproc_to_pru_id(pruss, rproc);
-        if (pru_id < 0 || pru_id >= PRUSS_NUM_PRUS) {
-                dev_err(pruss->dev, "%s: PRU id not found, %d\n",
-                        __func__, pru_id);
-                return -EINVAL;
-        }
-
-        reg = PRUSS_CFG_GPCFG0 + (0x4 * pru_id);
-
-        mutex_lock(&pruss->cfg_lock);
-        pruss_set_reg(pruss, PRUSS_MEM_CFG, reg,
-                      PRUSS_GPCFG_PRU_GPI_MODE_MASK,
-                      mode << PRUSS_GPCFG_PRU_GPI_MODE_SHIFT);
-        mutex_unlock(&pruss->cfg_lock);
-
-        return 0;
-}
-EXPORT_SYMBOL_GPL(pruss_cfg_gpimode);
         .read = seq_read,
         .llseek = seq_lseek,
         .release = single_release,
