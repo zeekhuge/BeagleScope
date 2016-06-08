@@ -1,0 +1,325 @@
+
+These notes are based on the 4.4.11-ti-r29 release of the beagleboard/linux kernels. These will be updates along the project as newer kernel images are released.
+The drivers support the AM335x SoC. The PRU remoteproc driver expects the firmware names to be "am335x-pru0-fw" and "am335x-pru1-fw" for the two PRU cores on the AM335x SoC.
+
+########################################################################################################################################################################
+
+
+
+1. pruss.ko
+
+-> Deals with the overall PRUSS and is responsible for the creation and  deletion of the platform devices for the child PRU device and other child devices. 
+-> Provide specific device data like PRU Id, firmware name etc using SoC-specific match data and appropriate compatible strings.
+
+-> PRUSS platform driver to allow client drivers to request a handlecto a PRUSS device. 
+-> This handle will be used by client drivers to request various operations.
+-> The pruss_get() function returns the pruss handle corresponding to a PRUSS device referenced by the PRUSS phandle in the "pruss" property of the client device's DT node.
+
+struct pruss *pruss_get(struct device *dev)
+{
+        struct pruss *pruss = NULL, *p;
+        struct device_node *np;
+
+        if (!dev)
+                return NULL;
+
+        np = of_parse_phandle(dev->of_node, "pruss", 0);
+        if (!np)
+                return NULL;
+                
+        mutex_lock(&pruss_list_mutex);
+        list_for_each_entry(p, &pruss_list, node) {
+                if (p->dev->of_node == np) {
+                        pruss = p;
+                        get_device(pruss->dev);
+                        break;
+                }
+        }       
+
+        mutex_unlock(&pruss_list_mutex);
+        of_node_put(np);
+
+        return pruss;
+}
+EXPORT_SYMBOL_GPL(pruss_get);
+
+-> The pruss_put() is the complimentary function to pruss_get().
+
+void pruss_put(struct pruss *pruss)
+{
+        if (!pruss)
+                return;
+
+        put_device(pruss->dev);
+}
+EXPORT_SYMBOL_GPL(pruss_put);
+
+
+-> pruss_rproc_get() and pruss_rproc_put()
+-> PRUSS platform driver allows client drivers to acquire and release the remoteproc device associated with a PRU core. The PRU cores are treated as resources with only one client owning it at a time.
+
+-> The pruss_rproc_get() function returns the rproc handle corresponding to a PRU core identified by its id number.
+/**
+ * pruss_rproc_get() - Get the rproc instance corresponding to pru_id
+ * @pruss: the pruss instance
+ * @pru_id: the PRU id of which we need the rproc instance
+ *
+ * Allows only one user to own the rproc resource at a time.
+ * Caller must call pruss_put_rproc() when done with using the rproc.
+ *
+ * Returns rproc handle on success. ERR_PTR on failure e.g.
+ * -EBUSY if PRU is already reserved by someone else
+ * -ENODEV if not yet available.
+ * -EINVAL if invalid parameters.
+ */
+struct rproc *pruss_rproc_get(struct pruss *pruss,
+                              enum pruss_pru_id pru_id)
+{
+        struct rproc *rproc;
+        int ret;
+
+        if (!pruss)
+                return ERR_PTR(-EINVAL);
+
+        rproc = __pruss_rproc_get(pruss, pru_id);
+        if (IS_ERR(rproc))
+                return rproc;
+
+        mutex_lock(&pruss->lock);
+
+        if (pruss->pru_in_use[pru_id]) {          
+        		ret = -EBUSY;
+                goto unlock;
+        }
+
+        pruss->pru_in_use[pru_id] = rproc;
+
+        mutex_unlock(&pruss->lock);
+
+        return rproc;
+
+unlock:
+        mutex_unlock(&pruss->lock);
+        rproc_put(rproc);
+
+        return ERR_PTR(ret);
+}
+EXPORT_SYMBOL_GPL(pruss_rproc_get);
+
+
+-> The pruss_rproc_put() is the complimentary function to pruss_rproc_get().
+-> pruss_request_mem_region(), pruss_release_mem_region()
+-> driver allows client drivers to acquire and release the common memory resources present within a PRU-ICSS subsystem. 
+-> client drivers can directly manipulate the respective memories,as per their design contract with the associated firmware.
+/**
+ * pruss_request_mem_region() - request a memory resource
+ * @pruss: the pruss instance
+ * @mem_id: the memory resource id
+ * @region: pointer to memory region structure to be filled in
+ *
+ * This function allows a client driver to requests a memory resource,
+ * and if successful, will let the client driver own the particular
+ * memory region until released using the pruss_release_mem_region()
+ * API.
+ *
+ * Returns the memory region if requested resource is available, an
+ * error otherwise
+ */
+int pruss_request_mem_region(struct pruss *pruss, enum pruss_mem mem_id,
+                             struct pruss_mem_region *region)
+{
+        if (!pruss || !region)
+                return -EINVAL;
+
+        if (mem_id >= PRUSS_MEM_MAX)
+                return -EINVAL;
+
+        mutex_lock(&pruss->lock);
+
+        if (pruss->mem_in_use[mem_id]) {
+                mutex_unlock(&pruss->lock);
+                return -EBUSY;
+        }
+
+        *region = pruss->mem_regions[mem_id];
+        pruss->mem_in_use[mem_id] = region;
+
+        mutex_unlock(&pruss->lock);
+
+        return 0;
+}
+EXPORT_SYMBOL_GPL(pruss_request_mem_region);
+
+
+
+-> Configuration bits lie in PRUSS CFG module space which owned by the PRUSS remoteproc driver. 
+-> API to set GPI mode,
+-> These API may be eliminated by replacing PRUSS CFG module as a SYSCON node.
+
+int pruss_cfg_gpimode(struct pruss *pruss, struct rproc *rproc,
+                      enum pruss_gpi_mode mode)
+{
+        u32 reg;
+        int pru_id;
+
+        pru_id = pruss_rproc_to_pru_id(pruss, rproc);
+        if (pru_id < 0 || pru_id >= PRUSS_NUM_PRUS) {
+                dev_err(pruss->dev, "%s: PRU id not found, %d\n",
+                        __func__, pru_id);
+                return -EINVAL;
+        }
+
+        reg = PRUSS_CFG_GPCFG0 + (0x4 * pru_id);
+
+        mutex_lock(&pruss->cfg_lock);
+        pruss_set_reg(pruss, PRUSS_MEM_CFG, reg,
+                      PRUSS_GPCFG_PRU_GPI_MODE_MASK,
+                      mode << PRUSS_GPCFG_PRU_GPI_MODE_SHIFT);
+        mutex_unlock(&pruss->cfg_lock);
+
+        return 0;
+}
+EXPORT_SYMBOL_GPL(pruss_cfg_gpimode);
+
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+2. pru_rproc.ko
+
+-> A remoteproc driver
+-> Performs the individual PRU RISC cores management
+-> Uses standard remoteproc core ELF loader 
+-> PRUs do not have a unified address space, (has an Instruction RAM and a primary Data RAM at both 0x0) and leverage an added .da_to_va ops to use the standard ELF loader. 
+-> This remoteproc driver is also designed to work with virtio, and uses a mailbox for performing the virtio signalling.
+-> Driver does not have support for error recovery and system suspend/resume features.
+-> The PRU remoteproc driver is enhanced to add additional debugfs entries for PRU. These will be auto-cleaned up when the parent rproc debug directory is removed.
+
+-> Adds two new entries: 'regs' and 'single_step'.
+
+-> 'regs' dumps out the useful CTRL sub-module registers as well as 32 registers each of the GPREGs and CT_REGs.
+-> The GPREGs and CT_REGs printed only when the PRU is halted and accessible as per the IP design.
+
+static const struct file_operations pru_rproc_debug_regs_ops = {
+        .open = pru_rproc_debug_regs_open,
+
+
+
+
+int pruss_cfg_gpimode(struct pruss *pruss, struct rproc *rproc,
+                      enum pruss_gpi_mode mode)
+{
+        u32 reg;
+        int pru_id;
+
+        pru_id = pruss_rproc_to_pru_id(pruss, rproc);
+        if (pru_id < 0 || pru_id >= PRUSS_NUM_PRUS) {
+                dev_err(pruss->dev, "%s: PRU id not found, %d\n",
+                        __func__, pru_id);
+                return -EINVAL;
+        }
+
+        reg = PRUSS_CFG_GPCFG0 + (0x4 * pru_id);
+
+        mutex_lock(&pruss->cfg_lock);
+        pruss_set_reg(pruss, PRUSS_MEM_CFG, reg,
+                      PRUSS_GPCFG_PRU_GPI_MODE_MASK,
+                      mode << PRUSS_GPCFG_PRU_GPI_MODE_SHIFT);
+        mutex_unlock(&pruss->cfg_lock);
+
+        return 0;
+}
+EXPORT_SYMBOL_GPL(pruss_cfg_gpimode);
+        .read = seq_read,
+        .llseek = seq_lseek,
+        .release = single_release,
+};
+
+static int pru_rproc_debug_regs_open(struct inode *inode, struct file *file)
+{
+        return single_open(file, pru_rproc_debug_read_regs, inode->i_private);
+}
+
+
+static int pru_rproc_debug_read_regs(struct seq_file *s, void *data)
+{
+        struct rproc *rproc = s->private;
+        struct pru_rproc *pru = rproc->priv;
+        int i, nregs = 32;
+        u32 pru_sts;
+        int pru_is_running;
+
+        seq_puts(s, "============== Control Registers ==============\n");
+        seq_printf(s, "CTRL      := 0x%08x\n",
+                   pru_control_read_reg(pru, PRU_CTRL_CTRL));
+        pru_sts = pru_control_read_reg(pru, PRU_CTRL_STS);
+        seq_printf(s, "STS (PC)  := 0x%08x (0x%08x)\n", pru_sts, pru_sts << 2);
+        seq_printf(s, "WAKEUP_EN := 0x%08x\n",
+                   pru_control_read_reg(pru, PRU_CTRL_WAKEUP_EN));
+        seq_printf(s, "CYCLE     := 0x%08x\n",
+                   pru_control_read_reg(pru, PRU_CTRL_CYCLE));
+        seq_printf(s, "STALL     := 0x%08x\n",
+                   pru_control_read_reg(pru, PRU_CTRL_STALL));
+        seq_printf(s, "CTBIR0    := 0x%08x\n",
+                   pru_control_read_reg(pru, PRU_CTRL_CTBIR0));
+        seq_printf(s, "CTBIR1    := 0x%08x\n",
+                   pru_control_read_reg(pru, PRU_CTRL_CTBIR1));
+        seq_printf(s, "CTPPR0    := 0x%08x\n",
+                   pru_control_read_reg(pru, PRU_CTRL_CTPPR0));
+        seq_printf(s, "CTPPR1    := 0x%08x\n",
+                   pru_control_read_reg(pru, PRU_CTRL_CTPPR1));   
+
+        seq_puts(s, "=============== Debug Registers ===============\n");
+        pru_is_running = pru_control_read_reg(pru, PRU_CTRL_CTRL) &
+                                CTRL_CTRL_RUNSTATE;
+        if (pru_is_running) {
+                seq_puts(s, "PRU is executing, cannot print/access debug registers.\n");
+                return 0;
+        }
+
+        for (i = 0; i < nregs; i++) {
+                seq_printf(s, "GPREG%-2d := 0x%08x\tCT_REG%-2d := 0x%08x\n",
+                           i, pru_debug_read_reg(pru, PRU_DEBUG_GPREG(i)),
+                           i, pru_debug_read_reg(pru, PRU_DEBUG_CT_REG(i)));
+        }
+
+        return 0;
+}
+
+
+
+-> 'single_step' utilizes the single-step execution of the PRU cores. 
+-> Writing a non-zero value performs a single step.
+-> zero value restores the PRU to execute in the same mode as before the first single step. 
+
+
+-> A PRU core sometimes may not communicate with the host processor  not using the virtio transport to talk to the host processor. remoteproc auto-boots the processors that have virtio support (virtio devices in their resource tables). remoteproc virtio layer also handles shutdown for such remoteproc devices, but not for processors booted outside the remoteproc virtio layer. Remaining remoteproc devices have to be managed by other drivers using rproc_boot() and rproc_shutdown() API. PRU remoteproc driver manages the boot cycle of such PRU devices manually, by checking presence (absence) of virtio devices.
+-> The rmmod of the PRU remoteproc module can only succeed when the PRU devices are unbound from their drivers, if there were any manually booted PRU cores. Ideally, the boot would have to be implemented in a different layer to avoid this issue.
+
+https://github.com/ZeekHuge/BeagleScope/blob/master/examples/pru_pin_state_reader/deploy.sh#L32
+
+echo "4a334000.pru0" > /sys/bus/platform/drivers/pru-rproc/unbind
+echo "4a334000.pru0" > /sys/bus/platform/drivers/pru-rproc/bind
+echo "4a338000.pru1"  > /sys/bus/platform/drivers/pru-rproc/unbind
+echo "4a338000.pru1" > /sys/bus/platform/drivers/pru-rproc/bin
+
+
+
+
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+3. pruss_intc.ko
+
+-> Manages the PRUSS interrupt controller and implementing a irqchip driver to provide a Linux standard way of interrupt management by PRU clients.
+-> PRUSS INTC platform driver is Linux standard DT way for the PRU client users to enable/disable/ack/re-trigger a PRUSS system event. 
+-> The system events to interrupt channels and
+-> Host interrupts relies on mapping configuration through a firmware resource table.
+-> The mappings currently programmed during the booting/shutdown of PRU.
