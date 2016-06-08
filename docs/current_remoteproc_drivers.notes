@@ -1,6 +1,7 @@
 
-These notes are based on the 4.4.11-ti-r29 release of the beagleboard/linux kernels. These will be updates along the project as newer kernel images are released.
-The drivers support the AM335x SoC. The PRU remoteproc driver expects the firmware names to be "am335x-pru0-fw" and "am335x-pru1-fw" for the two PRU cores on the AM335x SoC.
+These notes are based on the 4.4.11-ti-r29 release of the beagleboard/linux kernels. These will be updates along the project 
+as newer kernel images are released. The drivers support the AM335x SoC. The PRU remoteproc driver expects the firmware 
+names to be "am335x-pru0-fw" and "am335x-pru1-fw" for the two PRU cores on the AM335x SoC.
 
 ########################################################################################################################################################################
 
@@ -8,12 +9,14 @@ The drivers support the AM335x SoC. The PRU remoteproc driver expects the firmwa
 
 1. pruss.ko
 
--> Deals with the overall PRUSS and is responsible for the creation and  deletion of the platform devices for the child PRU device and other child devices. 
+-> Deals with the overall PRUSS and is responsible for the creation and  deletion of the platform devices for the 
+	child PRU device and other child devices. 
 -> Provide specific device data like PRU Id, firmware name etc using SoC-specific match data and appropriate compatible strings.
 
 -> PRUSS platform driver to allow client drivers to request a handlecto a PRUSS device. 
 -> This handle will be used by client drivers to request various operations.
--> The pruss_get() function returns the pruss handle corresponding to a PRUSS device referenced by the PRUSS phandle in the "pruss" property of the client device's DT node.
+-> The pruss_get() function returns the pruss handle corresponding to a PRUSS device referenced by the PRUSS phandle in the 
+	"pruss" property of the client device's DT node.
 
 struct pruss *pruss_get(struct device *dev)
 {
@@ -56,7 +59,8 @@ EXPORT_SYMBOL_GPL(pruss_put);
 
 
 -> pruss_rproc_get() and pruss_rproc_put()
--> PRUSS platform driver allows client drivers to acquire and release the remoteproc device associated with a PRU core. The PRU cores are treated as resources with only one client owning it at a time.
+-> PRUSS platform driver allows client drivers to acquire and release the remoteproc device associated with a PRU core. 
+	The PRU cores are treated as resources with only one client owning it at a time.
 
 -> The pruss_rproc_get() function returns the rproc handle corresponding to a PRU core identified by its id number.
 /**
@@ -193,10 +197,12 @@ EXPORT_SYMBOL_GPL(pruss_cfg_gpimode);
 -> A remoteproc driver
 -> Performs the individual PRU RISC cores management
 -> Uses standard remoteproc core ELF loader 
--> PRUs do not have a unified address space, (has an Instruction RAM and a primary Data RAM at both 0x0) and leverage an added .da_to_va ops to use the standard ELF loader. 
+-> PRUs do not have a unified address space, (has an Instruction RAM and a primary Data RAM at both 0x0) and 
+	leverage an added .da_to_va ops to use the standard ELF loader. 
 -> This remoteproc driver is also designed to work with virtio, and uses a mailbox for performing the virtio signalling.
 -> Driver does not have support for error recovery and system suspend/resume features.
--> The PRU remoteproc driver is enhanced to add additional debugfs entries for PRU. These will be auto-cleaned up when the parent rproc debug directory is removed.
+-> The PRU remoteproc driver is enhanced to add additional debugfs entries for PRU. 
+	These will be auto-cleaned up when the parent rproc debug directory is removed.
 
 -> Adds two new entries: 'regs' and 'single_step'.
 
@@ -296,8 +302,13 @@ static int pru_rproc_debug_read_regs(struct seq_file *s, void *data)
 -> zero value restores the PRU to execute in the same mode as before the first single step. 
 
 
--> A PRU core sometimes may not communicate with the host processor  not using the virtio transport to talk to the host processor. remoteproc auto-boots the processors that have virtio support (virtio devices in their resource tables). remoteproc virtio layer also handles shutdown for such remoteproc devices, but not for processors booted outside the remoteproc virtio layer. Remaining remoteproc devices have to be managed by other drivers using rproc_boot() and rproc_shutdown() API. PRU remoteproc driver manages the boot cycle of such PRU devices manually, by checking presence (absence) of virtio devices.
--> The rmmod of the PRU remoteproc module can only succeed when the PRU devices are unbound from their drivers, if there were any manually booted PRU cores. Ideally, the boot would have to be implemented in a different layer to avoid this issue.
+-> A PRU core sometimes may not communicate with the host processor not using the virtio transport to talk to the host processor.
+	 remoteproc auto-boots the processors that have virtio support (virtio devices in their resource tables). 
+	 remoteproc virtio layer also handles shutdown for such remoteproc devices, but not for processors booted outside the 
+	 remoteproc virtio layer. Remaining remoteproc devices have to be managed by other drivers using rproc_boot() 
+	 and rproc_shutdown() API. PRU remoteproc driver manages the boot cycle of such PRU devices manually, by checking presence (absence) of virtio devices.
+-> The rmmod of the PRU remoteproc module can only succeed when the PRU devices are unbound from their drivers, if there were 
+	any manually booted PRU cores. Ideally, the boot would have to be implemented in a different layer to avoid this issue.
 
 https://github.com/ZeekHuge/BeagleScope/blob/master/examples/pru_pin_state_reader/deploy.sh#L32
 
