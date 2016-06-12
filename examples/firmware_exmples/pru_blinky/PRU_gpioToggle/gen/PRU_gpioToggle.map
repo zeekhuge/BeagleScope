@@ -1,7 +1,7 @@
 ******************************************************************************
                      PRU Linker Unix v2.1.2                    
 ******************************************************************************
->> Linked Tue Jun  7 10:55:49 2016
+>> Linked Tue Jun  7 15:33:58 2016
 
 OUTPUT FILE NAME:   <gen/PRU_gpioToggle.out>
 ENTRY POINT SYMBOL: "_c_int00_noinit_noargs_noexit"  address: 00000000
