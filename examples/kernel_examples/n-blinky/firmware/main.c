@@ -34,6 +34,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 #include <stdint.h>
 #include <stdio.h>
 #include <pru_cfg.h>
@@ -45,7 +46,7 @@
 #include "resource_table_1.h"
 
 volatile register uint32_t __R31;
-
+volatile register uint32_t __R30;
 /* PRU1 is mailbox module user 2 */
 #define MB_USER						2
 /* Mbox0 - mail_u2_irq (mailbox interrupt for PRU1) is Int Number 59 */
@@ -62,10 +63,10 @@ volatile register uint32_t __R31;
 #define MB_FROM_ARM_HOST			4
 
 /*
- * Using the name 'rpmsg-pru' will probe the rpmsg_pru driver found
- * at linux-x.y.z/drivers/rpmsg/rpmsg_pru.c
+ * Using the name 'rpmsg-pru-parallel_example' will probe the rpmsg_pru driver found
+ * at linux-x.y.z/drivers/rpmsg/rpmsg_pru_parallel_example.c
  */
-#define CHAN_NAME					"rpmsg-pru"
+#define CHAN_NAME					"rpmsg-pru-parallel-example"
 #define CHAN_DESC					"Channel 31"
 #define CHAN_PORT					31
 
@@ -74,15 +75,6 @@ volatile register uint32_t __R31;
  * Found at linux-x.y.z/include/uapi/linux/virtio_config.h
  */
 #define VIRTIO_CONFIG_S_DRIVER_OK	4
-
-/*
- * Used to check the state of 0 bit of the r31 ie
- * the state of pr1_pru1_pru_r31_0. This gpio can be 
- * muxed to P8_45.
- */
-#define CHECK_BIT	0x0001
-
-
 
 uint8_t payload[RPMSG_BUF_SIZE];
 
@@ -93,9 +85,11 @@ void main(void)
 {
 	struct pru_rpmsg_transport transport;
 	uint16_t src, dst, len;
-	uint32_t prev_gpio_state;
-	volatile uint8_t *status;
-	
+	volatile uint8_t *status,number;
+	volatile uint32_t gpio;
+
+	gpio = 0x000F;
+
 	/* allow OCP master port access by the PRU so the PRU can read external memories */
 	CT_CFG.SYSCFG_bit.STANDBY_INIT = 0;
 
@@ -128,15 +122,17 @@ void main(void)
 				if (CT_MBX.MESSAGE[MB_FROM_ARM_HOST] == 1) {
 					/* Receive the message */
 					if (pru_rpmsg_receive(&transport, &src, &dst, payload, &len) == PRU_RPMSG_SUCCESS) {
-						/* Read the state of CHECK_BIT and responf to the same address from which we just received */
-						pru_rpmsg_send(&transport, dst, src, "Starting\n", sizeof("Starting\n"));
-						prev_gpio_state = __R31;
-						while(1)
-						if ((__R31 ^ prev_gpio_state) & CHECK_BIT) {
-							prev_gpio_state = __R31 & CHECK_BIT;	
-							pru_rpmsg_send(&transport, dst, src, "CHANGED\n", sizeof("CHANGED\n"));
+						number = payload[0] - '0';
+						/* toggle gpio 'number' times*/
+						while (number > 0){
+							__R30 ^= gpio;
+							__delay_cycles(100000000);
+							__R30 ^= gpio;
+							__delay_cycles(100000000);
+							--number;
 						}
-							
+						/* Echo the message back to the same address from which we just received */
+						pru_rpmsg_send(&transport, dst, src, payload, len);
 					}
 				}
 			}
