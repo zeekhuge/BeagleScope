@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (C) 2016 Texas Instruments Incorporated - http://www.ti.com/
  *
  *
  * Redistribution and use in source and binary forms, with or without
@@ -73,65 +73,60 @@
 #define PRU_VIRTQUEUE_INVALID_HEAD			-2
 
 /**
- * Summary		:	pru_virtqueue is a structure that encapsulates everything
- *					needed for a 'virtual queue'. This structure wraps a vring
- *					with extra information that is needed by the application
- *					in order to use the vring.
+ * Summary	:	pru_virtqueue is a structure that encapsulates everything
+ *			needed for a 'virtual queue'. This structure wraps a vring
+ *			with extra information that is needed by the application
+ *			in order to use the vring.
  *
- * Variables	:	id: The notification ID of the vring. When a kick is
- *						generated the id of the vring being kicked is placed
- *						into a mailbox. This is how the ARM host and the PRU
- *						determine whether a kick is for a receive operation or
- *						a sentbuffer being consumed.
- *					toArmMbx: Pointer to the mailbox that is used for
- *							  communication in the PRU->ARM direction.
- *					fromArmMbx: Pointer to the mailbox that is used for
- *							  communication in the ARM->PRU direction.
- *					last_avail_idx: A local running counter that is used by the
- *									PRU to determine whether or not a new
- *									available buffer has been added to the
- *									vring.
- *					vring: The underlying virtio structure that is being used
- *						   to pass buffers back and forth between the ARM and
- *						   PRU. See pru_virtio_ring.h.
+ * Variables	:	id: The notification ID of the vring. 
+ *			to_arm_event: The PRU-ICSS system event that signals the ARM.
+ *			from_arm_event: The PRU-ICSS system event that the ARM uses to
+ *					signal the PRU.
+ *			last_avail_idx: A local running counter that is used by the
+ *					PRU to determine whether or not a new
+ *					available buffer has been added to the
+ *					vring.
+ *			vring: The underlying virtio structure that is being used
+ *			       to pass buffers back and forth between the ARM and
+ *			       PRU. See pru_virtio_ring.h.
  */
 struct pru_virtqueue {
-	uint32_t			id;
-	volatile uint32_t	*to_arm_mbx;
-	volatile uint32_t	*from_arm_mbx;
-	uint32_t			last_avail_idx;
-	struct vring		vring;
+	uint32_t	id;
+	uint32_t	to_arm_event;
+	uint32_t	from_arm_event;
+	uint32_t 	last_avail_idx;
+	struct vring 	vring;
 };
 
 /**
-* Summary		:	pru_virtqueue_init initializes the pru_virtqueue structure
-*					with values from the resource table.
+* Summary	:	pru_virtqueue_init initializes the pru_virtqueue structure
+*			with values from the resource table.
 *
 * Parameters	:	vq: a pointer to a pru_virtqueue structure that will be
-*						initialized
-*					vring: a pointer to a vring that is populated and returned
-*						   by the ARM host through the resource table (the id,
-*						   number of descriptors, address of the vring, and
-*						   alignment information are contained in this vring
-*						   pointer's structure
-*					to_arm_mbx: the mailbox number to write to in order to
-*								'kick' the ARM host when sending data
-*					from_arm_mbx: the mailbox number to read from to check
-*								  for data arriving from the ARM host
+*			    initialized
+*			vring: a pointer to a vring that is populated and returned
+*			       by the ARM host through the resource table (the id,
+*			       number of descriptors, address of the vring, and
+*			       alignment information are contained in this vring
+*			       pointer's structure
+*			to_arm_event: the PRU-ICSS system event to trigger in order to
+*				      'kick' the ARM host when sending data
+*			from_arm_event: the PRU-ICSS system event to check
+*					for data arriving from the ARM host
 *
 * Description	:	This function initializes the pru_virtqueue (vq) with input
-*					values from the vring in the resource table. This function
-*					should be called once for each virtqueue/vring. After
-*					initialization the pru_virtqueue pointer, vq, should be
-*					passed to the other functions in this header file.
+*			values from the vring in the resource table. This function
+*			should be called once for each virtqueue/vring. After
+*			initialization the pru_virtqueue pointer, vq, should be
+*			passed to the other functions in this header file.
 *
 * Return Value	:	No return value.
 */
 void pru_virtqueue_init(
-    struct pru_virtqueue		*vq,
-    struct fw_rsc_vdev_vring	*vring,
-    volatile uint32_t			*to_arm_mbx,
-    volatile uint32_t			*from_arm_mbx
+	struct pru_virtqueue 		*vq,
+	struct fw_rsc_vdev_vring 	*vring,
+	uint32_t 			to_arm_event,
+	uint32_t 			from_arm_event
 );
 
 /**
