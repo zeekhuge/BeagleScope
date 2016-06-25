@@ -2,6 +2,15 @@
 # Copyright (c) 2016 Zubeen Tolani <ZeekHuge - zeekhuge@gmail.com>
 # Makefile to make PRU_inlineASM_blinky project
 #
+# The make file is tried to be made as generic as possible
+# So that it can be used to compile other programs too
+# 
+# Usage:
+#	name your main source file as main_pru1.c or main_pru0.c
+# 	add targets to variable TARGETS
+#	add other files required while linking in variable LINK_PRU1(0)_FW
+#	add compile targets, as added to LINK_PRU1(0)_FW for other files.
+# 
 
 # PRU_CGT environment variable must point to the TI PRU compiler directory. E.g.:
 #(Linux) export PRU_CGT=/home/jason/ti/ccs_v6_1_0/ccsv6/tools/compiler/ti-cgt-pru_2.1.0
@@ -38,18 +47,37 @@ PRU1_FW		=$(GEN_DIR)/main_pru1_fw.out
 PRU0_FW		=$(GEN_DIR)/main_pru0_fw.out
 
 
+# -----------------------------------------------------
+# Variable to edit in the makefile
+
+# add the required firmwares to TARGETS
+# TARGETS		=$(PRU1_FW) $(PRU0_FW)
+TARGETS		=$(PRU1_FW) $(PRU0_FW)
+
+# add the required files while linkin the FW code
+# required linking files for PRU1
+# LINK_PRU1_FW = (GEN_DIR)/pru1-inline-asm.object (GEN_DIR)/code2_pru1.object
+LINK_PRU1_FW=
+
+# required linking files for PRU1
+# LINK_PRU0_FW = (GEN_DIR)/pru0-inline-asm.object (GEN_DIR)/code2_pru1.object
+LINK_PRU0_FW=
+
+#------------------------------------------------------
+
+
 
 .PHONY: all
-all: $(PRU1_FW) $(PRU0_FW)
-	@echo '-	Generated firmwares are : $(PRU1_FW) and $(PRU0_FW)'
+all: $(TARGETS)
+	@echo '-	Generated firmwares are : $^'
 
 
-$(PRU1_FW): $(GEN_DIR)/main_pru1.object
+$(PRU1_FW): $(GEN_DIR)/main_pru1.object $(LINK_PRU1_FW)
 	@echo 'LD	$^'
 	@$(PRU_CGT)/bin/lnkpru -i$(PRU_CGT)/lib -i$(PRU_CGT)/include $(LFLAGS) -o $@ $^  $(LINKER_COMMAND_FILE) --library=libc.a $(LIBS) $^
 
 
-$(PRU0_FW): $(GEN_DIR)/main_pru0.object
+$(PRU0_FW): $(GEN_DIR)/main_pru0.object $(LINK_PRU0_FW)
 	@echo 'LD	$^' 
 	@$(PRU_CGT)/bin/lnkpru -i$(PRU_CGT)/lib -i$(PRU_CGT)/include $(LFLAGS) -o $@ $^  $(LINKER_COMMAND_FILE) --library=libc.a $(LIBS) $^
 
@@ -69,7 +97,8 @@ $(GEN_DIR)/main_pru1.object: main_pru1.c
 
 .PHONY: install install-pru1 install-pru0 copy_pru0_fw copy_pru1_fw reboot_pru_1 reboot_pru_0
 
-install: install-pru1 install-pru0
+install: $(patsubst $(GEN_DIR)/main_pru%_fw.out, install-pru%, $(TARGETS))
+
 
 install-pru1: $(PRU1_FW) copy_pru1_fw reboot_pru1
 install-pru0: $(PRU0_FW) copy_pru0_fw reboot_pru0
