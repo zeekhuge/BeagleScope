@@ -9,7 +9,7 @@
 ;* published by the Free Software Foundation.
 
 
-	.cdecls "main.c"
+	.cdecls "main_pru1.c"
 
 DELAY	.macro time
 	LDI32	R0, time

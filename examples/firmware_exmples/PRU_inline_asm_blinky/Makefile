@@ -39,13 +39,13 @@ TARGET=$(GEN_DIR)/pru1_inline_asm_blinky.out
 .PHONY: all
 all: $(TARGET)
 
-$(TARGET): $(GEN_DIR)/main.object $(GEN_DIR)/pru1-asm-blinky.object 
+$(TARGET): $(GEN_DIR)/main_pru1.object $(GEN_DIR)/pru1-asm-blinky.object 
 	@echo 'LD	$@'
-	@$(PRU_CGT)/bin/lnkpru -i$(PRU_CGT)/lib -i$(PRU_CGT)/include $(LFLAGS) -o $(TARGET) $(GEN_DIR)/main.object $(LINKER_COMMAND_FILE) --library=libc.a $(LIBS) $^
+	@$(PRU_CGT)/bin/lnkpru -i$(PRU_CGT)/lib -i$(PRU_CGT)/include $(LFLAGS) -o $(TARGET) $(GEN_DIR)/main_pru1.object $(LINKER_COMMAND_FILE) --library=libc.a $(LIBS) $^
 	@echo '*Generated firmware - $(TARGET)'
 
 
-$(GEN_DIR)/main.object: main.c 
+$(GEN_DIR)/main_pru1.object: main_pru1.c 
 	@mkdir -p $(GEN_DIR)
 	@echo 'CC	$<'
 	@$(PRU_CGT)/bin/clpru --include_path=$(PRU_CGT)/include $(INCLUDE) $(CFLAGS) -fe $@ $<
@@ -68,7 +68,7 @@ reboot_pru_1:
 	@echo "4a338000.pru1" > /sys/bus/platform/drivers/pru-rproc/bind
 	@echo '**pru core 1 is now loaded with $(TARGET)'	
 
-.PHONY: clean
+:.PHONY: clean
 clean:
 	@echo 'CLEAN	.'
 	@rm -rf $(GEN_DIR)
