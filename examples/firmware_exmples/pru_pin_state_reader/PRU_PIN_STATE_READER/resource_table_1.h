@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (C) 2016 Texas Instruments Incorporated - http://www.ti.com/
  *
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,16 +31,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*
- *  ======== rsc_table_am335x_pru.h ========
- *
- *  Define the resource table entries for all PRU cores. This will be
- *  incorporated into corresponding base images, and used by the remoteproc
- *  on the host-side to allocated/reserve resources.
- *
- */
-
-
 #ifndef _RSC_TABLE_PRU_H_
 #define _RSC_TABLE_PRU_H_
 
@@ -66,10 +56,9 @@
 /* Definition for unused interrupts */
 #define HOST_UNUSED		255
 
-/* Mapping sysevts to a channel. Each pair contains a sysevt, channel
- *		Mapping event 60 (Mbox0 mailbox interrupt for pru0) to channel 0
- * */
-struct ch_map pru_intc_map[] = { {59, 1},
+/* Mapping sysevts to a channel. Each pair contains a sysevt, channel. */
+struct ch_map pru_intc_map[] = { {18, 3},
+				 {19, 1},
 };
 
 struct my_resource_table {
@@ -132,10 +121,8 @@ struct my_resource_table resourceTable = {
 		sizeof(struct fw_rsc_custom_ints),
 		{ /* PRU_INTS version */
 			0x0000,
-			/* Channel-to-host mapping, 255 for unused
-			 *		Mapping Channel-1 to Host-1 (PRU0/1 R31 bit 31)
-			 * */
-			HOST_UNUSED, 1, HOST_UNUSED, HOST_UNUSED, HOST_UNUSED,
+			/* Channel-to-host mapping, 255 for unused */
+			HOST_UNUSED, 1, HOST_UNUSED, 3, HOST_UNUSED,
 			HOST_UNUSED, HOST_UNUSED, HOST_UNUSED, HOST_UNUSED, HOST_UNUSED,
 			/* Number of evts being mapped to channels */
 			(sizeof(pru_intc_map) / sizeof(struct ch_map)),
