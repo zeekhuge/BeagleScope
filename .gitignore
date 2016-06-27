@@ -1,1 +1,12 @@
 gen/
+
+*.dwo
+*.ko
+*.ko.cmd
+*.o
+*.o.cmd
+*.mod.c
+*.mod.o.cmd
+modules.order
+Module.symvers
+.tmp_versions/
