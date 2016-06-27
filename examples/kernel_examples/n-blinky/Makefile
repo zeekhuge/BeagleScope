@@ -1,20 +1,22 @@
 #
-# Makefile written by Zubeen Tolani <ZeekHuge - zeekhuge@gmail.com>
 # Copyright (C) 2016 Zubeen Tolani <ZeekHuge - zeekhuge@gmail.com>
 #
 # Makefile to compile n-blinky
 #
 
-DIR	=module firmware
-#DIR	+=firmware
+.PHONY:all
+all: firmware module
 
-all:
-	for dir in $(DIR); do\
-		cd $$dir && $(MAKE);\
-	done
+.PHONY:firmware
+firmware:
+	cd firmware; make
 
+.PHONY:module
+module: 
+	cd module; make
+
+.PHONY:clean
 clean: 
-	for dir in $(DIR); do\
-		cd $$dir && $(MAKE) clean;\
-	done
+	cd firmware; $(MAKE) clean
+	cd module; $(MAKE) clean	
 
