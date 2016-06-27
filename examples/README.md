@@ -76,3 +76,24 @@ There are following make targets:
 
 ### -kernel_examples
 Contains examples that have a loadable kernel module, and related pru firmware to demonstrate some concepts.
+
+###### -n-blinky
+The example contains a kernel module module/rpmsg_pru_parallel_example.c and a firmware for pru-1 firmware/main_pru1.c. 
+
+The module is to demonstrate how to use rpsmg APIs to communicate with the PRUs. The module when probed, creates a character device at /dev/rpmsg_pru_parallel_example. Writing a number (0-9) to this device will toggle the board pins 27, 28, 29, 39, 40, 41, 42, 43, 44, 45 and 46 on P8 header, with a delay of about 1 second.
+
+The firmware probes the rpmsg_pru_parallel_example driver and then waits for messages from the driver.
+
+To get the example working:
+
+Compile the source (cd to n-blinky) :
+        
+        $ make
+        $ cd module
+        $ sudo modprobe virtio_rpmsg_bus
+        $ sudo insmod rpmsg_pru_parallel_example.ko
+        $ cd ../firmware
+        $ ./deploy.sh
+This will probe the module and the char device rpmsg_pru_parallel_example would appear in /dev/. To get the parallel blinky blink 3 (or any number) times :
+
+        $ echo 3 > /dev/rpmsg_pru_parallel_example
