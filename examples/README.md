@@ -1,6 +1,6 @@
     
 ## **Examples** 
-The examples are based on the pru-software-support-package provided by TI. These examples were tested on 4.4.11-ti-r29 kernel version and are based on older version of RPMsg kernel module, that used mailboxes. The newer RPMsg, that uses ARM INTC in place of mailboxes, is available in kernel version 4.4.12-ti-r31 and later.
+The examples are based on the pru-software-support-package provided by TI. These examples were tested on 4.4.11-ti-r29 kernel version and are based on older version of RPMsg kernel module, that used mailboxes. The newer RPMsg, that uses ARM INTC in place of mailboxes, is available in kernel version 4.4.12-ti-r31 and later. For examples ported to the newer RPMsg please go to branch [port_to_4.4.12-ti-r31+](https://github.com/ZeekHuge/BeagleScope/tree/port_to_4.4.12-ti-r31+/examples)
 
 ### -firmware_examples
 Contains examples that are only related to the firmware code for both or one of the PRUs.
@@ -64,3 +64,24 @@ There are following make targets:
 
 ### -kernel_examples
 Contains examples that have a loadable kernel module, and related pru firmware to demonstrate some concepts.
+
+###### -n-blinky
+The example contains a kernel module module/rpmsg_pru_parallel_example.c and a firmware for pru-1 firmware/main_pru1.c. 
+
+The module is to demonstrate how to use rpsmg APIs to communicate with the PRUs. The module when probed, creates a character device at /dev/rpmsg_pru_parallel_example. Writing a number (0-9) to this device will toggle the board pins 27, 28, 29, 39, 40, 41, 42, 43, 44, 45 and 46 on P8 header, with a delay of about 1 second.
+
+The firmware probes the rpmsg_pru_parallel_example driver and then waits for messages from the driver.
+
+To get the example working:
+
+Compile the source (cd to n-blinky) :
+        
+        $ make
+        $ cd module
+        $ sudo modprobe virtio_rpmsg_bus
+        $ sudo insmod rpmsg_pru_parallel_example.ko
+        $ cd ../firmware
+        $ ./deploy.sh
+This will probe the module and the char device rpmsg_pru_parallel_example would appear in /dev/. To get the parallel blinky blink 3 (or any number) times :
+
+        $ echo 3 > /dev/rpmsg_pru_parallel_example
