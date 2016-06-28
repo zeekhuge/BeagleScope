@@ -1,4 +1,5 @@
 gen/
+new_example/
 
 *.dwo
 *.ko
