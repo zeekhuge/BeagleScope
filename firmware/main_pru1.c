@@ -38,21 +38,23 @@
 #include "resource_table_pru1.h"
 
 #define CLK_PIN 1<<1
-#define BYTE_1	R1.b0
-#define BYTE_2  R1.b1
-#define BYTE_3  R1.b2
-#define BYTE_4  R1.b3
-#define BYTE_5  R2.b0
-#define BYTE_6  R2.b1
-#define BYTE_7  R2.b2
-#define BYTE_8  R2.b3
-#define BYTE_9  R3.b0
-#define BYTE_10 R3.b1
-#define BYTE_11 R3.b2
-#define BYTE_12 R3.b3
+#define BYTE_1	R2.b0
+#define BYTE_2  R2.b1
+#define BYTE_3  R2.b2
+#define BYTE_4  R2.b3
+#define BYTE_5  R3.b0
+#define BYTE_6  R3.b1
+#define BYTE_7  R3.b2
+#define BYTE_8  R3.b3
+#define BYTE_9  R4.b0
+#define BYTE_10 R4.b1
+#define BYTE_11 R4.b2
+#define BYTE_12 R4.b3
 
-#define FREQ	R31.w0
-#define WIDTH	R3.w1
+#define CYCLE_BTWN_SAMPLE	R1.w0
+#define WIDTH			R1.b2
+
+
 register uint32_t __R30;
 volatile register uint32_t __R31;
 
