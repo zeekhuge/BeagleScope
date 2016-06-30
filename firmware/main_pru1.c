@@ -51,8 +51,9 @@
 #define BYTE_11 R4.b2
 #define BYTE_12 R4.b3
 
-#define CYCLE_BTWN_SAMPLE	R1.w0
-#define WIDTH			R1.b2
+#define SAMPLING_CONFIG		R1
+#define CYCLE_BTWN_SAMPLE	SAMPLING_CONFIG.w0
+#define WIDTH			SAMPLING_CONFIG.b2
 
 
 register uint32_t __R30;
