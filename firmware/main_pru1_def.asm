@@ -13,8 +13,25 @@
 	
 	.cdecls "main_pru1.c"
 
+;*******************************************************
+; NOP :	Null operation macro to produce a delay of one
+;	cycle
+;
+; The macro essentially consumes one system cycle in
+; subtracting 0 from the content of R0 register and put
+; the result back in R0 register. This do not changes 
+; anything but just consumes up one single system clock
+; cycle
+
+NOP	.macro
+	SUB	R0, R0, 0
+	.endm
 
 ;*******************************************************
+; 
+;
+;
+
 ;*******************************************************
 
 DELAY_CYCLES	.macro cycles
@@ -24,8 +41,6 @@ $M?:		SUB	R0, R0, 1
 		QBNE	$M?, R0, 0
 $E?:	
 		.endm
-
-
 
 ;*****************************************************
 ;*****************************************************
