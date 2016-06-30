@@ -1,6 +1,7 @@
 gen/
 new_example/
 
+.*.swp
 *.dwo
 *.ko
 *.ko.cmd
