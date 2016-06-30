@@ -28,19 +28,45 @@ NOP	.macro
 	.endm
 
 ;*******************************************************
+; DELAY_IMMEDIATE_2n:	The macro to cause a delay of
+;			'cycles_2n' cycles.
+;
+; cycles_2n	: The number of cycles to delay. This
+;		should be an immediate value and should
+;		always be a multiple of 2.
+;
+; NOTE:	The least delay value that can be give to this
+;	macro is 2 cycles
+
+DELAY_IMMEDIATE_2n	.macro cycles_2n
+			LDI32	R0, cycles_2n - 2 
+			QBEQ	$E2?, R0, 0
+$M2?:			SUB	R0, R0, 2
+			QBNE	$M2?, R0, 0
+$E2?:	
+			.endm
+
+
+;*****************************************************
+; DELAY_IMMEDIATE_3n:	The macro to cause a delay of 
+;			'cycles_3n' cycles.
+;
+; cycles_3n	: The number of cycles to delay.
+;		This should be an immediate value and
+;		should always be a multiple of 3.
 ; 
-;
-;
+; NOTE:	The least delay value that can be given to the
+; 	macro is 3
 
-;*******************************************************
-
-DELAY_CYCLES	.macro cycles
-		LDI32	R0, cycles - 1 
-		QBEQ	$E?, R0, 0
-$M?:		SUB	R0, R0, 1
-		QBNE	$M?, R0, 0
-$E?:	
-		.endm
+DELAY_IMMEDIATE_3n      .macro cycles_3n
+                        LDI32   R0, cycles - 3
+                        NOP
+                        QBEQ    $E3?, R0, 0
+$M3?:                   SUB     R0, R0, 3
+                        NOP
+                        QBNE    $M3?, R0, 0
+$E3?:
+                        .endm
 
 ;*****************************************************
 ;*****************************************************
