@@ -38,6 +38,12 @@
 #include "resource_table_pru1.h"
 
 #define CLK_PIN 1<<1
+
+/*
+ * BYTE_N : Data byte RX.bm for X from 2 to 29 and
+ * m from 0 to 1
+ * N comes out to be from 1 to 112
+ */
 #define BYTE_1	R2.b0
 #define BYTE_2  R2.b1
 #define BYTE_3  R2.b2
@@ -50,10 +56,127 @@
 #define BYTE_10 R4.b1
 #define BYTE_11 R4.b2
 #define BYTE_12 R4.b3
+#define BYTE_13 R5.b0
+#define BYTE_14 R5.b1
+#define BYTE_15 R5.b2
+#define BYTE_16 R5.b3
+#define BYTE_17 R6.b0
+#define BYTE_18 R6.b1
+#define BYTE_19 R6.b2
+#define BYTE_20 R6.b3
+#define BYTE_21 R7.b0
+#define BYTE_22 R7.b1
+#define BYTE_23 R7.b2
+#define BYTE_24 R7.b3
+#define BYTE_25 R8.b0
+#define BYTE_26 R8.b1
+#define BYTE_27 R8.b2
+#define BYTE_28 R8.b3
+#define BYTE_29 R9.b0
+#define BYTE_30 R9.b1
+#define BYTE_31 R9.b2
+#define BYTE_32 R9.b3
+#define BYTE_33 R10.b0
+#define BYTE_34 R10.b1
+#define BYTE_35 R10.b2
+#define BYTE_36 R10.b3
+#define BYTE_37 R11.b0
+#define BYTE_38 R11.b1
+#define BYTE_39 R11.b2
+#define BYTE_40 R11.b3
+#define BYTE_41 R12.b0
+#define BYTE_42 R12.b1
+#define BYTE_43 R12.b2
+#define BYTE_44 R12.b3
+#define BYTE_45 R13.b0
+#define BYTE_46 R13.b1
+#define BYTE_47 R13.b2
+#define BYTE_48 R13.b3
+#define BYTE_49 R14.b0
+#define BYTE_50 R14.b1
+#define BYTE_51 R14.b2
+#define BYTE_52 R14.b3
+#define BYTE_53 R15.b0
+#define BYTE_54 R15.b1
+#define BYTE_55 R15.b2
+#define BYTE_56 R15.b3
+#define BYTE_57 R16.b0
+#define BYTE_58 R16.b1
+#define BYTE_59 R16.b2
+#define BYTE_60 R16.b3
+#define BYTE_61 R17.b0
+#define BYTE_62 R17.b1
+#define BYTE_63 R17.b2
+#define BYTE_64 R17.b3
+#define BYTE_65 R18.b0
+#define BYTE_66 R18.b1
+#define BYTE_67 R18.b2
+#define BYTE_68 R18.b3
+#define BYTE_69 R19.b0
+#define BYTE_70 R19.b1
+#define BYTE_71 R19.b2
+#define BYTE_72 R19.b3
+#define BYTE_73 R20.b0
+#define BYTE_74 R20.b1
+#define BYTE_75 R20.b2
+#define BYTE_76 R20.b3
+#define BYTE_77 R21.b0
+#define BYTE_78 R21.b1
+#define BYTE_79 R21.b2
+#define BYTE_80 R21.b3
+#define BYTE_81 R22.b0
+#define BYTE_82 R22.b1
+#define BYTE_83 R22.b2
+#define BYTE_84 R22.b3
+#define BYTE_85 R23.b0
+#define BYTE_86 R23.b1
+#define BYTE_87 R23.b2
+#define BYTE_88 R23.b3
+#define BYTE_89 R24.b0
+#define BYTE_90 R24.b1
+#define BYTE_91 R24.b2
+#define BYTE_92 R24.b3
+#define BYTE_93 R25.b0
+#define BYTE_94 R25.b1
+#define BYTE_95 R25.b2
+#define BYTE_96 R25.b3
+#define BYTE_97 R26.b0
+#define BYTE_98 R26.b1
+#define BYTE_99 R26.b2
+#define BYTE_100 R26.b3
+#define BYTE_101 R27.b0
+#define BYTE_102 R27.b1
+#define BYTE_103 R27.b2
+#define BYTE_104 R27.b3
+#define BYTE_105 R28.b0
+#define BYTE_106 R28.b1
+#define BYTE_107 R28.b2
+#define BYTE_108 R28.b3
+#define BYTE_109 R29.b0
+#define BYTE_110 R29.b1
+#define BYTE_111 R29.b2
+#define BYTE_112 R29.b3
+
+/*
+ * SAMPLING_CONFIG : the register that will be used
+ * to store config data from Shared memory
+ */
 
 #define SAMPLING_CONFIG		R1
-#define CYCLE_BTWN_SAMPLE	SAMPLING_CONFIG.w0
-#define WIDTH			SAMPLING_CONFIG.b2
+
+/*
+ * CYCLE_BTWN_SAMPLE and SAMPLING_WIDTH
+ * The two definitions to be used with
+ * SAMPLING_CONFIG to get the config info
+ * To get
+ *	Delay cycles between consecutive
+ *	sample = SAMPLING_CONFIG.CYCLE_BTWN_SAMPLE
+ *
+ *	Width of the sampling data =
+ *		SAMPLING_CONFIG.SAMPLING_WIDTH
+ */
+#define SAMPLING_CONFIG_CYCLE_BTWN_SAMPLE	SAMPLING_CONFIG.w0
+#define SAMPLIGN_CONFIG_SAMPLING_WIDTH		SAMPLING_CONFIG.b2
 
 
 register uint32_t __R30;
