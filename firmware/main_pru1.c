@@ -153,12 +153,26 @@
 #define BYTE_108 R28.b3
 
 /*
- * SAMPLING_CONFIG : the register that will be used
- * to store config data from Shared memory
+ * SAMPLING_CONFIG_0: The first register that is used
+ * to store the config data. This will also be the
+ * starting point of the config data and hence the value
+ * of SAMPLING_CONFIG_START.
+ *
+ * SAMPLING_CONFIG_1: Second register that is used to
+ * store the config data
+ *
+ * SAMPLING_CONFIG_START: the register that will be the
+ * starting point of the config data
+ *
+ * SAMPLING_CONFIG_LENGTH: Number of bytes of the sampling
+ * data.
  */
 
-#define SAMPLING_CONFIG		R29
+#define SAMPLING_CONFIG_0		R28
+#define SAMPLING_CONFIG_1		R29
 
+#define SAMPLING_CONFIG_START		SAMPLING_CONFIG_0
+#define SAMPLING_CONFIG_LENGTH		8
 
 /*
  * CYCLE_BTWN_SAMPLE and SAMPLING_WIDTH
@@ -171,8 +185,8 @@
  *	Width of the sampling data =
  *		SAMPLING_CONFIG_SAMPLING_WIDTH
  */
-#define SAMPLING_CONFIG_CYCLE_BTWN_SAMPLE	SAMPLING_CONFIG.w0
-#define SAMPLING_CONFIG_SAMPLING_WIDTH		SAMPLING_CONFIG.b2
+#define SAMPLING_CONFIG_CYCLE_BTWN_SAMPLE	SAMPLING_CONFIG_0.w0
+#define SAMPLING_CONFIG_SAMPLING_WIDTH		SAMPLING_CONFIG_1.b2
 
 
 register uint32_t __R30;
