@@ -13,6 +13,20 @@
 
 	.cdecls "main_pru1.c"
 
+
+;*******************************************************
+; BLINK is just for debugging purpose while developing
+; the code
+;
+
+BLINK	.macro
+	CLK_TOGGLE
+	DELAY_IMMEDIATE_2n 100000000
+	CLK_TOGGLE
+	DELAY_IMMEDIATE_2n 100000000
+	.endm
+
+
 ;*******************************************************
 ; NOP :	Null operation macro to produce a delay of one
 ;	cycle
@@ -81,12 +95,15 @@ $E3?:
 ;               macro, or by other macros
 ; 2 cycles      = being used by the SUB and QBEQ instructions
 ;               in the DELAY_SAMPLE macro
-; 2 cycles      = being used by the 2 CLOCK_TOGGLE instructions
+; 2 cycles      = being used by the 2 CLK_TOGGLE instructions
 ;               in TAKE_SAMPLE_8 macro
 ;
-; NOTE: It turns out that the least value of CYCLE_BTWN_SAMPLE
+; NOTE: 1.) It turns out that the least value of CYCLE_BTWN_SAMPLE
 ;       can be 7. And hence least delay between 2 consecutive
 ;       samples will be 7 cycles.
+;	2.) The value given in the SAMPLING_CONFIG_CYCLE_BTWN_SAMPLE
+;	should always be odd, as subtracting 7 would then make it even
+;	and it will be in an infinite loop if the value is even.
 ;
 
 DELAY_SAMPLE    .macro
@@ -185,6 +202,8 @@ MANAGE_INTERRUPT	.macro
 
 	.global main
 main:
-	LDI32	SAMPLING_CONFIG,	100000
+	LDI32	SAMPLING_CONFIG, 100001
+again:
 	SAMPLE_CYCLE_8
+	JMP again
 	HALT
