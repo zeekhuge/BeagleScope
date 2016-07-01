@@ -23,6 +23,20 @@ BLINK	.macro
 	DELAY_IMMEDIATE_2n 100000000
 	.endm
 
+;*******************************************************
+; INIT : To do basic initialization on startup
+;
+; The macro performs initialization steps whenever the
+; PRU is started.
+;
+; Steps that it performs are:
+; 1.)Clearing the R30 register which will be used for
+; clock generation.
+;
+
+INIT	.macro
+	LDI32 R30, 0x00000000
+	.endm
 
 ;*******************************************************
 ; NOP :	Null operation macro to produce a delay of one
@@ -56,7 +70,6 @@ $M2?:			SUB	R0, R0, 2
 			QBNE	$M2?, R0, 0
 $E2?:
 			.endm
-
 
 ;*****************************************************
 ; DELAY_IMMEDIATE_3n:	The macro to cause a delay of
@@ -110,14 +123,6 @@ $MS?:           SUB     R0, R0, 2
                 QBNE    $MS?, R0, 0
 $ES?:
                 .endm
-
-;******************************************************
-;******************************************************
-
-INIT	.macro
-	LDI32 R30, 0x00000000
-	.endm
-
 
 ;*******************************************************
 ;*******************************************************
@@ -199,6 +204,7 @@ MANAGE_INTERRUPT	.macro
 
 	.global main
 main:
+	INIT
 	LDI32	SAMPLING_CONFIG_0, 100000001
 again:
 	SAMPLE_CYCLE_8
