@@ -32,10 +32,13 @@ BLINK	.macro
 ; Steps that it performs are:
 ; 1.)Clearing the R30 register which will be used for
 ; clock generation.
+; 2.)Clearing status of INT_P0_to_P1 interrup
 ;
 
 INIT	.macro
 	LDI32 R30, 0x00000000
+	LDI32 R0, INT_P0_to_P1
+	SBCO &R0, CONST_PRU_ICSS_INTC, SICR_offset, 4
 	.endm
 
 ;*******************************************************
@@ -124,6 +127,36 @@ $MS?:           SUB     R0, R0, 2
 $ES?:
                 .endm
 
+;********************************************************************
+; CHECK_INT_LOOP : To check and wait for the occurence of
+; INT_P0_to_P1 interrupt. The macro keeps polling the status of
+; INT_P0_to_P1 interrupt and ones the interrupt occurs, it invokes the
+; MANAGE_INTERRUPT macro.
+;
+; The first 2 instructions LDI32, LBBO copies the data from SECR0
+; register present in PRU ICSS INTC into R0 register.
+; The 3rd instruction, QBBC checks the status of INT_P0_to_P1 bit in it.
+;
+
+CHECK_INT_LOOP	.macro
+$A?:		LDI32	R1,SECR0
+		LBBO	&R0, R1, 0, 4
+		QBBC	$A?, R0, INT_P0_to_P1
+		MANAGE_INTERRUPT
+		.endm
+
+;********************************************************************
+; MANAGE_INTERRUPT : The macro that will be invoked on occurence of
+; interrupt. The macro is incomplete as of now and just clears the
+; status of INT_P0_to_P1. It then invokes BLINK macro.
+;
+
+MANAGE_INTERRUPT	.macro
+			LDI32	R0, INT_P0_to_P1
+			SBCO	&R0, CONST_PRU_ICSS_INTC, SICR_offset, 4
+			BLINK
+			.endm
+
 ;*******************************************************
 ;*******************************************************
 
@@ -197,16 +230,10 @@ SAMPLE_CYCLE_8	.macro
 ;*******************************************************
 ;*******************************************************
 
-MANAGE_INTERRUPT	.macro
-			LDI32	SICR,			INT_P0_TO_P1
-			LBCO	SAMPLING_CONFIG_START,	SHARED_MSG,0,SAMPLING_CONFIG_LENGTH
-			.endm
-
 	.global main
 main:
 	INIT
-	LDI32	SAMPLING_CONFIG_0, 100000001
 again:
-	SAMPLE_CYCLE_8
+	CHECK_INT_LOOP
 	JMP again
 	HALT
