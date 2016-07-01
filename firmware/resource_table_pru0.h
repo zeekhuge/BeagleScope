@@ -55,7 +55,6 @@
 
 #include <stddef.h>
 #include <rsc_types.h>
-#include "pru_defs.h"
 
 struct my_resource_table {
 	struct resource_table base;
