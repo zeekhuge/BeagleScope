@@ -55,21 +55,50 @@
 
 #include <stddef.h>
 #include <rsc_types.h>
+#include "common_pru_defs.h"
 
+/* Definition for unused interrupts */
+#define HOST_UNUSED	255
+
+/* Mapping sysevts to a channel. Each pair contains a sysevt, channel. */
+struct ch_map pru_intc_map[] = { {INT_P0_to_P1, CHNL_PRU0_TO_PRU1},
+};
 
 struct my_resource_table {
 	struct resource_table base;
 
 	uint32_t offset[1]; /* Should match 'num' in actual definition */
+
+	/* intc definition */
+        struct fw_rsc_custom pru_ints;
 };
 
 #pragma DATA_SECTION(pru_remoteproc_ResourceTable, ".resource_table")
 #pragma RETAIN(pru_remoteproc_ResourceTable)
 struct my_resource_table pru_remoteproc_ResourceTable = {
 	1,	/* we're the first version that implements this */
-	0,	/* number of entries in the table */
+	1,	/* number of entries in the table */
 	0, 0,	/* reserved, must be zero */
-	0,	/* offset[0] */
+	/* offsets to entries */
+	{
+        offsetof(struct my_resource_table, pru_ints),
+        },
+	/* PRU INTC configuration */
+	{
+                TYPE_CUSTOM, TYPE_PRU_INTS,
+                sizeof(struct fw_rsc_custom_ints),
+                { /* PRU_INTS version */
+                        0x0000,
+                      /* Channel-to-host mapping, 255 for unused */
+                        HOST_UNUSED, 1, HOST_UNUSED, HOST_UNUSED, HOST_UNUSED,
+                        HOST_UNUSED, HOST_UNUSED, HOST_UNUSED, HOST_UNUSED,
+			HOST_UNUSED,
+                      /* Number of evts being mapped to channels */
+                        (sizeof(pru_intc_map) / sizeof(struct ch_map)),
+                      /* Pointer to the structure containing mapped events */
+                        pru_intc_map,
+                },
+        },
 };
 
 #endif /* _RSC_TABLE_PRU_H_ */

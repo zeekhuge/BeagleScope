@@ -130,18 +130,16 @@ $ES?:
 ;********************************************************************
 ; CHECK_INT_LOOP : To check and wait for the occurence of
 ; INT_P0_to_P1 interrupt. The macro keeps polling the status of
-; INT_P0_to_P1 interrupt and ones the interrupt occurs, it invokes the
+; INT_P0_to_P1 interrupt and once the interrupt occurs, it invokes the
 ; MANAGE_INTERRUPT macro.
 ;
-; The first 2 instructions LDI32, LBBO copies the data from SECR0
-; register present in PRU ICSS INTC into R0 register.
-; The 3rd instruction, QBBC checks the status of INT_P0_to_P1 bit in it.
+; This macro checks the status of HOST_PRU0_TO_PRU1_CB in R31 register.
+; This bit is hardwired to HOST_PRU0_TO_PRU1(Host0 or Host1) and is set
+; whenever INT_P0_to_P1 occurs.
 ;
 
 CHECK_INT_LOOP	.macro
-$A?:		LDI32	R1,SECR0
-		LBBO	&R0, R1, 0, 4
-		QBBC	$A?, R0, INT_P0_to_P1
+$A?:		QBBC	$A?, R31, HOST_PRU0_TO_PRU1_CB
 		MANAGE_INTERRUPT
 		.endm
 
