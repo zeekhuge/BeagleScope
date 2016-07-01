@@ -107,7 +107,7 @@ $E3?:
 ;
 
 DELAY_SAMPLE    .macro
-                SUB     R0.w0, SAMPLING_CONFIG_CYCLE_BTWN_SAMPLE, 3 + 2 + 2
+                SUB     R0, SAMPLING_CONFIG_CYCLE_BTWN_SAMPLE, 3 + 2 + 2
                 QBEQ    $ES?, R0, 0
 $MS?:           SUB     R0, R0, 2
                 QBNE    $MS?, R0, 0
@@ -202,7 +202,7 @@ MANAGE_INTERRUPT	.macro
 
 	.global main
 main:
-	LDI32	SAMPLING_CONFIG_0, 100001
+	LDI32	SAMPLING_CONFIG_0, 100000001
 again:
 	SAMPLE_CYCLE_8
 	JMP again
