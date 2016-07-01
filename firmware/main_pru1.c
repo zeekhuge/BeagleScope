@@ -37,6 +37,19 @@
 #include <stdint.h>
 #include "resource_table_pru1.h"
 
+
+/*
+ * Interrupts ( system events ) that will be used to interrupt the
+ * two PRUs.
+ * INT_P1_to_P0 : interrupt from PRU1 to PRU0
+ * INT_P0_to_P1 : interrupt from PRU0 to PRU1
+ */
+
+#define INT_P1_to_P0 18
+#define INT_P0_to_P1 19
+
+
+
 #define CLK_PIN 1<<1
 
 /*

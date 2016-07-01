@@ -8,9 +8,6 @@
 ;* it under the terms of the GNU General Public License version 2 as
 ;* published by the Free Software Foundation.
 
-	.asg 19, INT_P0_TO_P1
-	.asg 18, INT_P1_TO_P0
-
 	.cdecls "main_pru1.c"
 
 
