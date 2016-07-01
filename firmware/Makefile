@@ -52,7 +52,7 @@ PRU0_FW		=$(GEN_DIR)/main_pru0_fw.out
 
 # add the required firmwares to TARGETS
 # TARGETS		=$(PRU1_FW) $(PRU0_FW)
-TARGETS		=$(PRU1_FW)
+TARGETS		=$(PRU1_FW) $(PRU0_FW)
 
 # add the required files while linkin the FW code
 # required linking files for PRU1
