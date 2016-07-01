@@ -36,7 +36,7 @@
 
 #include <stdint.h>
 #include "resource_table_pru1.h"
-
+#include "common_pru_defs.h"
 
 /*
  * Interrupts ( system events ) that will be used to interrupt the
