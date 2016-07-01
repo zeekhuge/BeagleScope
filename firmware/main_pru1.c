@@ -42,7 +42,6 @@
 /*
  * BYTE_N : Data byte RX.bm for X from 2 to 29 and
  * m from 0 to 1
- * N comes out to be from 1 to 112
  */
 #define BYTE_1	R2.b0
 #define BYTE_2  R2.b1
@@ -152,17 +151,14 @@
 #define BYTE_106 R28.b1
 #define BYTE_107 R28.b2
 #define BYTE_108 R28.b3
-#define BYTE_109 R29.b0
-#define BYTE_110 R29.b1
-#define BYTE_111 R29.b2
-#define BYTE_112 R29.b3
 
 /*
  * SAMPLING_CONFIG : the register that will be used
  * to store config data from Shared memory
  */
 
-#define SAMPLING_CONFIG		R1
+#define SAMPLING_CONFIG		R29
+
 
 /*
  * CYCLE_BTWN_SAMPLE and SAMPLING_WIDTH
