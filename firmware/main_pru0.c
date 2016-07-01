@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include <pru_cfg.h>
+#include <pru_intc.h>
 #include "resource_table_pru1.h"
 #include "common_pru_defs.h"
 
@@ -18,11 +19,12 @@ volatile register uint32_t __R31;
 
 void main(void)
 {
+	CT_INTC.EISR_bit.EN_SET_IDX = INT_P0_to_P1;
 
 	while (1) {
 
-		__R31 = ( (1 << 5) | (INT_P0_to_P1));
-		__delay_cycles(200000000);
+		__R31 = ( (1 << 5) | (INT_P0_to_P1 - 16));
+		__delay_cycles(500000000);
 	}
 }
 
