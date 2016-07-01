@@ -44,12 +44,29 @@
  * INT_P1_to_P0 : interrupt from PRU1 to PRU0
  * INT_P0_to_P1 : interrupt from PRU0 to PRU1
  */
-
 #define INT_P1_to_P0 18
 #define INT_P0_to_P1 19
 
+/*
+ * PRU ICSS INTC registers
+ * CONST_PRU_ICSS_INTC	: The entry from the constant table that points
+ *			to starting of PRU_ICSS INTC
+ * PRU_ICSS_INTC	: The absolute local address of the PRU ICSS INTC
+ * SICR_offset		: The offset of SICR register with resepect to the
+ *			PRU ICSS INTC
+ * SECR0		: Absolute local address of SECR0 register present
+ *			in PRU ICSS INTC
+ */
+#define CONST_PRU_ICSS_INTC	C0
+#define PRU_ICSS_INTC		0x00020000
+#define SICR_offset		0x24
+#define SECR0			PRU_ICSS_INTC + 0x280
 
-
+/*
+ * Clock Pin
+ * The bit of the R30 register where Clock pin of the external device
+ * is connected
+ */
 #define CLK_PIN 1<<1
 
 /*
