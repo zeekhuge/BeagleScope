@@ -35,7 +35,6 @@ void main(void)
 	 * memories */
 	CT_CFG.SYSCFG_bit.STANDBY_INIT = 0;
 	/* Writing to EISR regoster to enable interrupt */
-	CT_INTC.EISR_bit.EN_SET_IDX = INT_P0_to_P1;
 	CT_INTC.EISR_bit.EN_SET_IDX = INT_P1_to_P0;
 	/* Make sure the Linux drivers are ready for RPMsg communication */
 	status = &resourceTable.rpmsg_vdev.status;
