@@ -214,10 +214,17 @@
  *
  *	Width of the sampling data =
  *		SAMPLING_CONFIG_SAMPLING_WIDTH
+ *
+ *	Start or Stop sampling instruction =
+ *		SAMPLING_CONFIG_START_BIT is the bit
+ *		number in SAMPLING_CONFIG_1 register
+ *		and instructs to start sampling if is
+ *		set. Otherwise sampling should not be
+ *		done
  */
 #define SAMPLING_CONFIG_CYCLE_BTWN_SAMPLE	SAMPLING_CONFIG_0
 #define SAMPLING_CONFIG_SAMPLING_WIDTH		SAMPLING_CONFIG_1.b2
-
+#define SAMPLING_CONFIG_START_BIT		31
 
 register uint32_t __R30;
 volatile register uint32_t __R31;
