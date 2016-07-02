@@ -162,6 +162,12 @@ MANAGE_INTERRUPT	.macro
 			LBBO	&SAMPLING_CONFIG_START, R1, 0, SAMPLING_CONFIG_LENGTH
 			.endm
 
+
+TRANSFER_AND_TELL	.macro
+			LDI	R31.w0, R31_P1_to_P0
+			.endm
+
+
 ;*******************************************************
 ;*******************************************************
 
@@ -241,5 +247,7 @@ main:
 again:
 	CHECK_INT_LOOP
 	QBBC	again, SAMPLING_CONFIG_1, SAMPLING_CONFIG_START_BIT
-	SAMPLE_CYCLE_8
+	BLINK
+	TRANSFER_AND_TELL
+	JMP again
 	HALT

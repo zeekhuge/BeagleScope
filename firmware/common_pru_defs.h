@@ -25,6 +25,13 @@
 #define INT_P1_to_P0	18
 #define INT_P0_to_P1	19
 
+/*
+ * Register R31 values to generate interrupt
+ * R31_P1_to_P0 : The value that when written to R31 register will
+ * 		generate INT_P1_to_P0 interript
+ */
+#define R31_P1_to_P0	(1<<5) | (INT_P1_to_P0 - 16)
+
 /* Interrupt mappings
  * CHNL_PRU0_TO_PRU1 : The INTC channel to which the INT_P0_to_P1 interrupt
  * 		is be mapped.
