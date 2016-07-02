@@ -145,14 +145,21 @@ $A?:		QBBC	$A?, R31, HOST_PRU0_TO_PRU1_CB
 
 ;********************************************************************
 ; MANAGE_INTERRUPT : The macro that will be invoked on occurence of
-; interrupt. The macro is incomplete as of now and just clears the
-; status of INT_P0_to_P1. It then invokes BLINK macro.
+; interrupt.
+;
+; The first 2 instructions of the macro clears the status of INT_P0_to_P1
+; interrupt, due to which this macro got invoked.
+;
+; Next 2 instructions loads the data from shared RAM into SAMPLING_CONFIG_0
+; and SAMPLING_CONFIG_1 registers. The sampling config data in the shared
+; RAM was placed by PRU0.
 ;
 
 MANAGE_INTERRUPT	.macro
 			LDI32	R0, INT_P0_to_P1
 			SBCO	&R0, CONST_PRU_ICSS_INTC, SICR_offset, 4
-			BLINK
+			LDI32	R1, SHARED_MEM_ADDR
+			LBBO	&SAMPLING_CONFIG_START, R1, 0, SAMPLING_CONFIG_LENGTH
 			.endm
 
 ;*******************************************************
@@ -233,5 +240,6 @@ main:
 	INIT
 again:
 	CHECK_INT_LOOP
-	JMP again
+	QBBC	again, SAMPLING_CONFIG_1, SAMPLING_CONFIG_START_BIT
+	SAMPLE_CYCLE_8
 	HALT

@@ -19,12 +19,21 @@ volatile register uint32_t __R31;
 
 void main(void)
 {
+	/* pointer to starting of 12KB shared RAM */
+	int32_t *ptr_to_shared_mem;
+	ptr_to_shared_mem = (int32_t *) SHARED_MEM_ADDR;
+
+	/* Writing to EISR regoster to enable interrupt */
 	CT_INTC.EISR_bit.EN_SET_IDX = INT_P0_to_P1;
 
-	while (1) {
+	/* Writing data that is to be shared to PRU1, in shared
+	   RAM */
+	*(ptr_to_shared_mem) = 10000001;
+	*(ptr_to_shared_mem + 1 ) = 1<<31 ;
 
-		__R31 = ( (1 << 5) | (INT_P0_to_P1 - 16));
-		__delay_cycles(500000000);
-	}
+	/* Generating system event INT_P0_to_P1 */
+	__R31 = ( (1 << 5) | (INT_P0_to_P1 - 16));
+
+	__halt();
 }
 

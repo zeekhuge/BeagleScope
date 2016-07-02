@@ -18,7 +18,6 @@
  * INT_P1_to_P0 : interrupt from PRU1 to PRU0
  * INT_P0_to_P1 : interrupt from PRU0 to PRU1
  */
-
 #define INT_P1_to_P0 18
 #define INT_P0_to_P1 19
 
@@ -41,5 +40,11 @@
  */
 #define HOST_PRU0_TO_PRU1_CB	31
 
+/* Address of the external peripherals
+ * SHARED_MEM_ADDR : Absolute local address of the 12 KB shared RAM that will be
+ * 		used to communicate sampling configuration data between the two
+ * 		PRUs
+ */
+#define SHARED_MEM_ADDR 0x00010000
 
 #endif /* _COMMON_PRU_DEFS_ */
