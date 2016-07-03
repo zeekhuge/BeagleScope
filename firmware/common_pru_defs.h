@@ -90,5 +90,26 @@
 #define SP_BANK_1	11
 #define SP_BANK_2	12
 
+/*
+ * PRU1 to PRU0 data
+ * The constants are related to the sampled data that is sent by PRU1 to
+ * PRU0
+ * DATA_START_REGISTER : The register from where the sampled data starts to
+ * be stored on PRU1.
+ *
+ * DATA_START_REGISTER_NUMBER : The register number of DATA_START_REGISTER.
+ *
+ * DATA_SIZE : The size of Data that PRU1 will transfer into the banks for
+ * each interrupt to PRU0.
+ *
+ * FAKE_DATA : Any random data that will be used as fake input data to PRU1
+ * for testing purposes.
+ */
+#define DATA_START_REGISTER		R6
+#define DATA_START_REGISTER_NUMBER	6
+#define DATA_SIZE			44
+#define FAKE_DATA			0x38
+
+
 
 #endif /* _COMMON_PRU_DEFS_ */
