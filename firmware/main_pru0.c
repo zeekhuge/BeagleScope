@@ -25,6 +25,7 @@ uint8_t msg_from_kernel[RPMSG_BUF_SIZE];
 struct data_from_pru1{
 	uint8_t input_data[DATA_SIZE];
 }sampled_data;
+
 void main(void)
 {
 	struct pru_rpmsg_transport transport;
@@ -34,6 +35,7 @@ void main(void)
 
 	/* pointer to starting of 12KB shared RAM */
 	int32_t *ptr_to_shared_mem;
+	int32_t sampling_config[2];
 	ptr_to_shared_mem = (int32_t *) SHARED_MEM_ADDR;
 
 	/* allow OCP master port access by the PRU so the PRU can read external
@@ -50,10 +52,9 @@ void main(void)
 	pru_virtqueue_init(&transport.virtqueue1, &resourceTable.rpmsg_vring1,
 				INT_P0_to_ARM, INT_ARM_to_P0);
 
-	/* Writing data that is to be shared to PRU1, in shared
-	   RAM */
-	*(ptr_to_shared_mem) = 10000001;
-	*(ptr_to_shared_mem + 1 ) = 1<<31 ;
+	/* writing configuration data that will be sent to PRU1 */
+	sampling_config[0] = 10000001;
+	sampling_config[1] = (1<<31) ;
 	while (pru_rpmsg_channel(RPMSG_NS_CREATE, &transport, "rpmsg-pru",
 				 "Channel 30",
 				 30)!= PRU_RPMSG_SUCCESS);
@@ -66,6 +67,11 @@ void main(void)
 				if (pru_rpmsg_receive(&transport, &src,
 						      &dst, msg_from_kernel,
 						&len) == PRU_RPMSG_SUCCESS) {
+
+					/* Writing data that is to be shared to PRU1, in shared
+					RAM */
+					*(ptr_to_shared_mem) = sampling_config[0];
+					*(ptr_to_shared_mem + 1) = sampling_config[1];
 					/* Generating system event INT_P0_to_P1 */
 					__R31 = ( (1 << 5) | (INT_P0_to_P1 - 16));
 				}
