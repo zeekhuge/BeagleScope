@@ -20,12 +20,17 @@
 volatile register uint32_t __R30;
 volatile register uint32_t __R31;
 
+
 uint8_t msg_from_kernel[RPMSG_BUF_SIZE];
+struct data_from_pru1{
+	uint8_t input_data[DATA_SIZE];
+}sampled_data;
 void main(void)
 {
 	struct pru_rpmsg_transport transport;
 	uint16_t src, dst, len;
 	volatile uint8_t *status;
+	uint8_t bank_to_use = SP_BANK_0;
 
 	/* pointer to starting of 12KB shared RAM */
 	int32_t *ptr_to_shared_mem;
@@ -67,6 +72,21 @@ void main(void)
 			}
 			if (CT_INTC.SECR0_bit.ENA_STS_31_0 & (1<<INT_P1_to_P0)){
 				CT_INTC.SICR_bit.STS_CLR_IDX = INT_P1_to_P0;
+				switch(bank_to_use){
+				case SP_BANK_0:
+					__xin(SP_BANK_0,DATA_START_REGISTER_NUMBER,
+						0,sampled_data) ;
+				break;
+				case SP_BANK_1:
+					__xin(SP_BANK_1,DATA_START_REGISTER_NUMBER,
+						0,sampled_data) ;
+				break;
+				case SP_BANK_2:
+					__xin(SP_BANK_2,DATA_START_REGISTER_NUMBER,
+						0,sampled_data) ;
+				}
+				bank_to_use = bank_to_use == SP_BANK_2 ?
+					SP_BANK_0 : bank_to_use + 1  ;
 				pru_rpmsg_send(&transport, dst, src,
 					       "INTERRUPT\n",
 					       sizeof("INTERRUPT\n"));
@@ -74,4 +94,3 @@ void main(void)
 		}
 
 }
-
