@@ -78,4 +78,17 @@
  */
 #define SHARED_MEM_ADDR 0x00010000
 
+/*
+ * Scratch Pad Bank IDs
+ * The scratch pad inside the PRU-ICSS has 3 banks. Each bank has different
+ * ID numbers.
+ * SP_BANK_0 : ID number for scratch pad bank 0
+ * SP_BANK_1 : ID number for scratch pad bank 1
+ * SP_BANK_2 : ID number for scratch pad bank 2
+ */
+#define SP_BANK_0	10
+#define SP_BANK_1	11
+#define SP_BANK_2	12
+
+
 #endif /* _COMMON_PRU_DEFS_ */
