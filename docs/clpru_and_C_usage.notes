@@ -233,3 +233,32 @@ Link register 		Contains the return address of a function call (LR)
 Program counter 	Contains the current address of code being executed
 
 -----------------------------------------------------------------------------------
+
+void __xin  (unsigned int device_id, unsigned int base_register, unsigned int use_remapping, void& object)
+
+void __xout (unsigned int device_id, unsigned int base_register,unsigned int use_remapping, void& object)
+
+void __xchg (unsigned int device_id, unsigned int base_register,unsigned int use_remapping, void& object)
+
+void __sxin (unsigned int device_id, unsigned int base_register, unsigned int use_remapping, void& object)
+
+void __sxout(unsigned int device_id, unsigned int base_register, unsigned int use_remapping, void& object)
+
+void __sxchg(unsigned int device_id, unsigned int base_register, unsigned int use_remapping, void& object)
+
+These intrinsics are used to generate the XFER instructions on the PRU. 
+The parameters are defined as:
+
+   device_id: Literal 0-255 correpsonding to the first parameter of the 
+              assembly instruction.
+
+   base_register: Literal 0-32 corresponding to the register that must be used 
+                  as the base register for the transfer. 
+
+   use_remapping: Boolean value (zero is false, non-zero is true) that 
+                  specifies whether a register file shift amount is used
+                  to move the registers to the appropriate base register.
+                  An example of this are the bank shift supported for the 
+                  scratchpad memory on ICSS.
+
+   object:        Any object with a size less than 44 bytes. 
