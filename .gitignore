@@ -1,6 +1,8 @@
 gen/
 new_example/
 
+
+tags
 .*.swp
 *.dwo
 *.ko
