@@ -21,7 +21,7 @@ volatile register uint32_t __R30;
 volatile register uint32_t __R31;
 
 
-uint8_t msg_from_kernel[RPMSG_BUF_SIZE];
+uint32_t msg_from_kernel[RPMSG_BUF_SIZE/4];
 struct data_from_pru1{
 	uint8_t input_data[DATA_SIZE];
 }sampled_data;
@@ -31,11 +31,11 @@ void main(void)
 	struct pru_rpmsg_transport transport;
 	uint16_t src, dst, len;
 	volatile uint8_t *status;
+	uint8_t message_number=0;
 	uint8_t bank_to_use = SP_BANK_0;
 
 	/* pointer to starting of 12KB shared RAM */
 	int32_t *ptr_to_shared_mem;
-	int32_t sampling_config[2];
 	ptr_to_shared_mem = (int32_t *) SHARED_MEM_ADDR;
 
 	/* allow OCP master port access by the PRU so the PRU can read external
@@ -53,8 +53,6 @@ void main(void)
 				INT_P0_to_ARM, INT_ARM_to_P0);
 
 	/* writing configuration data that will be sent to PRU1 */
-	sampling_config[0] = 10000001;
-	sampling_config[1] = (1<<31) ;
 	while (pru_rpmsg_channel(RPMSG_NS_CREATE, &transport, "rpmsg-pru",
 				 "Channel 30",
 				 30)!= PRU_RPMSG_SUCCESS);
@@ -68,13 +66,19 @@ void main(void)
 						      &dst, msg_from_kernel,
 						&len) == PRU_RPMSG_SUCCESS) {
 
+					pru_rpmsg_send(&transport, dst, src,
+					&msg_from_kernel[0],
+					sizeof(int32_t));
 					/* Writing data that is to be shared to PRU1, in shared
 					RAM */
-					*(ptr_to_shared_mem) = sampling_config[0];
-					*(ptr_to_shared_mem + 1) = sampling_config[1];
+					*(ptr_to_shared_mem + message_number) =
+						msg_from_kernel[0]
+					;
 					/* Generating system event INT_P0_to_P1 */
-					__R31 = ( (1 << 5) | (INT_P0_to_P1 - 16));
-				}
+					__R31 = ( (message_number << 5) | (INT_P0_to_P1 - 16));
+					message_number =
+						message_number == 1 ? 0 : 1 ;
+									}
 			}
 			if (CT_INTC.SECR0_bit.ENA_STS_31_0 & (1<<INT_P1_to_P0)){
 				CT_INTC.SICR_bit.STS_CLR_IDX = INT_P1_to_P0;
