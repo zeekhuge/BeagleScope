@@ -88,8 +88,8 @@ void main(void)
 				bank_to_use = bank_to_use == SP_BANK_2 ?
 					SP_BANK_0 : bank_to_use + 1  ;
 				pru_rpmsg_send(&transport, dst, src,
-					       "INTERRUPT\n",
-					       sizeof("INTERRUPT\n"));
+					       sampled_data.input_data,
+					       sizeof(sampled_data));
 			}
 		}
 

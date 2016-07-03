@@ -162,79 +162,299 @@ MANAGE_INTERRUPT	.macro
 			LBBO	&SAMPLING_CONFIG_START, R1, 0, SAMPLING_CONFIG_LENGTH
 			.endm
 
+;*************************************************************************
+; TRANSFER_AND_TELL : The macro transfers the sampled data that has been
+; acquired using SAMPLE_CYCLE_8 macro, to the bank and then interrupts
+; PRU0.
+;
+; The macro takes one argument 'bank'.It is the bank id number where the
+; sampled data needs to be transfered.
+;
 
-TRANSFER_AND_TELL	.macro
+TRANSFER_AND_TELL	.macro bank
+			XOUT	bank, &DATA_START_REGISTER, DATA_SIZE
 			LDI	R31.w0, R31_P1_to_P0
 			.endm
 
 
-;*******************************************************
-;*******************************************************
+;*************************************************************************
+; CLK_TOGGLE : This macro toggles the pin connected to the CLK_PIN bit of
+; the R30 register. Each toggle takes 1 cycle.
+;
 
 CLK_TOGGLE	.macro
 		XOR R30, R30, CLK_PIN
 		.endm
 
-
-
-;********************************************************
-;*******************************************************
+;*************************************************************************
+; TAKE_SAMPLE_8 : The macro takes data input from the R31 register, ie the
+; GPI pins and stores the data into RX register.
+; The macro also toggles the clock, required to sample the data, provided
+; the clock pin is at 0 before the SAMPLE_CYCLE_8 starts.
+;
+; The Rx register is where the sampled data is to be kept.
+;
+; For testing purposes one can comment out the 'MOV RX,R31' and one of the
+; the 'CLK_TOGGLE' instructions and remove ';' from "LDI Rx, FAKE_DATA"
+; instruction.
+; Further connect an LED or Oscilloscope to the CLK_PIN.
+; This will result in sending FAKE_DATA to the PRU0 which will be further
+; sent to the kernel. Also, the  CLK_PIN will be toggled each time a sample
+; is taken, and hence the sampling frequency can be tested.
+;
 
 TAKE_SAMPLE_8	.macro RX
 		CLK_TOGGLE
 		MOV	RX, R31
-		;CLK_TOGGLE
+		;LDI	RX, FAKE_DATA
+		CLK_TOGGLE
 		.endm
 
-;*********************************************************
-;*********************************************************
+;*************************************************************************
+; SAMPLE_CYCLE_8 : The macro is a complete sampling cycle that takes one
+; sample using TAKE_SAMPLE_8 macro, delays for < 3 + delay caused by
+; DELAY_SAMPLE > cycles and then takes another sample.
+;
+; The delay after the last sample of the cycle is < delay caused by
+; NOP ( ie 1 cycle ) +  delay by DELAY_SAMPLE macro >. This is because the
+; SAMPLE_CYCLE_8 will be followed by TRANSFER_AND_TELL macro in the main
+; function, which will consume 2 cycles. Thus maintaining a delay of
+; < 3 + delay by DELAY_SAMPLE macro > cycles between each sample.
+;
 
 SAMPLE_CYCLE_8	.macro
 
-		TAKE_SAMPLE_8		BYTE_1
+                TAKE_SAMPLE_8           BYTE_1
 
-		DELAY_IMMEDIATE_3n 	3
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8		BYTE_2
-
-		DELAY_IMMEDIATE_3n 	3
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8		BYTE_3
-
-		DELAY_IMMEDIATE_3n	3
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8		BYTE_4
-
-		DELAY_IMMEDIATE_3n	3
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8   	BYTE_5
-
-		DELAY_IMMEDIATE_3n	3
+                DELAY_IMMEDIATE_3n      3
                 DELAY_SAMPLE
 
-                TAKE_SAMPLE_8   	BYTE_6
 
-		DELAY_IMMEDIATE_3n	3
+                TAKE_SAMPLE_8           BYTE_2
+
+                DELAY_IMMEDIATE_3n      3
                 DELAY_SAMPLE
 
-                TAKE_SAMPLE_8   	BYTE_7
 
-		DELAY_IMMEDIATE_3n	3
+                TAKE_SAMPLE_8           BYTE_3
+
+                DELAY_IMMEDIATE_3n      3
                 DELAY_SAMPLE
 
-                TAKE_SAMPLE_8   	BYTE_8
 
-		DELAY_IMMEDIATE_3n	3
+                TAKE_SAMPLE_8           BYTE_4
+
+                DELAY_IMMEDIATE_3n      3
                 DELAY_SAMPLE
 
-		TAKE_SAMPLE_8   	BYTE_9
 
-		DELAY_IMMEDIATE_3n	3
-            	DELAY_SAMPLE
+                TAKE_SAMPLE_8           BYTE_5
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+
+                TAKE_SAMPLE_8           BYTE_6
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+
+                TAKE_SAMPLE_8           BYTE_7
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+
+                TAKE_SAMPLE_8           BYTE_8
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+
+                TAKE_SAMPLE_8           BYTE_9
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+
+                TAKE_SAMPLE_8           BYTE_10
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+
+                TAKE_SAMPLE_8           BYTE_11
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+
+                TAKE_SAMPLE_8           BYTE_12
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+
+                TAKE_SAMPLE_8           BYTE_13
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_14
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_15
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_16
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_17
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_18
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_19
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_20
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_21
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_22
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_23
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_24
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_25
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_26
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_27
+
+		DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_28
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_29
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_30
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_31
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_32
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_33
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_34
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_35
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_36
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_37
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_38
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_39
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_40
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_41
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_42
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_43
+
+                DELAY_IMMEDIATE_3n      3
+                DELAY_SAMPLE
+
+                TAKE_SAMPLE_8           BYTE_44
+
+                NOP
+		DELAY_SAMPLE
 
 		.endm
 
@@ -247,7 +467,15 @@ main:
 again:
 	CHECK_INT_LOOP
 	QBBC	again, SAMPLING_CONFIG_1, SAMPLING_CONFIG_START_BIT
-	BLINK
-	TRANSFER_AND_TELL
-	JMP again
+start:
+	SAMPLE_CYCLE_8
+	TRANSFER_AND_TELL SP_BANK_0
+
+	SAMPLE_CYCLE_8
+	TRANSFER_AND_TELL SP_BANK_1
+
+	SAMPLE_CYCLE_8
+	TRANSFER_AND_TELL SP_BANK_2
+
+	JMP start
 	HALT
