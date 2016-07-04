@@ -18,6 +18,19 @@ The project, as the part of GSoC-2016, aims to provide with software support to 
 The overall software stack would allow developers to use PRUs for many cool applications. One of such applications is an Oscilloscope. This can be achieved using a fast ADC along with the developed software. This project will also try to develop a 20MHz oscilloscope as a test for the developed code. 
 
 ## This Branch - "port_to_4.4.12-ti-r31+" 
+In kernel version 4.4.12-ti-r31, the RPMsg framework used ARM INTC in place of Mailboxes to generate kicks from, and to PRUs. This was a significant change and the code needed to be modified to work with this new RPMsg framework.
+This branch has the code that works with kernel later than 4.4.12-ti-r31. To get examples for older version, checkout the [master branch](https://github.com/ZeekHuge/BeagleScope/tree/master).
+
+## firmware/
+firmware directory contains BeagleScope firmware code for PRUs (under development).
+BeagleScope uses these two PRU cores to sample data and transfer it to the Main Processing Unit (MPU).
+##### Current state -
+1. Samples 44 bytes of data in one cycle.
+2. Transfers data to PRU0 after each cycle.
+3. Utilizes all 3 scratch pad banks in cycle starting from bank0.
+4. Sampling frequency can be configured from userspace.
+5. Sampling can be stopped and started from userspace.
 
 ## License
 The kernel code is released under the [GPLv2](https://opensource.org/licenses/GPL-2.0/) license.
+
