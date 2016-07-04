@@ -75,10 +75,13 @@ void main(void)
 						msg_from_kernel[0]
 					;
 					/* Generating system event INT_P0_to_P1 */
-					__R31 = ( (message_number << 5) | (INT_P0_to_P1 - 16));
-					message_number =
-						message_number == 1 ? 0 : 1 ;
-									}
+					message_number++;
+					if (message_number > 1){
+						__R31 = ( (1 << 5) | (INT_P0_to_P1 - 16));
+						message_number = 0;
+						bank_to_use = SP_BANK_0;
+					}
+				}
 			}
 			if (CT_INTC.SECR0_bit.ENA_STS_31_0 & (1<<INT_P1_to_P0)){
 				CT_INTC.SICR_bit.STS_CLR_IDX = INT_P1_to_P0;
