@@ -128,6 +128,23 @@ $ES?:
                 .endm
 
 ;********************************************************************
+; CHECK_INT : A macro to do a quick check of the status of the
+; INT_P0_to_P1 interrupt.
+;
+; If there in an interrupt to be serviced, the control moves into the
+; MANAGE_INTERRUPT macro. If no interrupt is detected, there is a
+; quick jump to 'tag'.
+;
+; The 'tag' can be a onto to the next step, so as to bypass
+; MANAGE_INTERRUPT macro.
+;
+
+CHECK_INT	.macro tag
+		QBBC	tag, R31, HOST_PRU0_TO_PRU1_CB
+		MANAGE_INTERRUPT
+		.endm
+
+;********************************************************************
 ; CHECK_INT_LOOP : To check and wait for the occurence of
 ; INT_P0_to_P1 interrupt. The macro keeps polling the status of
 ; INT_P0_to_P1 interrupt and once the interrupt occurs, it invokes the
@@ -160,6 +177,7 @@ MANAGE_INTERRUPT	.macro
 			SBCO	&R0, CONST_PRU_ICSS_INTC, SICR_offset, 4
 			LDI32	R1, SHARED_MEM_ADDR
 			LBBO	&SAMPLING_CONFIG_START, R1, 0, SAMPLING_CONFIG_LENGTH
+			JMP	start_bit
 			.endm
 
 ;*************************************************************************
@@ -210,16 +228,19 @@ TAKE_SAMPLE_8	.macro RX
 		CLK_TOGGLE
 		.endm
 
-;*************************************************************************
-; SAMPLE_CYCLE_8 : The macro is a complete sampling cycle that takes one
-; sample using TAKE_SAMPLE_8 macro, delays for < 3 + delay caused by
-; DELAY_SAMPLE > cycles and then takes another sample.
+;********************************************************************
+; SAMPLE_CYCLE_8 : The macro is a complete sampling cycle that takes
+; one sample using TAKE_SAMPLE_8 macro, delays for < 3 + delay caused
+; by DELAY_SAMPLE > cycles and then takes another sample.
 ;
-; The delay after the last sample of the cycle is < delay caused by
-; NOP ( ie 1 cycle ) +  delay by DELAY_SAMPLE macro >. This is because the
-; SAMPLE_CYCLE_8 will be followed by TRANSFER_AND_TELL macro in the main
-; function, which will consume 2 cycles. Thus maintaining a delay of
-; < 3 + delay by DELAY_SAMPLE macro > cycles between each sample.
+; The delay after the last sample of the cycle is
+; < delay by DELAY_SAMPLE macro >. This is because in main,
+; SAMPLE_CYCLE_8 is followed by TRANSFER_AND_TELL and a CHECK_INT
+; macro or JMP instruction, both of which take one cycle. Thus
+; maintaining a delay of < 3 + delay by DELAY_SAMPLE macro > cycles
+; between each sample.
+;
+; In all, this macro takes 44 samples of 1byte each.
 ;
 
 SAMPLE_CYCLE_8	.macro
@@ -453,7 +474,6 @@ SAMPLE_CYCLE_8	.macro
 
                 TAKE_SAMPLE_8           BYTE_44
 
-                NOP
 		DELAY_SAMPLE
 
 		.endm
@@ -464,18 +484,29 @@ SAMPLE_CYCLE_8	.macro
 	.global main
 main:
 	INIT
+
 again:
 	CHECK_INT_LOOP
+
+start_bit:
 	QBBC	again, SAMPLING_CONFIG_1, SAMPLING_CONFIG_START_BIT
-start:
+
+sample_1:
 	SAMPLE_CYCLE_8
+
 	TRANSFER_AND_TELL SP_BANK_0
+	CHECK_INT sample_2
 
+sample_2:
 	SAMPLE_CYCLE_8
+
 	TRANSFER_AND_TELL SP_BANK_1
+	CHECK_INT sample_3
 
+sample_3:
 	SAMPLE_CYCLE_8
-	TRANSFER_AND_TELL SP_BANK_2
 
-	JMP start
+	TRANSFER_AND_TELL SP_BANK_2
+	JMP sample_1
+
 	HALT
