@@ -17,6 +17,27 @@
 #include "resource_table_pru0.h"
 #include "common_pru_defs.h"
 
+/* The value written by kernel into the status field of rpmsg.vdev
+ * structure, indicating that the rpmsg device is accepted by the
+ * virtio bus
+ */
+#define VIRTIO_CONFIG_S_DRIVER_OK	4
+
+/* RPMsg channel details
+ * Settings for the  RPMsg channel that is represented by PRU0
+ *
+ * RPMSG_CHAN_NAME : The name of the channel. Each channel has s
+ * specific name, that decides the controlling driver on the
+ * kernel side.
+ *
+ * RPMSG_CHAN_PORT : Port number of the rpmsg channel.
+ *
+ * RPMSG_CHAN_DESC : description of the rpmsg channel.
+ */
+#define RPMSG_CHAN_NAME			"rpmsg-pru"
+#define RPMSG_CHAN_PORT			30
+#define RPMSG_CHAN_DESC			"Channel 30"
+
 volatile register uint32_t __R30;
 volatile register uint32_t __R31;
 
@@ -96,7 +117,7 @@ void main(void)
 	 * kernel virtio bus.
 	 */
 	status = &resourceTable.rpmsg_vdev.status;
-	while (!(*status & 4));
+	while (!(*status & VIRTIO_CONFIG_S_DRIVER_OK));
 
 	/*
 	 * Initialize pru_virtqueue
@@ -119,7 +140,7 @@ void main(void)
 	 */
 	while (pru_rpmsg_channel(RPMSG_NS_CREATE,
 				 &transport,
-				 "rpmsg-pru", "Channel 30", 30)
+				 RPMSG_CHAN_NAME, RPMSG_CHAN_DESC, RPMSG_CHAN_PORT)
 	       != PRU_RPMSG_SUCCESS);
 
 
