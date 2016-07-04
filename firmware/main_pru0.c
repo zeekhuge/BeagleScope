@@ -20,8 +20,10 @@
 volatile register uint32_t __R30;
 volatile register uint32_t __R31;
 
+
 /* Buffer to save data send by kernel to PRU0 using RPMsg*/
 uint32_t msg_from_kernel[RPMSG_BUF_SIZE/4];
+
 /* Data structure to save data that is send by pru1 to pru0 */
 struct data_from_pru1{
 	uint8_t input_data[DATA_SIZE];
@@ -67,8 +69,7 @@ void main(void)
 	volatile uint8_t *status;
 	uint8_t message_number=0;
 	uint8_t bank_to_use = SP_BANK_0;
-	int32_t *ptr_to_shared_mem;
-	ptr_to_shared_mem = (int32_t *) SHARED_MEM_ADDR;
+	int32_t *ptr_to_shared_mem = (int32_t *) SHARED_MEM_ADDR;
 
 	/*
 	 * Register initialization
@@ -103,10 +104,12 @@ void main(void)
 	 * based on virtio framework. This virtual rpmsg device uses virtual
 	 * queues.
 	 */
-	pru_virtqueue_init(&transport.virtqueue0, &resourceTable.rpmsg_vring0,
-				INT_P0_to_ARM, INT_ARM_to_P0);
-	pru_virtqueue_init(&transport.virtqueue1, &resourceTable.rpmsg_vring1,
-				INT_P0_to_ARM, INT_ARM_to_P0);
+	pru_virtqueue_init(&transport.virtqueue0,
+			   &resourceTable.rpmsg_vring0,
+			   INT_P0_to_ARM, INT_ARM_to_P0);
+	pru_virtqueue_init(&transport.virtqueue1,
+			   &resourceTable.rpmsg_vring1,
+			   INT_P0_to_ARM, INT_ARM_to_P0);
 
 	/*
 	 * Announcement
@@ -114,9 +117,12 @@ void main(void)
 	 * PRU can send an CREATE or DESTROY message to the kernel that destroys
 	 * or creates the channel and probes the required driver.
 	 */
-	while (pru_rpmsg_channel(RPMSG_NS_CREATE, &transport, "rpmsg-pru",
-				 "Channel 30",
-				 30)!= PRU_RPMSG_SUCCESS);
+	while (pru_rpmsg_channel(RPMSG_NS_CREATE,
+				 &transport,
+				 "rpmsg-pru", "Channel 30", 30)
+	       != PRU_RPMSG_SUCCESS);
+
+
 	/*
 	 * The infinite loop
 	 */
@@ -137,26 +143,32 @@ void main(void)
 		 * - INT_P0_to_P1 is generated depending upon the value of
 		 * message_number.
 		 */
-			if(__R31 & (1<<HOST_ARM_TO_PRU0_CB)) {
-				CT_INTC.SICR_bit.STS_CLR_IDX = INT_ARM_to_P0;
-				if (pru_rpmsg_receive(&transport, &src,
-						      &dst, msg_from_kernel,
-						&len) == PRU_RPMSG_SUCCESS) {
+		if(__R31 & (1<<HOST_ARM_TO_PRU0_CB)) {
 
-					pru_rpmsg_send(&transport, dst, src,
-					&msg_from_kernel[0],
-					sizeof(int32_t));
-					*(ptr_to_shared_mem + message_number) =
-						msg_from_kernel[0]
-					;
-					message_number++;
-					if (message_number > 1){
-						__R31 = R31_P0_to_P1;
-						message_number = 0;
-						bank_to_use = SP_BANK_0;
-					}
+			CT_INTC.SICR_bit.STS_CLR_IDX = INT_ARM_to_P0;
+
+			if (pru_rpmsg_receive(&transport,
+					      &src, &dst,
+					      msg_from_kernel,
+					      &len
+					      ) == PRU_RPMSG_SUCCESS) {
+
+				pru_rpmsg_send(&transport,
+					       dst, src,
+					       &msg_from_kernel[0],
+					       sizeof(int32_t));
+
+				*(ptr_to_shared_mem + message_number) = msg_from_kernel[0];
+
+
+				message_number++;
+				if (message_number > 1){
+					__R31 = R31_P0_to_P1;
+					message_number = 0;
+					bank_to_use = SP_BANK_0;
 				}
 			}
+		}
 		/* Part of the code that gets executed when INT_P1_to_P0
 		 * interrupt has been generated. This is when PRU1 has
 		 * transfered the sampled data onto one of the banks and want
@@ -169,27 +181,38 @@ void main(void)
 		 * - Send the acquired data to the kernel and further to the user
 		 * using rpmsg bus.
 		 */
-			if (CT_INTC.SECR0_bit.ENA_STS_31_0 & (1<<INT_P1_to_P0)){
-				CT_INTC.SICR_bit.STS_CLR_IDX = INT_P1_to_P0;
-				switch(bank_to_use){
+
+		if (CT_INTC.SECR0_bit.ENA_STS_31_0 & (1<<INT_P1_to_P0)){
+
+			CT_INTC.SICR_bit.STS_CLR_IDX = INT_P1_to_P0;
+
+			switch(bank_to_use){
 				case SP_BANK_0:
-					__xin(SP_BANK_0,DATA_START_REGISTER_NUMBER,
-						0,sampled_data) ;
+					__xin(SP_BANK_0,
+					      DATA_START_REGISTER_NUMBER,
+					      0,
+					      sampled_data) ;
 				break;
 				case SP_BANK_1:
-					__xin(SP_BANK_1,DATA_START_REGISTER_NUMBER,
-						0,sampled_data) ;
+					__xin(SP_BANK_1,
+					      DATA_START_REGISTER_NUMBER,
+					      0,
+					      sampled_data) ;
 				break;
 				case SP_BANK_2:
-					__xin(SP_BANK_2,DATA_START_REGISTER_NUMBER,
-						0,sampled_data) ;
-				}
-				bank_to_use = bank_to_use == SP_BANK_2 ?
-					SP_BANK_0 : bank_to_use + 1  ;
-				pru_rpmsg_send(&transport, dst, src,
-					       sampled_data.input_data,
-					       sizeof(sampled_data));
+					__xin(SP_BANK_2,
+					      DATA_START_REGISTER_NUMBER,
+					      0,
+					      sampled_data) ;
 			}
+
+			bank_to_use = (bank_to_use == SP_BANK_2) ? SP_BANK_0 : bank_to_use + 1  ;
+
+			pru_rpmsg_send(&transport,
+				       dst, src,
+				       sampled_data.input_data,
+				       sizeof(sampled_data));
 		}
+	}
 
 }
