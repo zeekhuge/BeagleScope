@@ -1,19 +1,17 @@
 ;*
 ;* Copyright (C) 2016 Zubeen Tolani <ZeekHuge - zeekhuge@gmail.com>
 ;*
-;* This file is as an example to show how to develope
-;* and compile inline assembly code for PRUs
+;* The code is a part of BeagleScope Project.
 ;*
-;* This program is free software; you can redistribute it and/or modify
-;* it under the terms of the GNU General Public License version 2 as
-;* published by the Free Software Foundation.
+;* This program is free software; you can redistribute it and/or
+;* modify it under the terms of the GNU General Public License version
+;* 2 as published by the Free Software Foundation.
 
 	.cdecls "main_pru1.c"
 
 
-;*******************************************************
-; BLINK is just for debugging purpose while developing
-; the code
+;********************************************************************
+; BLINK is just for debugging purpose while developing the code.
 ;
 
 BLINK	.macro
@@ -23,16 +21,16 @@ BLINK	.macro
 	DELAY_IMMEDIATE_2n 100000000
 	.endm
 
-;*******************************************************
+;********************************************************************
 ; INIT : To do basic initialization on startup
 ;
-; The macro performs initialization steps whenever the
-; PRU is started.
+; The macro performs initialization steps whenever the PRU is
+; started.
 ;
 ; Steps that it performs are:
-; 1.)Clearing the R30 register which will be used for
-; clock generation.
-; 2.)Clearing status of INT_P0_to_P1 interrup
+; 1.)Clearing the R30 register which will be used for clock
+; generation.
+; 2.)Clearing status of INT_P0_to_P1 interrupt
 ;
 
 INIT	.macro
@@ -41,27 +39,26 @@ INIT	.macro
 	SBCO &R0, CONST_PRU_ICSS_INTC, SICR_offset, 4
 	.endm
 
-;*******************************************************
+;********************************************************************
 ; NOP :	Null operation macro to produce a delay of one
 ;	cycle
 ;
-; The macro essentially consumes one system cycle in
-; subtracting 0 from the content of R0 register and put
-; the result back in R0 register. This do not changes
-; anything but just consumes up one single system clock
-; cycle
+; The macro essentially consumes one system cycle in subtracting 0
+; from the content of R0 register and put the result back in R0
+; register. This do not changes anything but just consumes up one
+; single system clock cycle.
+;
 
 NOP	.macro
 	SUB	R0, R0, 0
 	.endm
 
-;*******************************************************
-; DELAY_IMMEDIATE_2n:	The macro to cause a delay of
-;			'cycles_2n' cycles.
+;********************************************************************
+; DELAY_IMMEDIATE_2n : The macro to cause a delay of 'cycles_2n'
+; cycles.
 ;
-; cycles_2n	: The number of cycles to delay. This
-;		should be an immediate value and should
-;		always be a multiple of 2.
+; cycles_2n : The number of cycles to delay. This should be an
+; immediate value and should always be a multiple of 2.
 ;
 ; NOTE:	The least delay value that can be give to this
 ;	macro is 2 cycles
@@ -74,16 +71,15 @@ $M2?:			SUB	R0, R0, 2
 $E2?:
 			.endm
 
-;*****************************************************
-; DELAY_IMMEDIATE_3n:	The macro to cause a delay of
-;			'cycles_3n' cycles.
+;********************************************************************
+; DELAY_IMMEDIATE_3n : The macro to cause a delay of 'cycles_3n'
+; cycles.
 ;
-; cycles_3n	: The number of cycles to delay.
-;		This should be an immediate value and
-;		should always be a multiple of 3.
+; cycles_3n	: The number of cycles to delay. This should be an
+; immediate value and should always be a multiple of 3.
 ;
-; NOTE:	The least delay value that can be given to the
-; 	macro is 3
+; NOTE:	The least delay value that can be given to the macro is 3
+;
 
 DELAY_IMMEDIATE_3n      .macro cycles_3n
                         LDI32   R0, cycles_3n - 3
@@ -96,27 +92,30 @@ $E3?:
                         .endm
 
 ;********************************************************************
-; DELAY_SAMPLE : To cause delay between samples
-; The macro takes CYCLE_BTWN_SAMPLE value, given by PRU0
-; and uses it to cause a delay between consecutive samples.
+; DELAY_SAMPLE : To cause delay between samples. The macro takes
+; CYCLE_BTWN_SAMPLE value, given by PRU0 and uses it to cause a delay
+; between consecutive samples.
 ;
 ; Instruction: "SUB R0.wo, CYCLE_BTWN_SAMPLE, 3 + 2 + 2"
-; The instrcution takes value from CYCLE_BTWN_SAMPLE value
-; from SAMPLIG.CONFIG data and subtracts 3+2+2 cycles.
-; 3 cycles      = already beign delayed between each sample
-;               in SAMPLE_CYCLE_n macro either by DELAY_CYCLES_3n
-;               macro, or by other macros
-; 2 cycles      = being used by the SUB and QBEQ instructions
-;               in the DELAY_SAMPLE macro
-; 2 cycles      = being used by the 2 CLK_TOGGLE instructions
-;               in TAKE_SAMPLE_8 macro
+; 	The instruction takes value from CYCLE_BTWN_SAMPLE value from
+; SAMPLIG.CONFIG data and subtracts 3+2+2 cycles.
 ;
-; NOTE: 1.) It turns out that the least value of CYCLE_BTWN_SAMPLE
-;       can be 7. And hence least delay between 2 consecutive
-;       samples will be 7 cycles.
-;	2.) The value given in the SAMPLING_CONFIG_CYCLE_BTWN_SAMPLE
-;	should always be odd, as subtracting 7 would then make it even
-;	and it will be in an infinite loop if the value is even.
+; 3 cycles  = already being delayed between each sample in
+; SAMPLE_CYCLE_n macro either by DELAY_CYCLES_3n  macro, or by other
+; macros
+;
+; 2 cycles = being used by the SUB and QBEQ instructions in the
+; DELAY_SAMPLE macro
+;
+; 2 cycles = being used by the 2 CLK_TOGGLE instructions in
+; TAKE_SAMPLE_8 macro
+;
+; NOTE: 1.) It turns out that the least value of CYCLE_BTWN_SAMPLE 
+; can be 7. And hence least delay between 2 consecutive  samples will
+; be 7 cycles.
+; 2.) The value given in the SAMPLING_CONFIG_CYCLE_BTWN_SAMPLE should
+; always be odd, as subtracting 7 would then make it even and it will
+; be in an infinite loop if the value is even.
 ;
 
 DELAY_SAMPLE    .macro
@@ -132,11 +131,10 @@ $ES?:
 ; INT_P0_to_P1 interrupt.
 ;
 ; If there in an interrupt to be serviced, the control JMPs to
-; 'manage_interrupt' tag in main, that further services the
-; interrupt.
+; 'manage_interrupt' tag in main, that further services the interrupt.
 ;
-; If no interrupt is detected, the JMP statement is bypassed and
-; the program flow is continued.
+; If no interrupt is detected, the JMP statement is bypassed and the
+; program flow is continued.
 ;
 
 CHECK_INT	.macro
@@ -162,15 +160,15 @@ $A?:		QBBC	$A?, R31, HOST_PRU0_TO_PRU1_CB
 		.endm
 
 ;********************************************************************
-; MANAGE_INTERRUPT : The macro that will be invoked on occurence of
+; MANAGE_INTERRUPT : The macro that will be invoked on occurrence of
 ; interrupt.
 ;
-; The first 2 instructions of the macro clears the status of INT_P0_to_P1
-; interrupt, due to which this macro got invoked.
+; The first 2 instructions of the macro clears the status of
+; INT_P0_to_P1 interrupt, due to which this macro got invoked.
 ;
-; Next 2 instructions loads the data from shared RAM into SAMPLING_CONFIG_0
-; and SAMPLING_CONFIG_1 registers. The sampling config data in the shared
-; RAM was placed by PRU0.
+; Next 2 instructions loads the data from shared RAM into
+; SAMPLING_CONFIG_0 and SAMPLING_CONFIG_1 registers. The sampling
+; config data in the shared RAM was placed by PRU0.
 ;
 
 MANAGE_INTERRUPT	.macro
@@ -180,13 +178,13 @@ MANAGE_INTERRUPT	.macro
 			LBBO	&SAMPLING_CONFIG_START, R1, 0, SAMPLING_CONFIG_LENGTH
 			.endm
 
-;*************************************************************************
-; TRANSFER_AND_TELL : The macro transfers the sampled data that has been
-; acquired using SAMPLE_CYCLE_8 macro, to the bank and then interrupts
-; PRU0.
+;********************************************************************
+; TRANSFER_AND_TELL : The macro transfers the sampled data that has
+; been acquired using SAMPLE_CYCLE_8 macro, to the bank and then
+; interrupts PRU0.
 ;
-; The macro takes one argument 'bank'.It is the bank id number where the
-; sampled data needs to be transfered.
+; The macro takes one argument 'bank'.It is the bank id number where
+; the sampled data needs to be transfered.
 ;
 
 TRANSFER_AND_TELL	.macro bank
@@ -195,29 +193,29 @@ TRANSFER_AND_TELL	.macro bank
 			.endm
 
 
-;*************************************************************************
-; CLK_TOGGLE : This macro toggles the pin connected to the CLK_PIN bit of
-; the R30 register. Each toggle takes 1 cycle.
+;********************************************************************
+; CLK_TOGGLE : This macro toggles the pin connected to the CLK_PIN
+; bit of the R30 register. Each toggle takes 1 cycle.
 ;
 
 CLK_TOGGLE	.macro
 		XOR R30, R30, CLK_PIN
 		.endm
 
-;*************************************************************************
-; TAKE_SAMPLE_8 : The macro takes data input from the R31 register, ie the
-; GPI pins and stores the data into RX register.
-; The macro also toggles the clock, required to sample the data, provided
-; the clock pin is at 0 before the SAMPLE_CYCLE_8 starts.
+;********************************************************************
+; TAKE_SAMPLE_8 : The macro takes data input from the R31 register,
+; ie the GPI pins and stores the data into RX register.
+; The macro also toggles the clock, required to sample the data,
+; provided the clock pin is at 0 before the SAMPLE_CYCLE_8 starts.
 ;
 ; The Rx register is where the sampled data is to be kept.
 ;
-; For testing purposes one can comment out the 'MOV RX,R31' and one of the
-; the 'CLK_TOGGLE' instructions and remove ';' from "LDI Rx, FAKE_DATA"
-; instruction.
-; Further connect an LED or Oscilloscope to the CLK_PIN.
-; This will result in sending FAKE_DATA to the PRU0 which will be further
-; sent to the kernel. Also, the  CLK_PIN will be toggled each time a sample
+; For testing purposes one can comment out the 'MOV RX,R31' and one
+; of the 'CLK_TOGGLE' instructions and remove ';' from 
+; "LDI Rx, FAKE_DATA" instruction.
+; Further connect an LED or Oscilloscope to the CLK_PIN. This will
+; result in sending FAKE_DATA to the PRU0 which will be further sent
+; to the kernel. Also, the  CLK_PIN will be toggled each time a sample
 ; is taken, and hence the sampling frequency can be tested.
 ;
 
