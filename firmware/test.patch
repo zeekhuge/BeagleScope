@@ -1,0 +1,17 @@
+diff --git a/firmware/main_pru1_def.asm b/firmware/main_pru1_def.asm
+index 13e66dd..4d20149 100644
+--- a/firmware/main_pru1_def.asm
++++ b/firmware/main_pru1_def.asm
+@@ -221,9 +221,9 @@ CLK_TOGGLE	.macro
+ 
+ TAKE_SAMPLE_8	.macro RX
+ 		CLK_TOGGLE
+-		MOV	RX, R31
+-		;LDI	RX, FAKE_DATA
+-		CLK_TOGGLE
++		;MOV	RX, R31
++		LDI	RX, FAKE_DATA
++		;CLK_TOGGLE
+ 		.endm
+ 
+ ;********************************************************************
