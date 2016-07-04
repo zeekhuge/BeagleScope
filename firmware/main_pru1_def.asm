@@ -228,8 +228,9 @@ TAKE_SAMPLE_8	.macro RX
 
 ;********************************************************************
 ; SAMPLE_CYCLE_8 : The macro is a complete sampling cycle that takes
-; one sample using TAKE_SAMPLE_8 macro, delays for < 3 + delay caused
-; by DELAY_SAMPLE > cycles and then takes another sample.
+; one sample using TAKE_SAMPLE_8 macro, delays for < delay by
+; CHECK_INT macro + 2 + delay caused by DELAY_SAMPLE > cycles and
+; then takes another sample.
 ;
 ; The delay after the last sample of the cycle is
 ; < delay by DELAY_SAMPLE macro >. This is because in main,
@@ -242,235 +243,265 @@ TAKE_SAMPLE_8	.macro RX
 ;
 
 SAMPLE_CYCLE_8	.macro
+		TAKE_SAMPLE_8           BYTE_1
 
-                TAKE_SAMPLE_8           BYTE_1
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_2
 
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                TAKE_SAMPLE_8           BYTE_2
+		TAKE_SAMPLE_8           BYTE_3
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
+		TAKE_SAMPLE_8           BYTE_4
 
-                TAKE_SAMPLE_8           BYTE_3
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_5
 
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                TAKE_SAMPLE_8           BYTE_4
+		TAKE_SAMPLE_8           BYTE_6
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
+		TAKE_SAMPLE_8           BYTE_7
 
-                TAKE_SAMPLE_8           BYTE_5
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_8
 
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                TAKE_SAMPLE_8           BYTE_6
+		TAKE_SAMPLE_8           BYTE_9
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
+		TAKE_SAMPLE_8           BYTE_10
 
-                TAKE_SAMPLE_8           BYTE_7
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_11
 
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                TAKE_SAMPLE_8           BYTE_8
+		TAKE_SAMPLE_8           BYTE_12
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
+		TAKE_SAMPLE_8           BYTE_13
 
-                TAKE_SAMPLE_8           BYTE_9
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_14
 
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                TAKE_SAMPLE_8           BYTE_10
+		TAKE_SAMPLE_8           BYTE_15
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
+		TAKE_SAMPLE_8           BYTE_16
 
-                TAKE_SAMPLE_8           BYTE_11
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_17
 
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                TAKE_SAMPLE_8           BYTE_12
+		TAKE_SAMPLE_8           BYTE_18
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
+		TAKE_SAMPLE_8           BYTE_19
 
-                TAKE_SAMPLE_8           BYTE_13
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_20
 
-                TAKE_SAMPLE_8           BYTE_14
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_21
 
-                TAKE_SAMPLE_8           BYTE_15
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_22
 
-                TAKE_SAMPLE_8           BYTE_16
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_23
 
-                TAKE_SAMPLE_8           BYTE_17
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_24
 
-                TAKE_SAMPLE_8           BYTE_18
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_25
 
-                TAKE_SAMPLE_8           BYTE_19
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_26
 
-                TAKE_SAMPLE_8           BYTE_20
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_27
 
-                TAKE_SAMPLE_8           BYTE_21
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_28
 
-                TAKE_SAMPLE_8           BYTE_22
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_29
 
-                TAKE_SAMPLE_8           BYTE_23
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_30
 
-                TAKE_SAMPLE_8           BYTE_24
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_31
 
-                TAKE_SAMPLE_8           BYTE_25
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_32
 
-                TAKE_SAMPLE_8           BYTE_26
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_33
 
-                TAKE_SAMPLE_8           BYTE_27
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-		DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_34
 
-                TAKE_SAMPLE_8           BYTE_28
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_35
 
-                TAKE_SAMPLE_8           BYTE_29
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_36
 
-                TAKE_SAMPLE_8           BYTE_30
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_37
 
-                TAKE_SAMPLE_8           BYTE_31
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_38
 
-                TAKE_SAMPLE_8           BYTE_32
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_39
 
-                TAKE_SAMPLE_8           BYTE_33
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_40
 
-                TAKE_SAMPLE_8           BYTE_34
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_41
 
-                TAKE_SAMPLE_8           BYTE_35
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_42
 
-                TAKE_SAMPLE_8           BYTE_36
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
+		TAKE_SAMPLE_8           BYTE_43
 
-                TAKE_SAMPLE_8           BYTE_37
+		CHECK_INT
+		DELAY_IMMEDIATE_2n      2
+		DELAY_SAMPLE
 
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
-
-                TAKE_SAMPLE_8           BYTE_38
-
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
-
-                TAKE_SAMPLE_8           BYTE_39
-
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
-
-                TAKE_SAMPLE_8           BYTE_40
-
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
-
-                TAKE_SAMPLE_8           BYTE_41
-
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
-
-                TAKE_SAMPLE_8           BYTE_42
-
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
-
-                TAKE_SAMPLE_8           BYTE_43
-
-                DELAY_IMMEDIATE_3n      3
-                DELAY_SAMPLE
-
-                TAKE_SAMPLE_8           BYTE_44
+		TAKE_SAMPLE_8           BYTE_44
 
 		DELAY_SAMPLE
 
@@ -492,19 +523,16 @@ manage_interrupt:
 
 sample_1:
 	SAMPLE_CYCLE_8
-
-	TRANSFER_AND_TELL SP_BANK_0
 	CHECK_INT
+	TRANSFER_AND_TELL SP_BANK_0
 
 sample_2:
 	SAMPLE_CYCLE_8
-
-	TRANSFER_AND_TELL SP_BANK_1
 	CHECK_INT
+	TRANSFER_AND_TELL SP_BANK_1
 
 sample_3:
 	SAMPLE_CYCLE_8
-
 	TRANSFER_AND_TELL SP_BANK_2
 	JMP sample_1
 
