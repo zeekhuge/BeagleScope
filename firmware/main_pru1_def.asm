@@ -131,33 +131,34 @@ $ES?:
 ; CHECK_INT : A macro to do a quick check of the status of the
 ; INT_P0_to_P1 interrupt.
 ;
-; If there in an interrupt to be serviced, the control moves into the
-; MANAGE_INTERRUPT macro. If no interrupt is detected, there is a
-; quick jump to 'tag'.
+; If there in an interrupt to be serviced, the control JMPs to
+; 'manage_interrupt' tag in main, that further services the
+; interrupt.
 ;
-; The 'tag' can be a onto to the next step, so as to bypass
-; MANAGE_INTERRUPT macro.
+; If no interrupt is detected, the JMP statement is bypassed and
+; the program flow is continued.
 ;
 
-CHECK_INT	.macro tag
-		QBBC	tag, R31, HOST_PRU0_TO_PRU1_CB
-		MANAGE_INTERRUPT
+CHECK_INT	.macro
+		QBBC	$CI1?, R31, HOST_PRU0_TO_PRU1_CB
+		JMP	manage_interrupt
+$CI1?:
 		.endm
 
 ;********************************************************************
-; CHECK_INT_LOOP : To check and wait for the occurence of
+; CHECK_INT_LOOP : To check and wait for the occurrence of
 ; INT_P0_to_P1 interrupt. The macro keeps polling the status of
-; INT_P0_to_P1 interrupt and once the interrupt occurs, it invokes the
-; MANAGE_INTERRUPT macro.
+; INT_P0_to_P1 interrupt and once the interrupt occurs, control moves
+; to the next instruction. Therefore, control after CHECK_INT_LOOP
+; must be moved to 'manage_interrupt' tag in main.
 ;
-; This macro checks the status of HOST_PRU0_TO_PRU1_CB in R31 register.
-; This bit is hardwired to HOST_PRU0_TO_PRU1(Host0 or Host1) and is set
-; whenever INT_P0_to_P1 occurs.
+; This macro checks the status of HOST_PRU0_TO_PRU1_CB in R31
+; register. This bit is hardwired to HOST_PRU0_TO_PRU1(Host0 or Host1)
+; and is set whenever INT_P0_to_P1 occurs.
 ;
 
 CHECK_INT_LOOP	.macro
 $A?:		QBBC	$A?, R31, HOST_PRU0_TO_PRU1_CB
-		MANAGE_INTERRUPT
 		.endm
 
 ;********************************************************************
@@ -177,7 +178,6 @@ MANAGE_INTERRUPT	.macro
 			SBCO	&R0, CONST_PRU_ICSS_INTC, SICR_offset, 4
 			LDI32	R1, SHARED_MEM_ADDR
 			LBBO	&SAMPLING_CONFIG_START, R1, 0, SAMPLING_CONFIG_LENGTH
-			JMP	start_bit
 			.endm
 
 ;*************************************************************************
@@ -485,23 +485,24 @@ SAMPLE_CYCLE_8	.macro
 main:
 	INIT
 
-again:
+int_loop:
 	CHECK_INT_LOOP
 
-start_bit:
-	QBBC	again, SAMPLING_CONFIG_1, SAMPLING_CONFIG_START_BIT
+manage_interrupt:
+	MANAGE_INTERRUPT
+	QBBC	int_loop, SAMPLING_CONFIG_1, SAMPLING_CONFIG_START_BIT
 
 sample_1:
 	SAMPLE_CYCLE_8
 
 	TRANSFER_AND_TELL SP_BANK_0
-	CHECK_INT sample_2
+	CHECK_INT
 
 sample_2:
 	SAMPLE_CYCLE_8
 
 	TRANSFER_AND_TELL SP_BANK_1
-	CHECK_INT sample_3
+	CHECK_INT
 
 sample_3:
 	SAMPLE_CYCLE_8
