@@ -77,7 +77,7 @@ void main(void)
 					/* Generating system event INT_P0_to_P1 */
 					message_number++;
 					if (message_number > 1){
-						__R31 = ( (1 << 5) | (INT_P0_to_P1 - 16));
+						__R31 = R31_P0_to_P1;
 						message_number = 0;
 						bank_to_use = SP_BANK_0;
 					}
