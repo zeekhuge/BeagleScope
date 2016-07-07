@@ -97,11 +97,11 @@ static int __init beaglescope_driver_init(void)
 
 	ret = register_rpmsg_driver(&beaglescope_driver);
 	if (ret){
-		pr_err("Failed to register the driver on rpmsg_bus\n");
+		pr_err("Failed to register beaglescope driver on rpmsg_bus\n");
 		return ret;
 	}
 
-	printk(KERN_DEBUG "Successfully registered to rpmsg_bus\n");
+	pr_debug("Successfully registered to rpmsg_bus\n");
 	return 0;
 
 }
