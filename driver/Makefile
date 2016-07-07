@@ -8,11 +8,21 @@
 obj-m += beaglescope_driver.o
 
 KDIR?=/lib/modules/$(shell uname -r)/build
-
+INSTALL?=/lib/modules/$(shell uname -r)/kerenl/drivers/testing
+OP=$(patsubst %.o,%.ko,$(obj-m))
+MODNAME=$(patsubst %.o,%,$(obj-m))
 
 .PHONY: all
 all:
 	@make -C $(KDIR) M=$(PWD) modules
+
+.PHONY: install
+install: all
+	@mkdir -p $(INSTALL)
+	@echo "  -	copying $(OP) driver to $(INSTALL)"
+	@cp $(OP) $(INSTALL)
+	@echo "  -	executing depmod -a"
+	@$(shell depmod -a)
 
 .PHONY: clean
 clean:
