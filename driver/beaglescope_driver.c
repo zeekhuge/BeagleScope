@@ -34,7 +34,7 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpmsg_dev)
 	struct beaglescope_state *st;
 	struct rpmsg_device_id *id;
 
-	dev_dbg(&rpmsg_dev->dev, "Driver probed");
+	dev_dbg(&rpmsg_dev->dev, "Driver probed\n");
 
 	indio_dev = devm_iio_device_alloc(&rpmsg_dev->dev, sizeof(*st));
 	if (!indio_dev) {
@@ -53,7 +53,7 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpmsg_dev)
 
 	ret = devm_iio_device_register(&rpmsg_dev->dev, indio_dev);
 	if (ret < 0) {
-		pr_err("Failed to register with iio");
+		pr_err("Failed to register with iio\n");
 		goto error_device_register;
 	}
 
@@ -97,11 +97,11 @@ static int __init beaglescope_driver_init(void)
 
 	ret = register_rpmsg_driver(&beaglescope_driver);
 	if (ret){
-		pr_err("Failed to register the driver on rpmsg_bus");
+		pr_err("Failed to register the driver on rpmsg_bus\n");
 		return ret;
 	}
 
-	printk(KERN_DEBUG "Successfully registered to rpmsg_bus");
+	printk(KERN_DEBUG "Successfully registered to rpmsg_bus\n");
 	return 0;
 
 }
