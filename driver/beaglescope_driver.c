@@ -24,6 +24,7 @@ struct beaglescope_state {
 
 
 static const struct iio_info beaglescope_info = {
+	.driver_module = THIS_MODULE,
 };
 
 
