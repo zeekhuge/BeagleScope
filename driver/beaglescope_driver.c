@@ -61,6 +61,7 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpmsg_dev)
 	return 0;
 
 error_device_register:
+	devm_iio_device_free(&rpmsg_dev->dev, indio_dev);
 error_ret:
 	return ret;
 }
@@ -72,6 +73,7 @@ static void beaglescope_driver_remove(struct rpmsg_channel *rpmsg_dev)
 
 	indio_dev = dev_get_drvdata(&rpmsg_dev->dev);
 	devm_iio_device_unregister(&rpmsg_dev->dev, indio_dev);
+	devm_iio_device_free(&rpmsg_dev->dev, indio_dev);
 }
 
 
