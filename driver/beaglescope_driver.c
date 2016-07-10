@@ -27,12 +27,25 @@ static const struct iio_info beaglescope_info = {
 	.driver_module = THIS_MODULE,
 };
 
+/* beaglescope_adc_channels - structure that holds information about the
+   channels that are present on the adc */
+static const struct iio_chan_spec beaglescope_adc_channels[] = {
+	{
+		.type = IIO_VOLTAGE,
+		.indexed = 1,
+		.channel = 0,
+		.info_mask_separate = BIT(IIO_CHAN_INFO_RAW),
+	},
+};
+
 /**
  * beaglescope_driver_probe() - function gets invoked when the rpmsg channel
  * as mentioned in the beaglescope_id table
  *
- * The function allocates space for the iio device. It also registers the
- * device to the IIO subsystem.
+ * The function
+ * - allocates space for the IIO device
+ * - registers the device to the IIO subsystem
+ * - exposes the sys entries according to the channels info
  */
 static int beaglescope_driver_probe (struct rpmsg_channel *rpmsg_dev)
 {
@@ -57,6 +70,8 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpmsg_dev)
 	indio_dev->dev.parent = &rpmsg_dev->dev;
 	indio_dev->name = id->name;
 	indio_dev->info = &beaglescope_info;
+	indio_dev->channels = beaglescope_adc_channels;
+	indio_dev->num_channels = ARRAY_SIZE(beaglescope_adc_channels);
 
 	ret = devm_iio_device_register(&rpmsg_dev->dev, indio_dev);
 	if (ret < 0) {
