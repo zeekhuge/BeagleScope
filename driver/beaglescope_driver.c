@@ -22,12 +22,18 @@ struct beaglescope_state {
 	struct rpmsg_channel *rpdev;
 };
 
-
+/* beaglescope_info - Structure contains constant data about the driver */
 static const struct iio_info beaglescope_info = {
 	.driver_module = THIS_MODULE,
 };
 
-
+/**
+ * beaglescope_driver_probe() - function gets invoked when the rpmsg channel
+ * as mentioned in the beaglescope_id table
+ *
+ * The function allocates space for the iio device. It also registers the
+ * device to the IIO subsystem.
+ */
 static int beaglescope_driver_probe (struct rpmsg_channel *rpmsg_dev)
 {
 	int ret;
@@ -66,7 +72,10 @@ error_ret:
 	return ret;
 }
 
-
+/**
+ * beaglescope_driver_remove() - function gets invoked when the rpmsg device is
+ * removed
+ */
 static void beaglescope_driver_remove(struct rpmsg_channel *rpmsg_dev)
 {
 	struct iio_dev *indio_dev;
@@ -76,14 +85,16 @@ static void beaglescope_driver_remove(struct rpmsg_channel *rpmsg_dev)
 	devm_iio_device_free(&rpmsg_dev->dev, indio_dev);
 }
 
-
+/* beaglescope_id - Structure that holds the channel name for which this driver
+   should be probed */
 static const struct rpmsg_device_id beaglescope_id[] = {
 		{ .name = "beaglescope" },
 		{ },
 };
 MODULE_DEVICE_TABLE(rpmsg, beaglescope_id);
 
-
+/* beaglescope_driver - The structure containing the pointers to read/write
+   functions to send data to the pru */
 static struct rpmsg_driver beaglescope_driver= {
 	.drv.name	= KBUILD_MODNAME,
 	.drv.owner	= THIS_MODULE,
@@ -92,10 +103,15 @@ static struct rpmsg_driver beaglescope_driver= {
 	.remove		= beaglescope_driver_remove,
 };
 
-
+/**
+ * beaglescope_driver_init() : driver driver registration
+ *
+ * The initialization function gets invoked when the driver is loaded. The
+ * function registers itself on the virtio_rpmsg_bus and it gets invoked when
+ * the pru creates a channel named as in the beaglescope_id structure.
+ */
 static int __init beaglescope_driver_init(void)
 {
-
 	int ret;
 
 	ret = register_rpmsg_driver(&beaglescope_driver);
@@ -105,16 +121,17 @@ static int __init beaglescope_driver_init(void)
 	}
 
 	pr_debug("Successfully registered to rpmsg_bus\n");
-	return 0;
 
+	return 0;
 }
 
-
+/**
+ * beaglescope_driver_exit() - function invoked when the driver is unloaded
+ */
 static void __exit beaglescope_driver_exit(void)
 {
 	unregister_rpmsg_driver (&beaglescope_driver);
 }
-
 
 module_init(beaglescope_driver_init);
 module_exit(beaglescope_driver_exit);
