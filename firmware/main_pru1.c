@@ -207,6 +207,12 @@
  *	Delay cycles between consecutive
  *	sample = CYCLE_BTWN_SAMPLE
  *
+ *	Delay cycles after the CLK_PIN is HIGH and
+ *	before the sample is taken = CYCLE_BEFORE_SAMPLE
+ *
+ *	Delay cycles after the sample is taken and before
+ *	the CLK_PIN is LOW = CYCLE_AFTER_SAMPLE
+ *
  *	The regiter that contains some miscellaneous
  *	sampling configuration data = MISC_CONFIG_DATA
  *
@@ -221,6 +227,8 @@
  *		done
  */
 #define CYCLE_BTWN_SAMPLE	SAMPLING_CONFIG_0
+#define CYCLE_BEFORE_SAMPLE	SAMPLING_CONFIG_1.w0
+#define CYCLE_AFTER_SAMPLE	SAMPLING_CONFIG_1.w2
 #define MISC_CONFIG_DATA	SAMPLING_CONFIG_1
 #define SAMPLING_WIDTH		MISC_CONFIG_DATA.b2
 #define SAMPLING_START_BIT	31
