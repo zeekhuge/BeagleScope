@@ -22,11 +22,6 @@ struct beaglescope_state {
 	struct rpmsg_channel *rpdev;
 };
 
-/* beaglescope_info - Structure contains constant data about the driver */
-static const struct iio_info beaglescope_info = {
-	.driver_module = THIS_MODULE,
-};
-
 /* beaglescope_adc_channels - structure that holds information about the
    channels that are present on the adc */
 static const struct iio_chan_spec beaglescope_adc_channels[] = {
@@ -36,6 +31,11 @@ static const struct iio_chan_spec beaglescope_adc_channels[] = {
 		.channel = 0,
 		.info_mask_separate = BIT(IIO_CHAN_INFO_RAW),
 	},
+};
+
+/* beaglescope_info - Structure contains constant data about the driver */
+static const struct iio_info beaglescope_info = {
+	.driver_module = THIS_MODULE,
 };
 
 /**
