@@ -72,26 +72,6 @@ $E2?:
 			.endm
 
 ;********************************************************************
-; DELAY_IMMEDIATE_3n : The macro to cause a delay of 'cycles_3n'
-; cycles.
-;
-; cycles_3n	: The number of cycles to delay. This should be an
-; immediate value and should always be a multiple of 3.
-;
-; NOTE:	The least delay value that can be given to the macro is 3
-;
-
-DELAY_IMMEDIATE_3n      .macro cycles_3n
-                        LDI32   R0, cycles_3n - 3
-                        NOP
-                        QBEQ    $E3?, R0, 0
-$M3?:                   SUB     R0, R0, 3
-                        NOP
-                        QBNE    $M3?, R0, 0
-$E3?:
-                        .endm
-
-;********************************************************************
 ; DELAY_SAMPLE : To cause delay between samples. The macro takes
 ; CYCLE_BTWN_SAMPLE value, given by PRU0 and uses it to cause a delay
 ; between consecutive samples.
