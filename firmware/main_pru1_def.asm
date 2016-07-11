@@ -96,12 +96,14 @@ $E3?:
 ; CYCLE_BTWN_SAMPLE value, given by PRU0 and uses it to cause a delay
 ; between consecutive samples.
 ;
-; Instruction: "SUB R0.wo, CYCLE_BTWN_SAMPLE, 3 + 2 + 2"
+; Instruction: "SUB R0.wo, CYCLE_BTWN_SAMPLE, 1 + 2 + 2 + 2"
 ; 	The instruction takes value from CYCLE_BTWN_SAMPLE value from
-; SAMPLIG.CONFIG data and subtracts 3+2+2 cycles.
+; SAMPLIG.CONFIG data and subtracts 1+2+2+2 cycles.
 ;
-; 3 cycles  = already being delayed between each sample in
-; SAMPLE_CYCLE_n macro either by DELAY_CYCLES_3n  macro, or by other
+; 1 cycle = used for the CHECK_INT macro
+;
+; 2 cycles = already being delayed between each sample in
+; SAMPLE_CYCLE_n macro either by DELAY_CYCLES_2n  macro, or by other
 ; macros
 ;
 ; 2 cycles = being used by the SUB and QBEQ instructions in the
@@ -119,7 +121,7 @@ $E3?:
 ;
 
 DELAY_SAMPLE    .macro
-                SUB     R0, SAMPLING_CONFIG_CYCLE_BTWN_SAMPLE, 3 + 2 + 2
+                SUB     R0, SAMPLING_CONFIG_CYCLE_BTWN_SAMPLE, 1 + 2 + 2 + 2
                 QBEQ    $ES?, R0, 0
 $MS?:           SUB     R0, R0, 2
                 QBNE    $MS?, R0, 0
