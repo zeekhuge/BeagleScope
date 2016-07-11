@@ -18,6 +18,10 @@
 #include <linux/poll.h>
 #include <linux/iio/iio.h>
 
+#define RPMSG_BUF_SIZE		(512)
+#define MAX_BLOCKS_IN_FIFO	(32)
+#define FIFO_BLOCK_SIZE		RPMSG_BUF_SIZE
+
 struct beaglescope_state {
 	struct rpmsg_channel *rpdev;
 	struct kfifo data_fifo;
@@ -93,6 +97,13 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpmsg_dev)
 	indio_dev->channels = beaglescope_adc_channels;
 	indio_dev->num_channels = ARRAY_SIZE(beaglescope_adc_channels);
 
+	ret = kfifo_alloc(&st->data_fifo, MAX_BLOCKS_IN_FIFO * FIFO_BLOCK_SIZE,
+			  GFP_KERNEL);
+	if (ret) {
+		dev_err(&rpmsg_dev->dev, "Unable to allocate data for fifo");
+		goto erro_allocate_fifo;
+	}
+
 	ret = devm_iio_device_register(&rpmsg_dev->dev, indio_dev);
 	if (ret < 0) {
 		pr_err("Failed to register with iio\n");
@@ -102,6 +113,8 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpmsg_dev)
 	return 0;
 
 error_device_register:
+	kfifo_free(&st->data_fifo);
+erro_allocate_fifo:
 	devm_iio_device_free(&rpmsg_dev->dev, indio_dev);
 error_ret:
 	return ret;
@@ -114,9 +127,13 @@ error_ret:
 static void beaglescope_driver_remove(struct rpmsg_channel *rpmsg_dev)
 {
 	struct iio_dev *indio_dev;
+	struct beaglescope_state *st;
 
 	indio_dev = dev_get_drvdata(&rpmsg_dev->dev);
+	st = iio_priv(indio_dev);
+
 	devm_iio_device_unregister(&rpmsg_dev->dev, indio_dev);
+	kfifo_free(&st->data_fifo);
 	devm_iio_device_free(&rpmsg_dev->dev, indio_dev);
 }
 
