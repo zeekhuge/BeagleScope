@@ -108,7 +108,7 @@ $ED?
 ;
 
 DELAY_SAMPLE    .macro
-                SUB     R0, SAMPLING_CONFIG_CYCLE_BTWN_SAMPLE, 1 + 2 + 2 + 2
+                SUB     R0, CYCLE_BTWN_SAMPLE, 1 + 2 + 2 + 2
                 QBEQ    $ES?, R0, 0
 $MS?:           SUB     R0, R0, 2
                 QBNE    $MS?, R0, 0
@@ -508,7 +508,7 @@ int_loop:
 
 manage_interrupt:
 	MANAGE_INTERRUPT
-	QBBC	int_loop, SAMPLING_CONFIG_1, SAMPLING_CONFIG_START_BIT
+	QBBC	int_loop, SAMPLING_CONFIG_1, SAMPLING_START_BIT
 
 sample_1:
 	SAMPLE_CYCLE_8
