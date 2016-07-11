@@ -20,6 +20,7 @@
 
 struct beaglescope_state {
 	struct rpmsg_channel *rpdev;
+	struct kfifo data_fifo;
 };
 
 /* beaglescope_adc_channels - structure that holds information about the
@@ -37,6 +38,25 @@ static const struct iio_chan_spec beaglescope_adc_channels[] = {
 static const struct iio_info beaglescope_info = {
 	.driver_module = THIS_MODULE,
 };
+
+/**
+ * beaglescope_driver_cb() - function gets invoked each time the pru sends some
+ * data.
+ *
+ * The function uses a kernel fifo buffer, to save the data. Data can later be
+ * read from this buffer to transfer to the user.
+ */
+static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
+				  int len, void *priv, u32 src)
+{
+	struct beaglescope_state *st;
+	struct iio_dev *indio_dev;
+
+	indio_dev = dev_get_drvdata(&rpdev->dev);
+	st = iio_priv(indio_dev);
+
+	kfifo_in(&st->data_fifo, data, len);
+}
 
 /**
  * beaglescope_driver_probe() - function gets invoked when the rpmsg channel
