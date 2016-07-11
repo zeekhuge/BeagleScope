@@ -25,6 +25,7 @@
 struct beaglescope_state {
 	struct rpmsg_channel *rpdev;
 	struct kfifo data_fifo;
+	int data_idx;
 };
 
 /* beaglescope_adc_channels - structure that holds information about the
@@ -59,7 +60,14 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 	indio_dev = dev_get_drvdata(&rpdev->dev);
 	st = iio_priv(indio_dev);
 
+	if (st->data_idx == MAX_BLOCKS_IN_FIFO){
+		dev_err(&rpdev->dev, "Data fifo is full, data will not be saved in fifo");
+		return;
+	}
+
 	kfifo_in(&st->data_fifo, data, len);
+
+	st->data_idx = st->data_idx + 1;
 }
 
 /**
