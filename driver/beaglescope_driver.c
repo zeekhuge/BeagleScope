@@ -26,6 +26,7 @@ struct beaglescope_state {
 	struct rpmsg_channel *rpdev;
 	struct kfifo data_fifo;
 	int data_idx;
+	u32 data_length[MAX_BLOCKS_IN_FIFO];
 };
 
 /* beaglescope_adc_channels - structure that holds information about the
@@ -54,6 +55,7 @@ static const struct iio_info beaglescope_info = {
 static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 				  int len, void *priv, u32 src)
 {
+	u32 length;
 	struct beaglescope_state *st;
 	struct iio_dev *indio_dev;
 
@@ -65,8 +67,9 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 		return;
 	}
 
-	kfifo_in(&st->data_fifo, data, len);
+	length = kfifo_in(&st->data_fifo, data, len);
 
+	st->data_length[st->data_idx] = length;
 	st->data_idx = st->data_idx + 1;
 }
 
