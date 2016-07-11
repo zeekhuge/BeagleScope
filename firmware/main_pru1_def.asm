@@ -63,6 +63,22 @@ DELAY_2	.macro
 	.endm
 
 ;********************************************************************
+; THE_DELAY : The macro to cause a configurable delay
+
+; cycles : The number of cycles to be delayed. This number should
+; always be an odd number (1, 3, 5, ..)
+;
+
+THE_DELAY	.macro cycles
+		QBEQ	$ED?, cycles, 1
+		SUB	R0, cycles, 3
+		QBEQ	$ED?, R0, 0
+$MD?		SUB	R0, R0, 2
+		QBNE	$MD?, R0, 0
+$ED?
+		.endm
+
+;********************************************************************
 ; DELAY_SAMPLE : To cause delay between samples. The macro takes
 ; CYCLE_BTWN_SAMPLE value, given by PRU0 and uses it to cause a delay
 ; between consecutive samples.
