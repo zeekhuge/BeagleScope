@@ -207,6 +207,9 @@
  *	Delay cycles between consecutive
  *	sample = CYCLE_BTWN_SAMPLE
  *
+ *	The regiter that contains some miscellaneous
+ *	sampling configuration data = MISC_CONFIG_DATA
+ *
  *	Width of the sampling data =
  *		SAMPLING_WIDTH
  *
@@ -218,7 +221,8 @@
  *		done
  */
 #define CYCLE_BTWN_SAMPLE	SAMPLING_CONFIG_0
-#define SAMPLING_WIDTH		SAMPLING_CONFIG_1.b2
+#define MISC_CONFIG_DATA	SAMPLING_CONFIG_1
+#define SAMPLING_WIDTH		MISC_CONFIG_DATA.b2
 #define SAMPLING_START_BIT	31
 
 register uint32_t __R30;
