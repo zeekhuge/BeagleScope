@@ -79,27 +79,27 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
  * - registers the device to the IIO subsystem
  * - exposes the sys entries according to the channels info
  */
-static int beaglescope_driver_probe (struct rpmsg_channel *rpmsg_dev)
+static int beaglescope_driver_probe (struct rpmsg_channel *rpdev)
 {
 	int ret;
 	struct iio_dev *indio_dev;
 	struct beaglescope_state *st;
 	struct rpmsg_device_id *id;
 
-	dev_dbg(&rpmsg_dev->dev, "Driver probed\n");
+	dev_dbg(&rpdev->dev, "Driver probed\n");
 
-	indio_dev = devm_iio_device_alloc(&rpmsg_dev->dev, sizeof(*st));
+	indio_dev = devm_iio_device_alloc(&rpdev->dev, sizeof(*st));
 	if (!indio_dev) {
 		ret = -ENOMEM;
 		goto error_ret;
 	}
 
-	id = &rpmsg_dev->id;
+	id = &rpdev->id;
 	st = iio_priv(indio_dev);
 
-	dev_set_drvdata(&rpmsg_dev->dev, indio_dev);
+	dev_set_drvdata(&rpdev->dev, indio_dev);
 
-	indio_dev->dev.parent = &rpmsg_dev->dev;
+	indio_dev->dev.parent = &rpdev->dev;
 	indio_dev->name = id->name;
 	indio_dev->info = &beaglescope_info;
 	indio_dev->channels = beaglescope_adc_channels;
@@ -108,11 +108,11 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpmsg_dev)
 	ret = kfifo_alloc(&st->data_fifo, MAX_BLOCKS_IN_FIFO * FIFO_BLOCK_SIZE,
 			  GFP_KERNEL);
 	if (ret) {
-		dev_err(&rpmsg_dev->dev, "Unable to allocate data for fifo");
+		dev_err(&rpdev->dev, "Unable to allocate data for fifo");
 		goto erro_allocate_fifo;
 	}
 
-	ret = devm_iio_device_register(&rpmsg_dev->dev, indio_dev);
+	ret = devm_iio_device_register(&rpdev->dev, indio_dev);
 	if (ret < 0) {
 		pr_err("Failed to register with iio\n");
 		goto error_device_register;
@@ -123,7 +123,7 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpmsg_dev)
 error_device_register:
 	kfifo_free(&st->data_fifo);
 erro_allocate_fifo:
-	devm_iio_device_free(&rpmsg_dev->dev, indio_dev);
+	devm_iio_device_free(&rpdev->dev, indio_dev);
 error_ret:
 	return ret;
 }
@@ -132,17 +132,17 @@ error_ret:
  * beaglescope_driver_remove() - function gets invoked when the rpmsg device is
  * removed
  */
-static void beaglescope_driver_remove(struct rpmsg_channel *rpmsg_dev)
+static void beaglescope_driver_remove(struct rpmsg_channel *rpdev)
 {
 	struct iio_dev *indio_dev;
 	struct beaglescope_state *st;
 
-	indio_dev = dev_get_drvdata(&rpmsg_dev->dev);
+	indio_dev = dev_get_drvdata(&rpdev->dev);
 	st = iio_priv(indio_dev);
 
-	devm_iio_device_unregister(&rpmsg_dev->dev, indio_dev);
+	devm_iio_device_unregister(&rpdev->dev, indio_dev);
 	kfifo_free(&st->data_fifo);
-	devm_iio_device_free(&rpmsg_dev->dev, indio_dev);
+	devm_iio_device_free(&rpdev->dev, indio_dev);
 }
 
 /* beaglescope_id - Structure that holds the channel name for which this driver
