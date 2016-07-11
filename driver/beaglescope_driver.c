@@ -63,7 +63,7 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 	st = iio_priv(indio_dev);
 
 	if (st->data_idx == MAX_BLOCKS_IN_FIFO){
-		dev_err(&rpdev->dev, "Data fifo is full, data will not be saved in fifo");
+		dev_err(&rpdev->dev, "Data fifo is full, data will not be saved in fifo\n");
 		return;
 	}
 
@@ -111,7 +111,7 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpdev)
 	ret = kfifo_alloc(&st->data_fifo, MAX_BLOCKS_IN_FIFO * FIFO_BLOCK_SIZE,
 			  GFP_KERNEL);
 	if (ret) {
-		dev_err(&rpdev->dev, "Unable to allocate data for fifo");
+		dev_err(&rpdev->dev, "Unable to allocate data for fifo\n");
 		goto erro_allocate_fifo;
 	}
 
