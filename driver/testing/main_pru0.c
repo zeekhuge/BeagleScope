@@ -105,7 +105,11 @@ void main(void)
 			/* Receive all available messages, multiple messages can be sent per kick */
 			while (pru_rpmsg_receive(&transport, &src, &dst, payload, &len) == PRU_RPMSG_SUCCESS) {
 				/* Echo the message back to the same address from which we just received */
-				pru_rpmsg_send(&transport, dst, src, payload, len);
+				while (1) {
+					pru_rpmsg_send(&transport, dst, src, "TEST",
+					       sizeof("TEST"));
+					__delay_cycles(100000000);
+				}
 			}
 		}
 	}
