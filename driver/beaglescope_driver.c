@@ -163,6 +163,7 @@ static struct rpmsg_driver beaglescope_driver= {
 	.drv.owner	= THIS_MODULE,
 	.id_table	= beaglescope_id,
 	.probe		= beaglescope_driver_probe,
+	.callback	= beaglescope_driver_cb,
 	.remove		= beaglescope_driver_remove,
 };
 
