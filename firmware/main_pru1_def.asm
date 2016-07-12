@@ -217,21 +217,26 @@ TAKE_SAMPLE_8	.macro RX
 
 ;********************************************************************
 ; SAMPLE_CYCLE_8 : The macro is a complete sampling cycle that takes
-; one sample using TAKE_SAMPLE_8 macro, delays for < delay by
-; CHECK_INT macro + 2 + delay caused by DELAY_SAMPLE > cycles and
+; one sample using TAKE_SAMPLE_8 macro, delays for [ delay by
+; CHECK_INT macro + 2 + delay caused by DELAY_SAMPLE ] cycles and
 ; then takes another sample.
 ;
-; The delay after the last sample of the cycle is
-; < delay by DELAY_SAMPLE macro >. This is because in main,
-; SAMPLE_CYCLE_8 is followed by TRANSFER_AND_TELL and a CHECK_INT
-; macro or JMP instruction, both of which take one cycle. Thus
-; maintaining a delay of < 3 + delay by DELAY_SAMPLE macro > cycles
-; between each sample.
+; The macro uses .loop, .break and .endloop directive to instruct the
+; assembler to compile the enclosed code section in loop. Thus, the
+; value of 'BANK_ID' changes as the compiler compiles the code, from
+; SP_BANK_0 to SP_BANK_2. For each loop the macro samples 44 bytes of
+; data and then transfers it to the 'BANK_ID' bank, except for the
+; last loop where it breaks off the loop and goes back to the 'main:'
+; where the TRANSFER_AND_TELL macro and the JMP instruction get
+; executed to  repeat the loop.
 ;
 ; In all, this macro takes 44 samples of 1byte each.
 ;
 
-SAMPLE_CYCLE_8	.macro
+SAMPLE_CYCLE_8	.macro BANK_ID
+
+		.loop
+
 		TAKE_SAMPLE_8           BYTE_1
 
 		CHECK_INT
@@ -494,6 +499,13 @@ SAMPLE_CYCLE_8	.macro
 
 		DELAY_SAMPLE
 
+		.break	BANK_ID = SP_BANK_2
+
+		CHECK_INT
+		TRANSFER_AND_TELL BANK_ID
+
+		.eval	1 + BANK_ID, BANK_ID
+		.endloop
 		.endm
 
 ;*******************************************************
@@ -510,19 +522,9 @@ manage_interrupt:
 	MANAGE_INTERRUPT
 	QBBC	int_loop, MISC_CONFIG_DATA, SAMPLING_START_BIT
 
-sample_1:
-	SAMPLE_CYCLE_8
-	CHECK_INT
-	TRANSFER_AND_TELL SP_BANK_0
-
-sample_2:
-	SAMPLE_CYCLE_8
-	CHECK_INT
-	TRANSFER_AND_TELL SP_BANK_1
-
-sample_3:
-	SAMPLE_CYCLE_8
+sample_start:
+	SAMPLE_CYCLE_8 SP_BANK_0
 	TRANSFER_AND_TELL SP_BANK_2
-	JMP sample_1
+	JMP sample_start
 
 	HALT
