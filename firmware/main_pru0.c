@@ -183,7 +183,7 @@ void main(void)
 
 
 				message_number++;
-				if (message_number > 1){
+				if (message_number > 2){
 					__R31 = R31_P0_to_P1;
 					message_number = 0;
 					bank_to_use = SP_BANK_0;
