@@ -216,6 +216,9 @@
  *	The regiter that contains some miscellaneous
  *	sampling configuration data = MISC_CONFIG_DATA
  *
+ *	The register that indicates the sample reading
+ *	mode out of RAW_READ and BLOCK_READ modes = READ_MODE
+ *
  *	Width of the sampling data =
  *		SAMPLING_WIDTH
  *
@@ -230,6 +233,7 @@
 #define CYCLE_BEFORE_SAMPLE	SAMPLING_CONFIG_1.w0
 #define CYCLE_AFTER_SAMPLE	SAMPLING_CONFIG_1.w2
 #define MISC_CONFIG_DATA	SAMPLING_CONFIG_2
+#define READ_MODE		MISC_CONFIG_DATA.b0
 #define SAMPLING_WIDTH		MISC_CONFIG_DATA.b2
 #define SAMPLING_START_BIT	31
 

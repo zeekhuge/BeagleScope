@@ -111,6 +111,20 @@
 #define DATA_SIZE			44
 #define FAKE_DATA			0x38
 
+/*
+ * Sample data read mode
+ * The constants are used for different sampling data modes.
+ *
+ * RAW_READ : In this mode, PRU1 reads a single instantaneous sample and sends
+ * the sample value to the PRU0, which is further sent to the kernel
+ *
+ * BLOCK_READ : This mode of reading the samples is a continuous mode and PRU1
+ * keeps on sampling the data until the SAMPLING_START_BIT is cleared.
+ * The samples are read and sent to PRU0 in blocks of 44 bytes, which are
+ * further sent to the kernel
+ */
+#define RAW_READ	0
+#define BLOCK_READ	1
 
 
 #endif /* _COMMON_PRU_DEFS_ */

@@ -520,11 +520,18 @@ int_loop:
 
 manage_interrupt:
 	MANAGE_INTERRUPT
-	QBBC	int_loop, MISC_CONFIG_DATA, SAMPLING_START_BIT
+	QBEQ	sample_start, READ_MODE, BLOCK_READ
+
+take_raw:
+	TAKE_SAMPLE_8 BYTE_1
+	TRANSFER_AND_TELL SP_BANK_0
+	JMP int_loop
 
 sample_start:
+	QBBC int_loop, MISC_CONFIG_DATA, SAMPLING_START_BIT
+sample_loop:
 	SAMPLE_CYCLE_8 SP_BANK_0
 	TRANSFER_AND_TELL SP_BANK_2
-	JMP sample_start
+	JMP sample_loop
 
 	HALT

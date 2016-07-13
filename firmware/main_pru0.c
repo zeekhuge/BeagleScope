@@ -79,6 +79,11 @@ void main(void)
 	 * message_number : variable to monitor the number of messages sent by
 	 * user over the char device file /dev/rpmsg30
 	 *
+	 * read_mode : pointer to the msg_from_kernel buffer, to extract the
+	 * read mode
+	 *
+	 * raw_data : the variable to save single sample data in RAW_READ mode
+	 *
 	 * bank_to_use : variable to choose one out of the 3 banks to read data
 	 * from.
 	 *
@@ -89,6 +94,8 @@ void main(void)
 	uint16_t src, dst, len;
 	volatile uint8_t *status;
 	uint8_t message_number=0;
+	uint8_t *read_mode = (uint8_t *)msg_from_kernel;
+	uint32_t raw_data;
 	uint8_t bank_to_use = SP_BANK_0;
 	int32_t *ptr_to_shared_mem = (int32_t *) SHARED_MEM_ADDR;
 
@@ -196,6 +203,10 @@ void main(void)
 		 * PRU0 to read it.
 		 * Following steps are executed in this part of code:
 		 * - Clear the status of INT_P1_to_P0 interrupt.
+		 * - Checks the read mode
+		 * - In case the read mode is RAW_READ, it reads single value
+		 * from SP_BANK_0 bank, and sends that to the kernel
+		 * - In case read mode is BLOCK_READ :
 		 * - Acquire data from one of the 3 banks, depending upon the value
 		 * of bank_to_use.
 		 * - Updates value of bank_to_use variable.
@@ -207,32 +218,45 @@ void main(void)
 
 			CT_INTC.SICR_bit.STS_CLR_IDX = INT_P1_to_P0;
 
-			switch(bank_to_use){
-				case SP_BANK_0:
-					__xin(SP_BANK_0,
-					      DATA_START_REGISTER_NUMBER,
-					      0,
-					      sampled_data) ;
-				break;
-				case SP_BANK_1:
-					__xin(SP_BANK_1,
-					      DATA_START_REGISTER_NUMBER,
-					      0,
-					      sampled_data) ;
-				break;
-				case SP_BANK_2:
-					__xin(SP_BANK_2,
-					      DATA_START_REGISTER_NUMBER,
-					      0,
-					      sampled_data) ;
+			if (*read_mode == RAW_READ) {
+				__xin(SP_BANK_0,
+				      DATA_START_REGISTER_NUMBER,
+				      0,
+				      raw_data);
+
+				pru_rpmsg_send(&transport,
+						dst, src,
+						&raw_data,
+						sizeof(raw_data));
+			}else{
+
+				switch(bank_to_use){
+					case SP_BANK_0:
+						__xin(SP_BANK_0,
+						      DATA_START_REGISTER_NUMBER,
+						      0,
+						      sampled_data) ;
+					break;
+					case SP_BANK_1:
+						__xin(SP_BANK_1,
+						      DATA_START_REGISTER_NUMBER,
+						      0,
+						      sampled_data) ;
+					break;
+					case SP_BANK_2:
+						__xin(SP_BANK_2,
+						      DATA_START_REGISTER_NUMBER,
+						      0,
+						      sampled_data) ;
+				}
+
+				bank_to_use = (bank_to_use == SP_BANK_2) ? SP_BANK_0 : bank_to_use + 1  ;
+
+				pru_rpmsg_send(&transport,
+					       dst, src,
+					       sampled_data.input_data,
+					       sizeof(sampled_data));
 			}
-
-			bank_to_use = (bank_to_use == SP_BANK_2) ? SP_BANK_0 : bank_to_use + 1  ;
-
-			pru_rpmsg_send(&transport,
-				       dst, src,
-				       sampled_data.input_data,
-				       sizeof(sampled_data));
 		}
 	}
 
