@@ -22,8 +22,14 @@
 #define MAX_BLOCKS_IN_FIFO	(32)
 #define FIFO_BLOCK_SIZE		RPMSG_BUF_SIZE
 
+/* Configuration data, needed to be send to PRUs to get a raw sample */
+#define BEAGLESCOPE_CONFIG_RAW_READ_0	0x00000000
+#define BEAGLESCOPE_CONFIG_RAW_READ_1	0x00000000
+#define BEAGLESCOPE_CONFIG_RAW_READ_2	0x00000000
+
 struct beaglescope_state {
 	struct rpmsg_channel *rpdev;
+	struct device *dev;
 	struct kfifo data_fifo;
 	int data_idx;
 	u32 data_length[MAX_BLOCKS_IN_FIFO];
@@ -39,6 +45,54 @@ static const struct iio_chan_spec beaglescope_adc_channels[] = {
 		.info_mask_separate = BIT(IIO_CHAN_INFO_RAW),
 	},
 };
+
+/**
+ * beaglescope_raw_read_from_pru() - function to read a single sample data
+ *
+ * The function writes necessary configuration data to the PRUs and waits for
+ * the pru to provide back with the data. The configuration brings the PRUs in
+ * single sample mode.
+ *
+ * At this point, the function might read stale values, as it uses kfifo, which
+ * might already have values of the last sampling process.
+ * Further developments will remove this 'bad' thing about this function.
+ */
+static int beaglescope_raw_read_from_pru(struct iio_dev *indio_dev, u32
+					  *raw_data)
+{
+	int ret;
+	struct beaglescope_state *st;
+	static u32 beaglescope_config_raw_read[][1]={
+		{BEAGLESCOPE_CONFIG_RAW_READ_0},
+		{BEAGLESCOPE_CONFIG_RAW_READ_1},
+		{BEAGLESCOPE_CONFIG_RAW_READ_2}};
+
+
+	st = iio_priv(indio_dev);
+
+
+	ret = rpmsg_send(st->rpdev, (void *)beaglescope_config_raw_read[0],
+			    sizeof(u32));
+	if (ret)
+		dev_err(st->dev, "beaglescope raw read from pru configuration 0 failed");
+
+	ret = rpmsg_send(st->rpdev, (void *)beaglescope_config_raw_read[1],
+			    sizeof(u32));
+	if (ret)
+		dev_err(st->dev, "beaglescope raw read from pru configuration 1 failed");
+
+	ret = rpmsg_send(st->rpdev, (void *)beaglescope_config_raw_read[2],
+			    sizeof(u32));
+	if (ret)
+		dev_err(st->dev, "beaglescope raw read from pru configuration 2 failed");
+
+	while(kfifo_is_empty(&st->data_fifo));
+
+	kfifo_out(&st->data_fifo, raw_data, sizeof(u32));
+
+	return ret;
+
+}
 
 /* beaglescope_info - Structure contains constant data about the driver */
 static const struct iio_info beaglescope_info = {
@@ -99,6 +153,9 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpdev)
 
 	id = &rpdev->id;
 	st = iio_priv(indio_dev);
+
+	st->rpdev = rpdev;
+	st->dev = &rpdev->dev;
 
 	dev_set_drvdata(&rpdev->dev, indio_dev);
 
