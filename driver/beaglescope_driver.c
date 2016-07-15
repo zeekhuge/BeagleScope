@@ -74,17 +74,17 @@ static int beaglescope_raw_read_from_pru(struct iio_dev *indio_dev, u32
 	ret = rpmsg_send(st->rpdev, (void *)beaglescope_config_raw_read[0],
 			    sizeof(u32));
 	if (ret)
-		dev_err(st->dev, "beaglescope raw read from pru configuration 0 failed");
+		dev_err(st->dev, "beaglescope raw read from pru configuration 0 failed\n");
 
 	ret = rpmsg_send(st->rpdev, (void *)beaglescope_config_raw_read[1],
 			    sizeof(u32));
 	if (ret)
-		dev_err(st->dev, "beaglescope raw read from pru configuration 1 failed");
+		dev_err(st->dev, "beaglescope raw read from pru configuration 1 failed\n");
 
 	ret = rpmsg_send(st->rpdev, (void *)beaglescope_config_raw_read[2],
 			    sizeof(u32));
 	if (ret)
-		dev_err(st->dev, "beaglescope raw read from pru configuration 2 failed");
+		dev_err(st->dev, "beaglescope raw read from pru configuration 2 failed\n");
 
 	while(kfifo_is_empty(&st->data_fifo));
 
