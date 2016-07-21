@@ -62,6 +62,12 @@ void main(void)
 	 * wraps the virtual rings that are used to communicate. It is
 	 * a required argument for many RPMsg APIS
 	 *
+
+	 * pru1_switch : the pointer used as a switch to turn off and on the
+	 * sampling process. The pointer points to the starting of the
+	 * msg_from_kernel buffer.
+	 *
+	 *
 	 * src : variable to save address of the rpmsg channel that sends data to
 	 * the pru. This is the rpmsg channel on kernel side.
 	 *
@@ -89,6 +95,7 @@ void main(void)
 	 * PRU-ICSS.
 	 */
 	struct pru_rpmsg_transport transport;
+	uint8_t *pru1_switch = (uint8_t *)msg_from_kernel;
 	uint16_t src, dst, len;
 	volatile uint8_t *status;
 	uint8_t *read_mode = (uint8_t *)&msg_from_kernel[2];
@@ -191,9 +198,21 @@ void main(void)
 					       &msg_from_kernel[2],
 					       sizeof(int32_t));
 
-				*(ptr_to_shared_mem) = msg_from_kernel[0];
-				*(ptr_to_shared_mem + 1) = msg_from_kernel[1];
-				*(ptr_to_shared_mem + 2) = msg_from_kernel[2];
+				if (len < 12){
+					if (*(pru1_switch) == 0){
+						msg_from_kernel[2] &= (uint32_t)
+							(1 << 0);
+					} else {
+						msg_from_kernel[2] |= (uint32_t)
+							(1 << 31);
+					}
+
+					*(ptr_to_shared_mem + 2) = msg_from_kernel[2];
+				}else{
+					*(ptr_to_shared_mem) = msg_from_kernel[0];
+					*(ptr_to_shared_mem + 1) = msg_from_kernel[1];
+					*(ptr_to_shared_mem + 2) = msg_from_kernel[2];
+				}
 
 
 					__R31 = R31_P0_to_P1;
