@@ -232,295 +232,56 @@ TAKE_SAMPLE_8	.macro RX
 
 ;********************************************************************
 ; SAMPLE_CYCLE_8 : The macro is a complete sampling cycle that takes
-; one sample using TAKE_SAMPLE_8 macro, delays for [ delay by
-; CHECK_INT macro + 2 + delay caused by DELAY_SAMPLE ] cycles and
-; then takes another sample.
+; one sample using, delays for some cycles and then takes another
+; sample. The delay it causes are not optimized yet.
 ;
-; The macro uses .loop, .break and .endloop directive to instruct the
-; assembler to compile the enclosed code section in loop. Thus, the
-; value of 'BANK_ID' changes as the compiler compiles the code, from
-; SP_BANK_0 to SP_BANK_2. For each loop the macro samples 44 bytes of
-; data and then transfers it to the 'BANK_ID' bank, except for the
-; last loop where it breaks off the loop and goes back to the 'main:'
-; where the TRANSFER_AND_TELL macro and the JMP instruction get
-; executed to  repeat the loop.
+; The macro uses MVI instruction and the MVI_POINTER register to move
+; 1 byte from R31.b0 to the address pointed to by MVI_POINTER in a
+; loop.
+; The value of MVI_POINTER also gets incremented every time the MVI
+; instruction is executed.
 ;
-; In all, this macro takes 44 samples of 1byte each.
+; After one $SC1? loop, the two more sample taking steps are performed
+; separately. The Delay of 2 cycles that we have in every sampling
+; step, is used to reset the values of COUNTER_REG and MVI_POINTER and
+; to execute TRANSFER_AND_TELL macro in these two separate sample
+; taking steps.
+;
+; The macro transfer this data to only one bank, given by the BANK_ID
+; variable.
+;
+; In all, this macro takes 44 samples of 1byte at each and transfers
+; that data to the scratch pad bank given by BANK_ID variable
 ;
 
 SAMPLE_CYCLE_8	.macro BANK_ID
 
-		.loop
-
-		TAKE_SAMPLE_8           BYTE_1
-
+		LDI	COUNTER_REG, 0
+		LDI	MVI_POINTER, &DATA_START_REGISTER
+$SC1?:
+		CLK_TOGGLE
+		MVIB 	*MVI_POINTER++, R31.b0
+		CLK_TOGGLE
 		CHECK_INT
-		DELAY_2
+		DELAY_SAMPLE
+		ADD	COUNTER_REG, COUNTER_REG, 1
+		QBNE 	$SC1?, COUNTER_REG, 44-2
+
+		CLK_TOGGLE
+		MOV	BYTE_43, R31.b0
+		CLK_TOGGLE
+		CHECK_INT
+		LDI	COUNTER_REG, 0
+		LDI	MVI_POINTER, &DATA_START_REGISTER
 		DELAY_SAMPLE
 
-		TAKE_SAMPLE_8           BYTE_2
-
-		CHECK_INT
-		DELAY_2
+		CLK_TOGGLE
+		MOV	BYTE_43, R31.b0
+		CLK_TOGGLE
 		DELAY_SAMPLE
 
-		TAKE_SAMPLE_8           BYTE_3
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_4
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_5
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_6
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_7
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_8
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_9
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_10
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_11
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_12
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_13
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_14
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_15
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_16
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_17
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_18
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_19
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_20
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_21
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_22
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_23
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_24
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_25
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_26
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_27
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_28
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_29
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_30
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_31
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_32
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_33
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_34
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_35
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_36
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_37
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_38
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_39
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_40
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_41
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_42
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_43
-
-		CHECK_INT
-		DELAY_2
-		DELAY_SAMPLE
-
-		TAKE_SAMPLE_8           BYTE_44
-
-		DELAY_SAMPLE
-
-		.break	BANK_ID = SP_BANK_2
-
-		CHECK_INT
 		TRANSFER_AND_TELL BANK_ID
-
-		.eval	1 + BANK_ID, BANK_ID
-		.endloop
+		JMP $SC1?
 		.endm
 
 ;*******************************************************
@@ -546,7 +307,4 @@ sample_start:
 	QBBC int_loop, MISC_CONFIG_DATA, SAMPLING_START_BIT
 sample_loop:
 	SAMPLE_CYCLE_8 SP_BANK_0
-	TRANSFER_AND_TELL SP_BANK_2
-	JMP sample_loop
-
 	HALT

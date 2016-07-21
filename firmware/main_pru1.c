@@ -106,17 +106,26 @@
  */
 #define TEMP_VARIABLE_0		R0
 
-#define USED_IN_CODE_1		R1	/* the first byte of the register is
-					as a pointer for MVI instruction. All
-					other bytes remain unused*/
+#define USED_IN_CODE_0		R1 /* the first byte of the register is
+				as a pointer for MVI instruction. All
+				other bytes remain unused*/
 
-#define MVI_POINTER		R1.b0	/* the first byte of the R1 register is
-					as a pointer for instruction MVI */
+#define MVI_POINTER		R1.b0 /* the first byte of the R1 register is
+				as a pointer for instruction MVI */
 
 #define TEMP_VARIABLE_1		R2
-#define UNUSED_FOR_NOW_0	R3
-#define UNUSED_FOR_NOW_1	R4
-#define UNUSED_FOR_NOW_2	R5
+
+#define USED_IN_CODE_1		R3 /* the first word, that is 16 bits, are
+				reserved for COUNTER_REG that is used in the
+				SAMPLE_CYCLE_8 macro. The 2nd word remains
+				unused */
+
+#define COUNTER_REG		R3.w0 /* this 16 bit region is reserved to work
+				as a counter register. It will be used in the
+				loop inside the SAMPLE_CYCLE_8 macro. */
+
+#define UNUSED_FOR_NOW_0	R4
+#define UNUSED_FOR_NOW_1	R5
 #define BYTE_1			R6.b0
 #define BYTE_2			R6.b1
 #define BYTE_3			R6.b2
