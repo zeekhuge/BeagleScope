@@ -306,9 +306,85 @@ $SC1?:
 		THE_DELAY CYCLE_AFTER_SAMPLE
 		CLK_TOGGLE
 		THE_DELAY CYCLE_BTWN_SAMPLE
-		TRANSFER_AND_TELL BANK_ID
+		CHECK_INT
+		TRANSFER_AND_TELL SP_BANK_0
 		;****** Separate sample taking step 2 ends
 
+		;****** SC2 loop starts
+$SC2?:
+		CLK_TOGGLE
+		THE_DELAY CYCLE_BEFORE_SAMPLE
+		MVIB 	*MVI_POINTER++, R31.b0
+		THE_DELAY CYCLE_AFTER_SAMPLE
+		CLK_TOGGLE
+		CHECK_INT
+		THE_DELAY CYCLE_BTWN_SAMPLE
+		ADD	COUNTER_REG, COUNTER_REG, 1
+		QBNE 	$SC2?, COUNTER_REG, 44-2
+		;****** SC2 loop ends
+
+		;****** Separate sample taking step 1 starts
+		CLK_TOGGLE
+		THE_DELAY CYCLE_BEFORE_SAMPLE
+		MOV	BYTE_43, R31.b0
+		THE_DELAY CYCLE_AFTER_SAMPLE
+		CLK_TOGGLE
+		CHECK_INT
+		LDI	COUNTER_REG, 0
+		LDI	MVI_POINTER, &DATA_START_REGISTER
+		THE_DELAY CYCLE_BTWN_SAMPLE
+		;****** Separate sample taking step 1 ends
+
+		;****** Separate sample taking step 2 starts
+		CLK_TOGGLE
+		THE_DELAY CYCLE_BEFORE_SAMPLE
+		MOV	BYTE_43, R31.b0
+		THE_DELAY CYCLE_AFTER_SAMPLE
+		CLK_TOGGLE
+		THE_DELAY CYCLE_BTWN_SAMPLE
+		CHECK_INT
+		TRANSFER_AND_TELL SP_BANK_1
+		;****** Separate sample taking step 2 ends
+
+		;****** SC3 loop starts
+$SC3?:
+		CLK_TOGGLE
+		THE_DELAY CYCLE_BEFORE_SAMPLE
+		MVIB 	*MVI_POINTER++, R31.b0
+		THE_DELAY CYCLE_AFTER_SAMPLE
+		CLK_TOGGLE
+		CHECK_INT
+		THE_DELAY CYCLE_BTWN_SAMPLE
+		ADD	COUNTER_REG, COUNTER_REG, 1
+		QBNE 	$SC3?, COUNTER_REG, 44-2
+		;****** SC3 loop ends
+
+		;****** Separate sample taking step 1 starts
+		CLK_TOGGLE
+		THE_DELAY CYCLE_BEFORE_SAMPLE
+		MOV	BYTE_43, R31.b0
+		THE_DELAY CYCLE_AFTER_SAMPLE
+		CLK_TOGGLE
+		CHECK_INT
+		LDI	COUNTER_REG, 0
+		LDI	MVI_POINTER, &DATA_START_REGISTER
+		THE_DELAY CYCLE_BTWN_SAMPLE
+		;****** Separate sample taking step 1 ends
+
+		;****** Separate sample taking step 2 starts
+		CLK_TOGGLE
+		THE_DELAY CYCLE_BEFORE_SAMPLE
+		MOV	BYTE_43, R31.b0
+		THE_DELAY CYCLE_AFTER_SAMPLE
+		CLK_TOGGLE
+		THE_DELAY CYCLE_BTWN_SAMPLE
+		TRANSFER_AND_TELL SP_BANK_2
+		;****** Separate sample taking step 2 ends
+
+		; JMP instruction to form an infinite loop
+		; the CHECK_INT step was removed from the above
+		; sample taking step to compensate for cycle
+		; usage by this JMP instruction
 		JMP $SC1?
 		.endm
 
