@@ -63,6 +63,17 @@
 #define SECR0			PRU_ICSS_INTC + 0x280
 
 /*
+ * PRUSS_PRU_CTRL registers
+ * PRUSS_PRU_CTRL_START : The starting address of the PRUSS_PRU_CTRL register
+ *			file
+ * CONTROL_REG		: The offset of the CONTROL register in the
+ *			PRUSS_PRU_CTRL register file.
+ *
+ */
+#define PRUSS_PRU_CTRL_START	0x00024000
+#define CONTROL_REG		0
+
+/*
  * Clock Pin
  * The bit of the R30 register where Clock pin of the external device
  * is connected
