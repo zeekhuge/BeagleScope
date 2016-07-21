@@ -114,9 +114,9 @@
 					as a pointer for instruction MVI */
 
 #define TEMP_VARIABLE_1		R2
-#define UNUSED_FOR_NOW_2	R3
-#define UNUSED_FOR_NOW_3	R4
-#define UNUSED_FOR_NOW_4	R5
+#define UNUSED_FOR_NOW_0	R3
+#define UNUSED_FOR_NOW_1	R4
+#define UNUSED_FOR_NOW_2	R5
 #define BYTE_1			R6.b0
 #define BYTE_2			R6.b1
 #define BYTE_3			R6.b2
