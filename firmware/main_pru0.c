@@ -202,8 +202,8 @@ void main(void)
 				}
 
 
-					__R31 = R31_P0_to_P1;
-					bank_to_use = SP_BANK_0;
+				__R31 = R31_P0_to_P1;
+				bank_to_use = SP_BANK_0;
 			}
 		}
 		/* Part of the code that gets executed when INT_P1_to_P0
