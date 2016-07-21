@@ -75,9 +75,12 @@
  * purposes. This section of the file describes and declares usage of
  * the register.
  *
- * USED_IN_CODE_N : These registers are used inside the code to help
- * perform various operations, and should not be used for a specific
- * purpose.
+ * TEMP_VARIABLE_N : These registers are used inside the code as temporary
+ * variables to help perform various operations, and should not be used for a specific
+ * purpose. There is no gaurantee that their value will remain same between
+ * macro calls.
+ *
+ * USED_IN_CODE_1 : These registers are used in code. Read specific comments.
  *
  * UNUSED_FOR_NOW_N : The registers are not being used for any
  * purpose and are free to be used for other operations/tasks.
@@ -90,9 +93,16 @@
  * CONTROL_REGISTER_N : These register are not meant for normal use.
  * They are control register and have very specific usage.
  */
-#define USED_IN_CODE_0		R0 // Register R0 and R1 are being
-#define USED_IN_CODE_1		R1 // used in the code
-#define UNUSED_FOR_NOW_1	R2
+#define TEMP_VARIABLE_0		R0
+
+#define USED_IN_CODE_1		R1	/* the first byte of the register is
+					as a pointer for MVI instruction. All
+					other bytes remain unused*/
+
+#define MVI_POINTER		R1.b0	/* the first byte of the R1 register is
+					as a pointer for instruction MVI */
+
+#define TEMP_VARIABLE_1		R2
 #define UNUSED_FOR_NOW_2	R3
 #define UNUSED_FOR_NOW_3	R4
 #define UNUSED_FOR_NOW_4	R5

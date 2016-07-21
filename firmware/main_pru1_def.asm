@@ -35,8 +35,8 @@ BLINK	.macro
 
 INIT	.macro
 	LDI32 R30, 0x00000000
-	LDI32 R0, INT_P0_to_P1
-	SBCO &R0, CONST_PRU_ICSS_INTC, SICR_offset, 4
+	LDI32 TEMP_VARIABLE_0, INT_P0_to_P1
+	SBCO &TEMP_VARIABLE_0, CONST_PRU_ICSS_INTC, SICR_offset, 4
 	.endm
 
 ;********************************************************************
@@ -44,13 +44,13 @@ INIT	.macro
 ;	cycle
 ;
 ; The macro essentially consumes one system cycle in subtracting 0
-; from the content of R0 register and put the result back in R0
+; from the content of TEMP_VARIABLE_0 register and put the result back in TEMP_VARIABLE_0
 ; register. This do not changes anything but just consumes up one
 ; single system clock cycle.
 ;
 
 NOP	.macro
-	SUB	R0, R0, 0
+	SUB	TEMP_VARIABLE_0, TEMP_VARIABLE_0, 0
 	.endm
 
 ;********************************************************************
@@ -71,10 +71,10 @@ DELAY_2	.macro
 
 THE_DELAY	.macro cycles
 		QBEQ	$ED?, cycles, 1
-		SUB	R0, cycles, 3
-		QBEQ	$ED?, R0, 0
-$MD?		SUB	R0, R0, 2
-		QBNE	$MD?, R0, 0
+		SUB	TEMP_VARIABLE_0, cycles, 3
+		QBEQ	$ED?, TEMP_VARIABLE_0, 0
+$MD?		SUB	TEMP_VARIABLE_0, TEMP_VARIABLE_0, 2
+		QBNE	$MD?, TEMP_VARIABLE_0, 0
 $ED?
 		.endm
 
@@ -83,7 +83,7 @@ $ED?
 ; CYCLE_BTWN_SAMPLE value, given by PRU0 and uses it to cause a delay
 ; between consecutive samples.
 ;
-; Instruction: "SUB R0.wo, CYCLE_BTWN_SAMPLE, 1 + 2 + 2 + 2"
+; Instruction: "SUB TEMP_VARIABLE_0, CYCLE_BTWN_SAMPLE, 1 + 2 + 2 + 2"
 ; 	The instruction takes value from CYCLE_BTWN_SAMPLE value from
 ; SAMPLIG.CONFIG data and subtracts 1+2+2+2 cycles.
 ;
@@ -108,10 +108,10 @@ $ED?
 ;
 
 DELAY_SAMPLE    .macro
-                SUB     R0, CYCLE_BTWN_SAMPLE, 1 + 2 + 2 + 2
-                QBEQ    $ES?, R0, 0
-$MS?:           SUB     R0, R0, 2
-                QBNE    $MS?, R0, 0
+                SUB     TEMP_VARIABLE_0, CYCLE_BTWN_SAMPLE, 1 + 2 + 2 + 2
+                QBEQ    $ES?, TEMP_VARIABLE_0, 0
+$MS?:           SUB     TEMP_VARIABLE_0, TEMP_VARIABLE_0, 2
+                QBNE    $MS?, TEMP_VARIABLE_0, 0
 $ES?:
                 .endm
 
@@ -161,10 +161,10 @@ $A?:		QBBC	$A?, R31, HOST_PRU0_TO_PRU1_CB
 ;
 
 MANAGE_INTERRUPT	.macro
-			LDI32	R0, INT_P0_to_P1
-			SBCO	&R0, CONST_PRU_ICSS_INTC, SICR_offset, 4
-			LDI32	R1, SHARED_MEM_ADDR
-			LBBO	&SAMPLING_CONFIG_START, R1, 0, SAMPLING_CONFIG_LENGTH
+			LDI32	TEMP_VARIABLE_0, INT_P0_to_P1
+			SBCO	&TEMP_VARIABLE_0, CONST_PRU_ICSS_INTC, SICR_offset, 4
+			LDI32	TEMP_VARIABLE_1, SHARED_MEM_ADDR
+			LBBO	&SAMPLING_CONFIG_START, TEMP_VARIABLE_1, 0, SAMPLING_CONFIG_LENGTH
 			.endm
 
 ;********************************************************************
