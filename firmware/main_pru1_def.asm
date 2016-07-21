@@ -80,8 +80,14 @@ DELAY_2	.macro
 ;********************************************************************
 ; THE_DELAY : The macro to cause a configurable delay
 
-; cycles : The number of cycles to be delayed. This number should
-; always be an odd number (1, 3, 5, ..)
+; cycles : The register that contains the number of cycles to be
+; delayed. The content of the register will be unaltered. To do this
+; the macro uses TEMP_VARIABLE_0 as the output register for the first
+; SUB instruction.
+;
+; The macro can produce a delay of only odd number of cycles.
+; Therefore the value contained in the 'cycles' should always be an
+; odd number (1, 3, 5, ..)
 ;
 
 THE_DELAY	.macro cycles
