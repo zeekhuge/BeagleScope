@@ -185,19 +185,6 @@ void main(void)
 					      &len
 					      ) == PRU_RPMSG_SUCCESS) {
 
-				pru_rpmsg_send(&transport,
-					       dst, src,
-					       &msg_from_kernel[0],
-					       sizeof(int32_t));
-				pru_rpmsg_send(&transport,
-					       dst, src,
-					       &msg_from_kernel[1],
-					       sizeof(int32_t));
-				pru_rpmsg_send(&transport,
-					       dst, src,
-					       &msg_from_kernel[2],
-					       sizeof(int32_t));
-
 				if (len < 12){
 					if (*(pru1_switch) == 0){
 						msg_from_kernel[2] &= (uint32_t)
