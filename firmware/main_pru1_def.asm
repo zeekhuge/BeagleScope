@@ -39,6 +39,21 @@ INIT	.macro
 	SBCO &TEMP_VARIABLE_0, CONST_PRU_ICSS_INTC, SICR_offset, 4
 	.endm
 
+
+;********************************************************************
+; SINGLE_STEP_MODE : To change from continuous to single_step_mode
+;
+; The macro does the required configuration to change the mode of PRU
+; from continuous mode to single_step mode.
+;
+
+SINGLE_STEP_MODE	.macro
+			LDI32	TEMP_VARIABLE_0, PRUSS_PRU_CTRL_START
+			LBBO	&R2, TEMP_VARIABLE_0, CONTROL_REG, 4
+			OR	R2, R2.b1, 1
+			SBBO	&R2, TEMP_VARIABLE_0, CONTROL_REG, 4
+			.endm
+
 ;********************************************************************
 ; NOP :	Null operation macro to produce a delay of one
 ;	cycle
