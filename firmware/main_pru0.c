@@ -76,8 +76,6 @@ void main(void)
 	 * initialized with VIRTIO_CONFIG_S_DRIVER_OK by kernel once kernel is
 	 * ready to receive messages over the rpmsg channel.
 	 *
-	 * message_number : variable to monitor the number of messages sent by
-	 * user over the char device file /dev/rpmsg30
 	 *
 	 * read_mode : pointer to the msg_from_kernel buffer, to extract the
 	 * read mode
@@ -93,8 +91,7 @@ void main(void)
 	struct pru_rpmsg_transport transport;
 	uint16_t src, dst, len;
 	volatile uint8_t *status;
-	uint8_t message_number=0;
-	uint8_t *read_mode = (uint8_t *)msg_from_kernel;
+	uint8_t *read_mode = (uint8_t *)&msg_from_kernel[2];
 	uint32_t raw_data;
 	uint8_t bank_to_use = SP_BANK_0;
 	int32_t *ptr_to_shared_mem = (int32_t *) SHARED_MEM_ADDR;
@@ -185,16 +182,22 @@ void main(void)
 					       dst, src,
 					       &msg_from_kernel[0],
 					       sizeof(int32_t));
+				pru_rpmsg_send(&transport,
+					       dst, src,
+					       &msg_from_kernel[1],
+					       sizeof(int32_t));
+				pru_rpmsg_send(&transport,
+					       dst, src,
+					       &msg_from_kernel[2],
+					       sizeof(int32_t));
 
-				*(ptr_to_shared_mem + message_number) = msg_from_kernel[0];
+				*(ptr_to_shared_mem) = msg_from_kernel[0];
+				*(ptr_to_shared_mem + 1) = msg_from_kernel[1];
+				*(ptr_to_shared_mem + 2) = msg_from_kernel[2];
 
 
-				message_number++;
-				if (message_number > 2){
 					__R31 = R31_P0_to_P1;
-					message_number = 0;
 					bank_to_use = SP_BANK_0;
-				}
 			}
 		}
 		/* Part of the code that gets executed when INT_P1_to_P0
