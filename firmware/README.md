@@ -16,7 +16,7 @@ To compile :
 To compile and install the firmware on the PRUs :
 
     $ make install
-To configurable P8_46 as output and mux it to PRU
+To configure P8_46 as output and mux it to PRU
 
     $ config-pin P8_46 pruout
     
@@ -45,10 +45,10 @@ Thus as the above demo of sampling process suggest, the total time period is = C
 
 ##### Important points
 * The least value of CYCLE_BEFORE_SAMPLE, CYCLE_AFTER_SAMPLE and CYCLE_BTWN_SAMPLE can be 1
-* The value of CYCLE_BEFORE_SAMPLE, CYCLE_AFTER_SAMPLE and CYCLE_BTWN_SAMPLE should always be a odd number.
+* The value of CYCLE_BEFORE_SAMPLE, CYCLE_AFTER_SAMPLE and CYCLE_BTWN_SAMPLE should always be an odd number.
 
 ### Testing the firmware
-To test the firmware, configuration data needs to be send to the PRUs from kernel space using he character file '/dev/rpmsg_pru30'.
+To test the firmware, configuration data needs to be send to the PRUs from kernel space using the character file '/dev/rpmsg_pru30'.
 
 This can be a bit difficult/confusing because of the way raw data is send thorough character device files.
 
@@ -75,7 +75,7 @@ This can be a bit difficult/confusing because of the way raw data is send thorou
     
         \x81\x96\x98\x00\ xcd\xab\ x02\x01
         
-    appending the constant MISC_CONFIG_DATA the message to be send becomes :
+    appending the constant MISC_CONFIG_DATA the message to be send becomes (notice the spaces have been removed) :
 
         \x81\x96\x98\x00\xcd\xab\x02\x01\x01\x00\x00\x80
         
