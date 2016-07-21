@@ -247,6 +247,14 @@ TAKE_SAMPLE_8	.macro RX
 ; The value of MVI_POINTER also gets incremented every time the MVI
 ; instruction is executed.
 ;
+; THE_DELAY macro follows all the CLK_TOGGLE previous to the MVIB or
+; MOV instruction. And All the MOV or MVIB instruction that take data
+; sample are also followed by THE_DELAY macro. The delay that they
+; produce is of CYCLE_BEFORE_SAMPLE and CYCLE_AFTER_SAMPLE cycles
+; respectively. The values of these register come from the
+; configuration data send by the user. Thus these delays can be used
+; to produce a variable clock duty cycle.
+;
 ; After one $SC1? loop, the two more sample taking steps are performed
 ; separately. The Delay of 2 cycles that we have in every sampling
 ; step, is used to reset the values of COUNTER_REG and MVI_POINTER and
@@ -262,31 +270,45 @@ TAKE_SAMPLE_8	.macro RX
 
 SAMPLE_CYCLE_8	.macro BANK_ID
 
+		;****** Initialization required for this macro
 		LDI	COUNTER_REG, 0
 		LDI	MVI_POINTER, &DATA_START_REGISTER
+
+		;****** SC1 loop starts
 $SC1?:
 		CLK_TOGGLE
+		THE_DELAY CYCLE_BEFORE_SAMPLE
 		MVIB 	*MVI_POINTER++, R31.b0
+		THE_DELAY CYCLE_AFTER_SAMPLE
 		CLK_TOGGLE
 		CHECK_INT
 		THE_DELAY CYCLE_BTWN_SAMPLE
 		ADD	COUNTER_REG, COUNTER_REG, 1
 		QBNE 	$SC1?, COUNTER_REG, 44-2
+		;****** SC1 loop ends
 
+		;****** Separate sample taking step 1 starts
 		CLK_TOGGLE
+		THE_DELAY CYCLE_BEFORE_SAMPLE
 		MOV	BYTE_43, R31.b0
+		THE_DELAY CYCLE_AFTER_SAMPLE
 		CLK_TOGGLE
 		CHECK_INT
 		LDI	COUNTER_REG, 0
 		LDI	MVI_POINTER, &DATA_START_REGISTER
 		THE_DELAY CYCLE_BTWN_SAMPLE
+		;****** Separate sample taking step 1 ends
 
+		;****** Separate sample taking step 2 starts
 		CLK_TOGGLE
+		THE_DELAY CYCLE_BEFORE_SAMPLE
 		MOV	BYTE_43, R31.b0
+		THE_DELAY CYCLE_AFTER_SAMPLE
 		CLK_TOGGLE
 		THE_DELAY CYCLE_BTWN_SAMPLE
-
 		TRANSFER_AND_TELL BANK_ID
+		;****** Separate sample taking step 2 ends
+
 		JMP $SC1?
 		.endm
 
