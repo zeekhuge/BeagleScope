@@ -55,17 +55,17 @@ This can be a bit difficult/confusing because of the way raw data is send thorou
 * Assume :
     * CYCLE_BTWN_SAMPLE = 0x00989681 = 00989681 
     * CYCLE_BEFORE_SAMPLE = 0xabcd = abcd
-    * CYCLE_AFTER_SAMPLE = 0x0102 = 0102
+    * CYCLE_AFTER_SAMPLE = 0x0103 = 0103
 
 * Then swap their bytes
     * CYCLE_BTWN_SAMPLE = 81969800 
     * CYCLE_AFTER_SAMPLE = cdab
-    * CYCLE_BEFORE_SAMPLE = 0201
+    * CYCLE_BEFORE_SAMPLE = 0301
 
 * Format suitable to be used with echo
     * CYCLE_BTWN_SAMPLE = \x81\x96\x98\x00 
     * CYCLE_AFTER_SAMPLE = \xcd\xab
-    * CYCLE_BEFORE_SAMPLE = \x02\x01
+    * CYCLE_BEFORE_SAMPLE = \x03\x01
 
 * write them to the char device file using the sequence
 
@@ -73,12 +73,12 @@ This can be a bit difficult/confusing because of the way raw data is send thorou
 
     ie, for this example it will be :
     
-        \x81\x96\x98\x00\ xcd\xab\ x02\x01
+        \x81\x96\x98\x00\ xcd\xab\ x03\x01
         
     appending the constant MISC_CONFIG_DATA the message to be send becomes (notice the spaces have been removed) :
 
-        \x81\x96\x98\x00\xcd\xab\x02\x01\x01\x00\x00\x80
+        \x81\x96\x98\x00\xcd\xab\x03\x01\x01\x00\x00\x80
         
     To send it execute following command:
     
-        echo -e '\x81\x96\x98\x00\xcd\xab\x02\x01\x01\x00\x00\x80' > /dev/rpmsg_pru30 && xxd -c 4 /dev/rpmsg_pru30
+        echo -e '\x81\x96\x98\x00\xcd\xab\x03\x01\x01\x00\x00\x80' > /dev/rpmsg_pru30 && xxd -c 4 /dev/rpmsg_pru30
