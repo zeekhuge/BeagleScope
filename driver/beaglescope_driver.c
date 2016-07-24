@@ -35,9 +35,12 @@
 struct beaglescope_state {
 	struct rpmsg_channel *rpdev;
 	struct device *dev;
+	u32 raw_data;
+	bool got_raw;
 	struct kfifo data_fifo;
 	int data_idx;
 	u32 data_length[MAX_BLOCKS_IN_FIFO];
+	wait_queue_head_t wait_list;
 };
 
 /* beaglescope_adc_channels - structure that holds information about the
@@ -79,8 +82,13 @@ static int beaglescope_raw_read_from_pru(struct iio_dev *indio_dev, u32
 	if (ret)
 		dev_err(st->dev, "beaglescope raw read from pru configuration failed\n");
 
-	return ret;
+	ret = wait_event_interruptible(st->wait_list, st->got_raw);
+	if (ret)
+		return -EINTR;
 
+	*raw_data = st->raw_data;
+
+	return ret;
 }
 
 /* beaglescope_info - Structure contains constant data about the driver */
@@ -96,7 +104,6 @@ static const struct iio_info beaglescope_info = {
 static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 				  int len, void *priv, u32 src)
 {
-	u32 length;
 	struct beaglescope_state *st;
 	struct iio_dev *indio_dev;
 
@@ -105,6 +112,9 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 	indio_dev = dev_get_drvdata(&rpdev->dev);
 	st = iio_priv(indio_dev);
 
+	st->raw_data=*((u32 *)data);
+	st->got_raw = 1;
+	wake_up_interruptible(&st->wait_list);
 }
 
 /**
@@ -150,6 +160,8 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpdev)
 		pr_err("Failed to register with iio\n");
 		goto error_device_register;
 	}
+
+	init_waitqueue_head(&st->wait_list);
 
 	return 0;
 
