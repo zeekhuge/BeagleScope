@@ -67,31 +67,20 @@ static int beaglescope_raw_read_from_pru(struct iio_dev *indio_dev, u32
 {
 	int ret;
 	struct beaglescope_state *st;
-	static u32 beaglescope_config_raw_read[][1]={
-		{BEAGLESCOPE_CONFIG_RAW_READ_0},
-		{BEAGLESCOPE_CONFIG_RAW_READ_1},
-		{BEAGLESCOPE_CONFIG_RAW_READ_2}};
+	static u32 beaglescope_config_raw_read[]={
+		BEAGLESCOPE_CONFIG_RAW_READ_0,
+		BEAGLESCOPE_CONFIG_RAW_READ_1,
+		BEAGLESCOPE_CONFIG_RAW_READ_2};
 
 
 	log_debug("raw_read_from_pru");
 
 	st = iio_priv(indio_dev);
 
-
-	ret = rpmsg_send(st->rpdev, (void *)beaglescope_config_raw_read[0],
+	ret = rpmsg_send(st->rpdev, (void *)beaglescope_config_raw_read,
 			    sizeof(u32));
 	if (ret)
-		dev_err(st->dev, "beaglescope raw read from pru configuration 0 failed\n");
-
-	ret = rpmsg_send(st->rpdev, (void *)beaglescope_config_raw_read[1],
-			    sizeof(u32));
-	if (ret)
-		dev_err(st->dev, "beaglescope raw read from pru configuration 1 failed\n");
-
-	ret = rpmsg_send(st->rpdev, (void *)beaglescope_config_raw_read[2],
-			    sizeof(u32));
-	if (ret)
-		dev_err(st->dev, "beaglescope raw read from pru configuration 2 failed\n");
+		dev_err(st->dev, "beaglescope raw read from pru configuration failed\n");
 
 	while(kfifo_is_empty(&st->data_fifo));
 
