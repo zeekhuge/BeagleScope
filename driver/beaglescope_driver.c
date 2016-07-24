@@ -58,9 +58,6 @@ static const struct iio_chan_spec beaglescope_adc_channels[] = {
  * the pru to provide back with the data. The configuration brings the PRUs in
  * single sample mode.
  *
- * At this point, the function might read stale values, as it uses kfifo, which
- * might already have values of the last sampling process.
- * Further developments will remove this 'bad' thing about this function.
  */
 static int beaglescope_raw_read_from_pru(struct iio_dev *indio_dev, u32
 					  *raw_data)
@@ -82,10 +79,6 @@ static int beaglescope_raw_read_from_pru(struct iio_dev *indio_dev, u32
 	if (ret)
 		dev_err(st->dev, "beaglescope raw read from pru configuration failed\n");
 
-	while(kfifo_is_empty(&st->data_fifo));
-
-	kfifo_out(&st->data_fifo, raw_data, sizeof(u32));
-
 	return ret;
 
 }
@@ -99,8 +92,6 @@ static const struct iio_info beaglescope_info = {
  * beaglescope_driver_cb() - function gets invoked each time the pru sends some
  * data.
  *
- * The function uses a kernel fifo buffer, to save the data. Data can later be
- * read from this buffer to transfer to the user.
  */
 static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 				  int len, void *priv, u32 src)
@@ -114,15 +105,6 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 	indio_dev = dev_get_drvdata(&rpdev->dev);
 	st = iio_priv(indio_dev);
 
-	if (st->data_idx == MAX_BLOCKS_IN_FIFO){
-		dev_err(&rpdev->dev, "Data fifo is full, data will not be saved in fifo\n");
-		return;
-	}
-
-	length = kfifo_in(&st->data_fifo, data, len);
-
-	st->data_length[st->data_idx] = length;
-	st->data_idx = st->data_idx + 1;
 }
 
 /**
@@ -163,13 +145,6 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpdev)
 	indio_dev->channels = beaglescope_adc_channels;
 	indio_dev->num_channels = ARRAY_SIZE(beaglescope_adc_channels);
 
-	ret = kfifo_alloc(&st->data_fifo, MAX_BLOCKS_IN_FIFO * FIFO_BLOCK_SIZE,
-			  GFP_KERNEL);
-	if (ret) {
-		dev_err(&rpdev->dev, "Unable to allocate data for fifo\n");
-		goto erro_allocate_fifo;
-	}
-
 	ret = devm_iio_device_register(&rpdev->dev, indio_dev);
 	if (ret < 0) {
 		pr_err("Failed to register with iio\n");
@@ -179,8 +154,6 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpdev)
 	return 0;
 
 error_device_register:
-	kfifo_free(&st->data_fifo);
-erro_allocate_fifo:
 	devm_iio_device_free(&rpdev->dev, indio_dev);
 error_ret:
 	return ret;
@@ -199,7 +172,6 @@ static void beaglescope_driver_remove(struct rpmsg_channel *rpdev)
 	st = iio_priv(indio_dev);
 
 	devm_iio_device_unregister(&rpdev->dev, indio_dev);
-	kfifo_free(&st->data_fifo);
 	devm_iio_device_free(&rpdev->dev, indio_dev);
 }
 
