@@ -33,6 +33,12 @@ install-driver: driver
 install-testing: testing
 	@cd testing && $(MAKE) install
 
+.PHONY: load
+load:
+	@echo "  -	rmmod beaglescope_driver"
+	@rmmod beaglescope_driver | true
+	@echo "  -	modprobe beaglescope_driver"
+	@modprobe beaglescope_driver
 
 .PHONY: clean
 clean:
