@@ -91,8 +91,31 @@ static int beaglescope_raw_read_from_pru(struct iio_dev *indio_dev, u32
 	return ret;
 }
 
+static int beaglescope_read_raw(struct iio_dev *indio_dev,
+               struct iio_chan_spec const *chan,
+               int *val,
+               int *val2,
+               long mask)
+{
+       u32 regval = 0;
+
+       log_debug("read_raw");
+
+       switch (mask) {
+               case IIO_CHAN_INFO_RAW:
+
+                       beaglescope_raw_read_from_pru(indio_dev, &regval);
+                       *val = regval;
+                       return IIO_VAL_INT;
+               default:
+                       return -EINVAL;
+       }
+
+}
+
 /* beaglescope_info - Structure contains constant data about the driver */
 static const struct iio_info beaglescope_info = {
+	.read_raw = beaglescope_read_raw,
 	.driver_module = THIS_MODULE,
 };
 
