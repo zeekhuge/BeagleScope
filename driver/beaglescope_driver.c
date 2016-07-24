@@ -18,6 +18,11 @@
 #include <linux/poll.h>
 #include <linux/iio/iio.h>
 
+/*
+ * macro to print debug info easily
+ */
+#define log_debug(msg) printk(KERN_DEBUG "%s: %s\n", __FILE__, msg);
+
 #define RPMSG_BUF_SIZE		(512)
 #define MAX_BLOCKS_IN_FIFO	(32)
 #define FIFO_BLOCK_SIZE		RPMSG_BUF_SIZE
@@ -68,6 +73,8 @@ static int beaglescope_raw_read_from_pru(struct iio_dev *indio_dev, u32
 		{BEAGLESCOPE_CONFIG_RAW_READ_2}};
 
 
+	log_debug("raw_read_from_pru");
+
 	st = iio_priv(indio_dev);
 
 
@@ -113,6 +120,8 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 	struct beaglescope_state *st;
 	struct iio_dev *indio_dev;
 
+	log_debug("callback");
+
 	indio_dev = dev_get_drvdata(&rpdev->dev);
 	st = iio_priv(indio_dev);
 
@@ -143,7 +152,7 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpdev)
 	struct beaglescope_state *st;
 	struct rpmsg_device_id *id;
 
-	dev_dbg(&rpdev->dev, "Driver probed\n");
+	log_debug("probe");
 
 	indio_dev = devm_iio_device_alloc(&rpdev->dev, sizeof(*st));
 	if (!indio_dev) {
