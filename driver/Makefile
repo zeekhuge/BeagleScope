@@ -7,7 +7,7 @@
 obj-m += beaglescope_driver.o
 
 KDIR?=/lib/modules/$(shell uname -r)/build
-INSTALL?=/lib/modules/$(shell uname -r)/kerenl/drivers/testing
+INSTALL?=/lib/modules/$(shell uname -r)/kernel/drivers/testing
 OP=$(patsubst %.o,%.ko,$(obj-m))
 MODNAME=$(patsubst %.o,%,$(obj-m))
 
@@ -28,7 +28,7 @@ install-driver: driver
 	@echo "  -	copying $(OP) driver to $(INSTALL)"
 	@cp $(OP) $(INSTALL)
 	@echo "  -	executing depmod -a"
-	@$(shell depmod -a)
+	@depmod -a
 
 install-testing: testing
 	@cd testing && $(MAKE) install
