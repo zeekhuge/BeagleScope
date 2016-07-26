@@ -134,10 +134,67 @@ static int beaglescope_read_raw(struct iio_dev *indio_dev,
 
 }
 
+static int beaglescope_write_raw(struct iio_dev *indio_dev,
+			       struct iio_chan_spec const *chan,
+			       int val,
+			       int val2,
+			       long mask)
+{
+	log_debug("write_raw");
+	return -EINVAL;
+}
+
+
+int beaglescope_read_event_config(struct iio_dev *indio_dev,
+				       const struct iio_chan_spec *chan,
+				       enum iio_event_type type,
+				       enum iio_event_direction dir)
+{
+	log_debug("write_raw");
+	return -EINVAL;
+}
+
+int beaglescope_write_event_config(struct iio_dev *indio_dev,
+					const struct iio_chan_spec *chan,
+					enum iio_event_type type,
+					enum iio_event_direction dir,
+					int state)
+
+{
+	log_debug("write_raw");
+	return -EINVAL;
+}
+int beaglescope_read_event_value(struct iio_dev *indio_dev,
+				      const struct iio_chan_spec *chan,
+				      enum iio_event_type type,
+				      enum iio_event_direction dir,
+				      enum iio_event_info info, int *val,
+				      int *val2)
+
+{
+	log_debug("write_raw");
+	return -EINVAL;
+}
+int beaglescope_write_event_value(struct iio_dev *indio_dev,
+				       const struct iio_chan_spec *chan,
+				       enum iio_event_type type,
+				       enum iio_event_direction dir,
+				       enum iio_event_info info, int val,
+				       int val2)
+{
+	log_debug("write_raw");
+	return -EINVAL;
+}
+
 /* beaglescope_info - Structure contains constant data about the driver */
 static const struct iio_info beaglescope_info = {
 	.read_raw = beaglescope_read_raw,
+	.write_raw = beaglescope_write_raw,
 	.driver_module = THIS_MODULE,
+	.read_event_config = &beaglescope_read_event_config,
+	.write_event_config = &beaglescope_write_event_config,
+	.read_event_value = &beaglescope_read_event_value,
+	.write_event_value = &beaglescope_write_event_value,
 };
 
 /**
@@ -161,6 +218,39 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 	wake_up_interruptible(&st->wait_list);
 }
 
+
+static int beaglescope_buffer_preenable(struct iio_dev *indio_dev)
+{
+	log_debug("preenable");
+	return 0;
+}
+
+static int beaglescope_buffer_postenable(struct iio_dev *indio_dev)
+{
+	log_debug("postenable");
+	return 0;
+}
+
+static int beaglescope_buffer_predisable(struct iio_dev *indio_dev)
+{
+	log_debug("predisable");
+	return 0;
+}
+
+static int beaglescope_buffer_postdisable(struct iio_dev *indio_dev)
+{
+	log_debug("postdisable");
+	return 0;
+}
+
+
+static const struct iio_buffer_setup_ops beaglescope_buffer_setup_ops = {
+	.preenable = &beaglescope_buffer_preenable,
+	.postenable = &beaglescope_buffer_postenable,
+	.predisable = &beaglescope_buffer_predisable,
+	.postdisable = &beaglescope_buffer_postdisable,
+};
+
 /**
  * beaglescope_driver_probe() - function gets invoked when the rpmsg channel
  * as mentioned in the beaglescope_id table
@@ -177,7 +267,6 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpdev)
 	struct beaglescope_state *st;
 	struct rpmsg_device_id *id;
 	struct iio_buffer *buffer;
-
 
 	log_debug("probe");
 
@@ -198,6 +287,8 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpdev)
 	indio_dev->dev.parent = &rpdev->dev;
 	indio_dev->name = id->name;
 	indio_dev->info = &beaglescope_info;
+	indio_dev->setup_ops = &beaglescope_buffer_setup_ops;
+	indio_dev->modes = INDIO_DIRECT_MODE;
 	indio_dev->channels = beaglescope_adc_channels;
 	indio_dev->num_channels = ARRAY_SIZE(beaglescope_adc_channels);
 
