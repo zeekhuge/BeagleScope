@@ -36,7 +36,12 @@
 #define BEAGLESCOPE_CONFIG_RAW_READ_1	0x00000000
 #define BEAGLESCOPE_CONFIG_RAW_READ_2	0x00000000
 
+#define BEAGLESCOPE_CONFIG_RANDOM_BLOCK_READ_0 0x00989681
+#define BEAGLESCOPE_CONFIG_RANDOM_BLOCK_READ_1 0xabcd0103
+#define BEAGLESCOPE_CONFIG_RANDOM_BLOCK_READ_2 0x80000001
+
 #define OFFSET_REF_VDD 2
+
 
 struct beaglescope_state {
 	struct rpmsg_channel *rpdev;
@@ -94,7 +99,7 @@ static int beaglescope_raw_read_from_pru(struct iio_dev *indio_dev, u32
 	st = iio_priv(indio_dev);
 
 	ret = rpmsg_send(st->rpdev, (void *)beaglescope_config_raw_read,
-			    sizeof(u32));
+			    3*sizeof(u32));
 	if (ret)
 		dev_err(st->dev, "beaglescope raw read from pru configuration failed\n");
 
@@ -218,6 +223,37 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 	wake_up_interruptible(&st->wait_list);
 }
 
+static void beaglescope_start_pru_block_read (struct iio_dev *indio_dev )
+{
+	int err;
+	struct beaglescope_state *st;
+	static u32 beaglescope_config_raw_read[]={
+		BEAGLESCOPE_CONFIG_RANDOM_BLOCK_READ_0,
+		BEAGLESCOPE_CONFIG_RANDOM_BLOCK_READ_1,
+		BEAGLESCOPE_CONFIG_RANDOM_BLOCK_READ_2};
+
+	log_debug("raw_read_from_pru");
+
+	st = iio_priv(indio_dev);
+
+	err = rpmsg_send(st->rpdev, (void *)beaglescope_config_raw_read,
+			    3*sizeof(u32));
+	if (err)
+		dev_err(st->dev, "beaglescope raw read from pru configuration failed\n");
+}
+
+static void beaglescope_stop_sampling(struct iio_dev *indio_dev )
+{
+	int err;
+	char stop_val = 0;
+	struct beaglescope_state *st;
+
+	st = iio_priv(indio_dev);
+
+	err = rpmsg_send(st->rpdev, (void *)&stop_val, sizeof(stop_val));
+	if (err)
+		dev_err(st->dev, "failed to stop beaglescope sampling\n");
+}
 
 static int beaglescope_buffer_preenable(struct iio_dev *indio_dev)
 {
@@ -227,12 +263,14 @@ static int beaglescope_buffer_preenable(struct iio_dev *indio_dev)
 
 static int beaglescope_buffer_postenable(struct iio_dev *indio_dev)
 {
+	beaglescope_start_pru_block_read(indio_dev);
 	log_debug("postenable");
 	return 0;
 }
 
 static int beaglescope_buffer_predisable(struct iio_dev *indio_dev)
 {
+	beaglescope_stop_sampling(indio_dev);
 	log_debug("predisable");
 	return 0;
 }
@@ -288,7 +326,7 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpdev)
 	indio_dev->name = id->name;
 	indio_dev->info = &beaglescope_info;
 	indio_dev->setup_ops = &beaglescope_buffer_setup_ops;
-	indio_dev->modes = INDIO_DIRECT_MODE;
+	indio_dev->modes = INDIO_DIRECT_MODE | INDIO_BUFFER_SOFTWARE;
 	indio_dev->channels = beaglescope_adc_channels;
 	indio_dev->num_channels = ARRAY_SIZE(beaglescope_adc_channels);
 
