@@ -17,6 +17,10 @@
 #include <linux/uaccess.h>
 #include <linux/poll.h>
 #include <linux/iio/iio.h>
+#include <linux/iio/buffer.h>
+#include <linux/iio/kfifo_buf.h>
+#include <linux/iio/triggered_buffer.h>
+#include <linux/iio/trigger_consumer.h>
 
 /*
  * macro to print debug info easily
@@ -55,6 +59,14 @@ static const struct iio_chan_spec beaglescope_adc_channels[] = {
 		.info_mask_separate = BIT(IIO_CHAN_INFO_RAW) |
 					BIT(IIO_CHAN_INFO_SCALE)|
 					BIT(IIO_CHAN_INFO_OFFSET),
+		.scan_index =0,
+		.scan_type = {
+			.sign = 'u',
+			.realbits = 10,
+			.storagebits = 16,
+			.shift = 0,
+			.endianness = IIO_LE,
+		},
 	},
 };
 
@@ -164,6 +176,8 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpdev)
 	struct iio_dev *indio_dev;
 	struct beaglescope_state *st;
 	struct rpmsg_device_id *id;
+	struct iio_buffer *buffer;
+
 
 	log_debug("probe");
 
@@ -187,17 +201,27 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpdev)
 	indio_dev->channels = beaglescope_adc_channels;
 	indio_dev->num_channels = ARRAY_SIZE(beaglescope_adc_channels);
 
+	buffer = iio_kfifo_allocate();
+	if (!buffer) {
+		ret = -ENOMEM;
+		goto error_free_device;
+	}
+
+	iio_device_attach_buffer(indio_dev, buffer);
+
 	ret = devm_iio_device_register(&rpdev->dev, indio_dev);
 	if (ret < 0) {
 		pr_err("Failed to register with iio\n");
-		goto error_device_register;
+		goto error_remove_buffer;
 	}
 
 	init_waitqueue_head(&st->wait_list);
 
 	return 0;
 
-error_device_register:
+error_remove_buffer:
+	iio_kfifo_free(indio_dev->buffer);
+error_free_device:
 	devm_iio_device_free(&rpdev->dev, indio_dev);
 error_ret:
 	return ret;
@@ -216,6 +240,7 @@ static void beaglescope_driver_remove(struct rpmsg_channel *rpdev)
 	st = iio_priv(indio_dev);
 
 	devm_iio_device_unregister(&rpdev->dev, indio_dev);
+	iio_kfifo_free(indio_dev->buffer);
 	devm_iio_device_free(&rpdev->dev, indio_dev);
 }
 
