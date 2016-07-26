@@ -32,6 +32,8 @@
 #define BEAGLESCOPE_CONFIG_RAW_READ_1	0x00000000
 #define BEAGLESCOPE_CONFIG_RAW_READ_2	0x00000000
 
+#define OFFSET_REF_VDD 2
+
 struct beaglescope_state {
 	struct rpmsg_channel *rpdev;
 	struct device *dev;
@@ -104,13 +106,18 @@ static int beaglescope_read_raw(struct iio_dev *indio_dev,
        log_debug("read_raw");
 
        switch (mask) {
-               case IIO_CHAN_INFO_RAW:
-
-                       beaglescope_raw_read_from_pru(indio_dev, &regval);
-                       *val = regval;
-                       return IIO_VAL_INT;
-               default:
-                       return -EINVAL;
+       case IIO_CHAN_INFO_RAW:
+	       beaglescope_raw_read_from_pru(indio_dev, &regval);
+	       *val = regval;
+	       return IIO_VAL_INT;
+	case IIO_CHAN_INFO_SCALE:
+	       *val = 1;
+	       return IIO_VAL_INT;
+	case IIO_CHAN_INFO_OFFSET:
+	       *val = - OFFSET_REF_VDD;
+	       return IIO_VAL_INT;
+        default:
+                return -EINVAL;
        }
 
 }
