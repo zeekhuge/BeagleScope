@@ -50,7 +50,9 @@ static const struct iio_chan_spec beaglescope_adc_channels[] = {
 		.type = IIO_VOLTAGE,
 		.indexed = 1,
 		.channel = 0,
-		.info_mask_separate = BIT(IIO_CHAN_INFO_RAW),
+		.info_mask_separate = BIT(IIO_CHAN_INFO_RAW) |
+					BIT(IIO_CHAN_INFO_SCALE)|
+					BIT(IIO_CHAN_INFO_OFFSET),
 	},
 };
 
