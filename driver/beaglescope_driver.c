@@ -41,13 +41,15 @@
 #define BEAGLESCOPE_CONFIG_RANDOM_BLOCK_READ_2 0x80000001
 
 #define OFFSET_REF_VDD 2
-
+#define RAW_READ 0
+#define BLOCK_READ 1
 
 struct beaglescope_state {
 	struct rpmsg_channel *rpdev;
 	struct device *dev;
 	u32 raw_data;
 	bool got_raw;
+	bool read_mode;
 	struct kfifo data_fifo;
 	int data_idx;
 	u32 data_length[MAX_BLOCKS_IN_FIFO];
@@ -98,6 +100,7 @@ static int beaglescope_raw_read_from_pru(struct iio_dev *indio_dev, u32
 
 	st = iio_priv(indio_dev);
 
+	st->read_mode = RAW_READ;
 	ret = rpmsg_send(st->rpdev, (void *)beaglescope_config_raw_read,
 			    3*sizeof(u32));
 	if (ret)
@@ -213,14 +216,20 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 	struct beaglescope_state *st;
 	struct iio_dev *indio_dev;
 
-	log_debug("callback");
+	log_debug("callback - ");
 
 	indio_dev = dev_get_drvdata(&rpdev->dev);
 	st = iio_priv(indio_dev);
 
-	st->raw_data=*((u32 *)data);
-	st->got_raw = 1;
-	wake_up_interruptible(&st->wait_list);
+	if (st->read_mode == RAW_READ){
+		st->raw_data=*((u32 *)data);
+		st->got_raw = 1;
+		log_debug("raw reading");
+		wake_up_interruptible(&st->wait_list);
+	}else{
+		log_debug("pushing to buffer");
+		iio_push_to_buffers(indio_dev, (u32 *) data);
+	}
 }
 
 static void beaglescope_start_pru_block_read (struct iio_dev *indio_dev )
@@ -236,6 +245,7 @@ static void beaglescope_start_pru_block_read (struct iio_dev *indio_dev )
 
 	st = iio_priv(indio_dev);
 
+	st->read_mode = BLOCK_READ;
 	err = rpmsg_send(st->rpdev, (void *)beaglescope_config_raw_read,
 			    3*sizeof(u32));
 	if (err)
