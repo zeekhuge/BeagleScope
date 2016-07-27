@@ -159,6 +159,31 @@ static int beaglescope_stop_sampling_pru(struct iio_dev *indio_dev )
 	return ret;
 }
 
+/*
+ * beaglescope_buffer_postenable - function to do necessay work
+ * just after the buffer gets enabled
+ */
+static int beaglescope_buffer_postenable(struct iio_dev *indio_dev)
+{
+	log_debug("postenable");
+	return 0;
+}
+
+/*
+ * beaglescope_buffer_postenable - function to do necessay work
+ * just before the buffer gets disabled
+ */
+static int beaglescope_buffer_predisable(struct iio_dev *indio_dev)
+{
+	log_debug("predisable");
+	return 0;
+}
+
+static const struct iio_buffer_setup_ops beaglescope_buffer_setup_ops = {
+	.postenable = &beaglescope_buffer_postenable,
+	.predisable = &beaglescope_buffer_predisable,
+};
+
 static int beaglescope_read_raw(struct iio_dev *indio_dev,
                struct iio_chan_spec const *chan,
                int *val,
@@ -250,6 +275,7 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpdev)
 	indio_dev->dev.parent = &rpdev->dev;
 	indio_dev->name = id->name;
 	indio_dev->info = &beaglescope_info;
+	indio_dev->setup_ops = &beaglescope_buffer_setup_ops;
 	indio_dev->modes = INDIO_DIRECT_MODE | INDIO_BUFFER_SOFTWARE;
 	indio_dev->channels = beaglescope_adc_channels;
 	indio_dev->num_channels = ARRAY_SIZE(beaglescope_adc_channels);
