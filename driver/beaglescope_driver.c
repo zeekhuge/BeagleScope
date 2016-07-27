@@ -227,15 +227,22 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 {
 	struct beaglescope_state *st;
 	struct iio_dev *indio_dev;
+	int count;
 
 	log_debug("callback");
 
 	indio_dev = dev_get_drvdata(&rpdev->dev);
 	st = iio_priv(indio_dev);
 
-	st->raw_data=*((u32 *)data);
-	st->got_raw = 1;
-	wake_up_interruptible(&st->wait_list);
+	if (st->read_mode == RAW_READ){
+		st->raw_data=*((u32 *)data);
+		st->got_raw = 1;
+		wake_up_interruptible(&st->wait_list);
+	}else{
+		for (count =0; count < len; count++) {
+			iio_push_to_buffers(indio_dev, &((u8 *)data)[count]);
+		}
+	}
 }
 
 /**
