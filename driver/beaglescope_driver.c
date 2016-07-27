@@ -141,6 +141,24 @@ static int beaglescope_block_read_from_pru (struct iio_dev *indio_dev )
 	return ret;
 }
 
+/*
+ * beaglescope_stop_sampling - to stop sampling process of the PRUS immediately
+ */
+static int beaglescope_stop_sampling_pru(struct iio_dev *indio_dev )
+{
+	int ret;
+	char stop_val = 0;
+	struct beaglescope_state *st;
+
+	st = iio_priv(indio_dev);
+
+	ret = rpmsg_send(st->rpdev, (void *)&stop_val, sizeof(stop_val));
+	if (ret)
+		dev_err(st->dev, "failed to stop beaglescope sampling\n");
+
+	return ret;
+}
+
 static int beaglescope_read_raw(struct iio_dev *indio_dev,
                struct iio_chan_spec const *chan,
                int *val,
