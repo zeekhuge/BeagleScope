@@ -250,6 +250,7 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpdev)
 	indio_dev->dev.parent = &rpdev->dev;
 	indio_dev->name = id->name;
 	indio_dev->info = &beaglescope_info;
+	indio_dev->modes = INDIO_DIRECT_MODE | INDIO_BUFFER_SOFTWARE;
 	indio_dev->channels = beaglescope_adc_channels;
 	indio_dev->num_channels = ARRAY_SIZE(beaglescope_adc_channels);
 
