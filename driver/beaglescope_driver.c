@@ -36,13 +36,21 @@
 #define BEAGLESCOPE_CONFIG_RAW_READ_1	0x00000000
 #define BEAGLESCOPE_CONFIG_RAW_READ_2	0x00000000
 
+#define BEAGLESCOPE_CONFIG_RANDOM_BLOCK_READ_0 0x00989681
+#define BEAGLESCOPE_CONFIG_RANDOM_BLOCK_READ_1 0xabcd0103
+#define BEAGLESCOPE_CONFIG_RANDOM_BLOCK_READ_2 0x80000001
+
 #define OFFSET_REF_VDD 2
+
+#define RAW_READ 0
+#define BLOCK_READ 1
 
 struct beaglescope_state {
 	struct rpmsg_channel *rpdev;
 	struct device *dev;
 	u32 raw_data;
 	bool got_raw;
+	bool read_mode;
 	struct kfifo data_fifo;
 	int data_idx;
 	u32 data_length[MAX_BLOCKS_IN_FIFO];
@@ -103,6 +111,32 @@ static int beaglescope_raw_read_from_pru(struct iio_dev *indio_dev, u32
 		return -EINTR;
 
 	*raw_data = st->raw_data;
+
+	return ret;
+}
+
+/*
+ * beaglescope_start_pru_block_read - to configure the PRUs to BLOCK_READ mode
+ * and start sampling.
+ */
+static int beaglescope_block_read_from_pru (struct iio_dev *indio_dev )
+{
+	int ret;
+	struct beaglescope_state *st;
+	static u32 beaglescope_config_raw_read[]={
+		BEAGLESCOPE_CONFIG_RANDOM_BLOCK_READ_0,
+		BEAGLESCOPE_CONFIG_RANDOM_BLOCK_READ_1,
+		BEAGLESCOPE_CONFIG_RANDOM_BLOCK_READ_2};
+
+	log_debug("raw_read_from_pru");
+
+	st = iio_priv(indio_dev);
+
+	st->read_mode = BLOCK_READ;
+	ret = rpmsg_send(st->rpdev, (void *)beaglescope_config_raw_read,
+			    3*sizeof(u32));
+	if (ret)
+		dev_err(st->dev, "beaglescope raw read from pru configuration failed\n");
 
 	return ret;
 }
