@@ -45,15 +45,18 @@
 #define BLOCK_READ 1
 #define LENGTH_OF_DATA_FROM_PRU 44
 
+struct frequency {
+	int val;
+	int val2;
+};
+
 struct beaglescope_state {
 	struct rpmsg_channel *rpdev;
 	struct device *dev;
 	u32 raw_data;
 	bool got_raw;
 	bool read_mode;
-	struct kfifo data_fifo;
-	int data_idx;
-	u32 data_length[MAX_BLOCKS_IN_FIFO];
+	struct frequency *sampling_frequency ;
 	wait_queue_head_t wait_list;
 };
 
@@ -66,7 +69,8 @@ static const struct iio_chan_spec beaglescope_adc_channels[] = {
 		.channel = 0,
 		.info_mask_separate = BIT(IIO_CHAN_INFO_RAW) |
 					BIT(IIO_CHAN_INFO_SCALE)|
-					BIT(IIO_CHAN_INFO_OFFSET),
+					BIT(IIO_CHAN_INFO_OFFSET)|
+					BIT(IIO_CHAN_INFO_SAMP_FREQ),
 		.scan_index =0,
 		.scan_type = {
 			.sign = 'u',
@@ -77,6 +81,44 @@ static const struct iio_chan_spec beaglescope_adc_channels[] = {
 		},
 	},
 };
+
+//static int get_pru_config(struct frequenct *sampl_freq, bool read_mode, u32 *
+//			  buffer)
+static int get_pru_config(void)
+{
+	u32 buffer[3];
+	u32 temp = 3979924;
+	int read_mode =1;
+	u32 *cycle_between_sample = buffer;
+	u32 *cycle_before_sample = (u32 *)&buffer[1];
+	u32 *cycle_after_sample = ((u32 *)&buffer[2]) ;
+	u32 time_period_ns;
+	u32 actuall_frequency;
+	u32 pru_cycles;
+	u32 extra;
+	int val=3;
+
+	if (read_mode == RAW_READ){
+		buffer[0] =0;
+		buffer[1] =0;
+		buffer[2] =0;
+		return 0;
+	}
+
+	time_period_ns = 1000000000/(temp);
+	pru_cycles = time_period_ns/5;
+	pru_cycles -= 5;
+	extra = pru_cycles%4;
+	pru_cycles = pru_cycles/4;
+	*cycle_between_sample = 2*pru_cycles + 1;
+	*cycle_after_sample = pru_cycles%2?pru_cycles:pru_cycles+1;
+	*cycle_before_sample = pru_cycles%2?pru_cycles:pru_cycles-1;
+	actuall_frequency = 1000000000/ ((*cycle_between_sample +
+					   *cycle_before_sample +
+					   *cycle_after_sample + 5) * 5);
+	pr_err("actuall - %u, between - %u, after - %u, before - %u \n",actuall_frequency ,*cycle_between_sample,*cycle_before_sample,*cycle_after_sample);
+	return actuall_frequency;
+}
 
 /**
  * beaglescope_raw_read_from_pru() - function to read a single sample data
@@ -123,6 +165,9 @@ static int beaglescope_read_raw(struct iio_dev *indio_dev,
                long mask)
 {
        u32 regval = 0;
+       struct beaglescope_state *st;
+
+       st = iio_priv(indio_dev);
 
        log_debug("read_raw");
 
@@ -137,10 +182,13 @@ static int beaglescope_read_raw(struct iio_dev *indio_dev,
 	case IIO_CHAN_INFO_OFFSET:
 	       *val = - OFFSET_REF_VDD;
 	       return IIO_VAL_INT;
+	case IIO_CHAN_INFO_SAMP_FREQ:
+	       *val = st->sampling_frequency->val;
+	       *val = st->sampling_frequency->val2;
+	       return IIO_VAL_INT;
         default:
                 return -EINVAL;
        }
-
 }
 
 static int beaglescope_write_raw(struct iio_dev *indio_dev,
@@ -149,8 +197,20 @@ static int beaglescope_write_raw(struct iio_dev *indio_dev,
 			       int val2,
 			       long mask)
 {
+	struct beaglescope_state *st;
+	st = iio_priv(indio_dev);
+
 	log_debug("write_raw");
+	pr_err("val - %d val2 - %d\n",val, val2);
+
+	switch (mask){
+	case IIO_CHAN_INFO_SAMP_FREQ:
+		st->sampling_frequency->val = val;
+		st->sampling_frequency->val2 = val;
+		return 0;
+	default:
 	return -EINVAL;
+	}
 }
 
 
@@ -361,7 +421,7 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpdev)
 	}
 
 	init_waitqueue_head(&st->wait_list);
-
+	get_pru_config();
 	return 0;
 
 error_remove_buffer:
