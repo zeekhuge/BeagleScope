@@ -88,15 +88,18 @@ static const struct iio_chan_spec beaglescope_adc_channels[] = {
  * get the configuration data for pru
  * that needs to be send for the give sampl_freq and read_mode
  */
-static int get_pru_config(struct frequency *sampl_freq, bool read_mode,
-			  u32 * buffer)
+static int get_pru_config(void)
+//static int get_pru_config(struct frequency *sampl_freq, bool read_mode, u32 * buffer)
 {
+	u32 buffer[3];bool read_mode = BLOCK_READ;u32 tmp = 3527667;
+
 	u32 *cycle_between_sample = buffer;
-	u16 *cycle_before_sample = (u16 *)&buffer[1];
-	u16 *cycle_after_sample = ((u16 *)&buffer[1])+1 ;
+	u32 *cycle_before_sample = (u32 *)&buffer[1];
+	u32 *cycle_after_sample = ((u32 *)&buffer[2]) ;
 	u32 *misc_config_data = &buffer[2];
 	u32 time_period_ns;
 	u32 pru_cycles;
+	u32 extra;
 
 	log_debug("get_pru_config");
 
@@ -108,18 +111,26 @@ static int get_pru_config(struct frequency *sampl_freq, bool read_mode,
 	}
 
 	*misc_config_data = MISC_PRU_CONFIG_BLOCK_READ;
-	time_period_ns = 1000000000/(sampl_freq->val);
+
+	//pr_err("asked for - %u", sampl_freq->val); time_period_ns = 100000000000/(sampl_freq->val);
+	pr_err("asked for - %u", tmp); time_period_ns = 100000000000/(tmp);
+	pr_err("time_perio_ns - %u",time_period_ns);
 	pru_cycles = time_period_ns/5;
-	pru_cycles -= 5;
+	pr_err("pru cycles - %u",pru_cycles);
+	pru_cycles -= 500;
+	extra = pru_cycles%4;
 	pru_cycles = pru_cycles/4;
+	pru_cycles = pru_cycles/100;
+	pr_err("pru cycles - %u",pru_cycles);
+	//pru_cycles = pru_cycles/100;
 	*cycle_between_sample = 2*pru_cycles + 1;
 	*cycle_after_sample = pru_cycles%2?pru_cycles:pru_cycles+1;
 	*cycle_before_sample = pru_cycles%2?pru_cycles:pru_cycles-1;
-	sampl_freq->val = 1000000000/ ((*cycle_between_sample +
+	tmp = 1000000000/((*cycle_between_sample +
 					   *cycle_before_sample +
 					   *cycle_after_sample + 5) * 5);
 	pr_err("actuall - %u, between - %u, after - %u, before - %u \n",
-	       sampl_freq->val ,*cycle_between_sample,*cycle_before_sample,
+	       tmp ,*cycle_between_sample,*cycle_before_sample,
 	       *cycle_after_sample);
 	return 0;
 }
@@ -312,8 +323,8 @@ static void beaglescope_start_pru_block_read (struct iio_dev *indio_dev )
 
 	st = iio_priv(indio_dev);
 
-	get_pru_config(&st->sampling_frequency, BLOCK_READ,
-		       beaglescope_config_raw_read);
+	//get_pru_config(&st->sampling_frequency, BLOCK_READ,
+	//	       beaglescope_config_raw_read);
 	st->read_mode = BLOCK_READ;
 	err = rpmsg_send(st->rpdev, (void *)beaglescope_config_raw_read,
 			    3*sizeof(u32));
@@ -422,6 +433,8 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpdev)
 		pr_err("Failed to register with iio\n");
 		goto error_remove_buffer;
 	}
+
+	get_pru_config();
 
 	init_waitqueue_head(&st->wait_list);
 	return 0;
