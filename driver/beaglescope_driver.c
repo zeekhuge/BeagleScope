@@ -166,7 +166,7 @@ static int beaglescope_stop_sampling_pru(struct iio_dev *indio_dev )
 static int beaglescope_buffer_postenable(struct iio_dev *indio_dev)
 {
 	log_debug("postenable");
-	return 0;
+	return beaglescope_block_read_from_pru(indio_dev);
 }
 
 /*
@@ -176,7 +176,7 @@ static int beaglescope_buffer_postenable(struct iio_dev *indio_dev)
 static int beaglescope_buffer_predisable(struct iio_dev *indio_dev)
 {
 	log_debug("predisable");
-	return 0;
+	return beaglescope_stop_sampling_pru(indio_dev);
 }
 
 static const struct iio_buffer_setup_ops beaglescope_buffer_setup_ops = {
