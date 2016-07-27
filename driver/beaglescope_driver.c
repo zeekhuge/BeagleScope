@@ -43,6 +43,7 @@
 #define OFFSET_REF_VDD 2
 #define RAW_READ 0
 #define BLOCK_READ 1
+#define LENGTH_OF_DATA_FROM_PRU 44
 
 struct beaglescope_state {
 	struct rpmsg_channel *rpdev;
@@ -215,6 +216,7 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 {
 	struct beaglescope_state *st;
 	struct iio_dev *indio_dev;
+	int count;
 
 	log_debug("callback - ");
 
@@ -228,7 +230,11 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 		wake_up_interruptible(&st->wait_list);
 	}else{
 		log_debug("pushing to buffer");
-		iio_push_to_buffers(indio_dev, (u32 *) data);
+		pr_err("len = %d",len);
+		for (count =0; count < len; count++) {
+			log_debug("pxxxxx");
+			iio_push_to_buffers(indio_dev, &((u8 *)data)[count]);
+		}
 	}
 }
 
