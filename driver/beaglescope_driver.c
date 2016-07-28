@@ -48,9 +48,11 @@
 struct beaglescope_state {
 	struct rpmsg_channel *rpdev;
 	struct device *dev;
+	u32 pru_config[3];
 	u32 raw_data;
 	bool got_raw;
 	bool read_mode;
+	int sampling_frequency ;
 	wait_queue_head_t wait_list;
 };
 
