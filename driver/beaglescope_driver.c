@@ -77,6 +77,63 @@ static const struct iio_chan_spec beaglescope_adc_channels[] = {
 	},
 };
 
+/*
+ * set_beaglescope_sampling_frequency - To set the sampling_frequency and save
+ * for the current instance of the device into the beaglescope_state structure
+ *
+ * @st			current beaglescope state instance
+ * @*val		pointer to the required sampling frequency
+ *
+ * Description - The function maps 3 pointers to the differne reqions of the
+ * pru_config buffer. It then store the configuration data into apropriately
+ * pointed regions. The frequency value is converted into:
+ * the time period then to
+ * number of pru cycles
+ * it is then divided into 3 parts, 2 of which are use for the clock on time
+ * (cycle_after/before_sample) and the other (cycle_between_sample) is used for
+ * clock off time.
+ * These 3 values need to be odd (this is PRUs requeirement). Finally the the
+ * resultant configuration value is used to get the resultant frequency, as the
+ * pru cant attain all the frequencies but a large number of frequencies. This
+ * resultant frequency is what saved in the current state of the beaglescope
+ */
+static void set_beaglescope_sampling_frequency(struct beaglescope_state *st,
+					      int *val)
+{
+
+	u32 *cycle_between_sample = st->pru_config;
+	u16 *cycle_before_sample = (u16 *)&st->pru_config[1];
+	u16 *cycle_after_sample = ((u16*)&st->pru_config[1])+1;
+	u32 time_period_ns;
+	u32 pru_cycles;
+	u32 remainder;
+
+	log_debug("set_pru_sampling_frequency");
+
+	time_period_ns = 1000000000/(*val);
+	pru_cycles = time_period_ns/5;
+	pru_cycles -= 5;
+	remainder = pru_cycles%4;
+	pru_cycles = pru_cycles/4;
+	*cycle_between_sample = 2*pru_cycles + (remainder == 3 ? 3 : 1 );
+	if (pru_cycles%2){
+		*cycle_after_sample = pru_cycles;
+		*cycle_before_sample = pru_cycles;
+	}else{
+		*cycle_after_sample = pru_cycles+1;
+		*cycle_before_sample = pru_cycles-1;
+	}
+
+	st->sampling_frequency = 1000000000/((*cycle_between_sample +
+			   *cycle_before_sample +
+			   *cycle_after_sample + 5) * 5);
+	pr_err("%u, %u, %u\n", *cycle_between_sample, *cycle_before_sample,
+	       *cycle_after_sample);
+	 pr_err("Requested sampling freqeuency %u\n",*val);
+	 pr_err("Available sampling freqeuency %u\n",st->sampling_frequency);
+
+}
+
 /**
  * beaglescope_raw_read_from_pru() - function to read a single sample data
  *
