@@ -129,7 +129,7 @@ static bool get_beaglescope_read_mode(struct beaglescope_state *st)
 }
 
 
-static void set_pru_read_mode(struct beaglescope_state *st, bool read_mode)
+static void set_beaglescope_read_mode(struct beaglescope_state *st, bool read_mode)
 {
 	bool *config_pru_read_mode = (bool *)&st->pru_config[2];
 	bool *config_pru_enable_bit = ((bool *)&st->pru_config[2]) + 31;
