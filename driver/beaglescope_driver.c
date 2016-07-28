@@ -55,9 +55,9 @@ struct frequency {
 struct beaglescope_state {
 	struct rpmsg_channel *rpdev;
 	struct device *dev;
+	u32 pru_config[3];
 	u32 raw_data;
 	bool got_raw;
-	bool read_mode;
 	struct frequency sampling_frequency ;
 	wait_queue_head_t wait_list;
 };
@@ -88,52 +88,57 @@ static const struct iio_chan_spec beaglescope_adc_channels[] = {
  * get the configuration data for pru
  * that needs to be send for the give sampl_freq and read_mode
  */
-static int get_pru_config(void)
-//static int get_pru_config(struct frequency *sampl_freq, bool read_mode, u32 * buffer)
+static int set_pru_sampling_frequency(struct beaglescope_state *st, int *val)
 {
-	u32 buffer[3];bool read_mode = BLOCK_READ;u32 tmp = 3527667;
-
-	u32 *cycle_between_sample = buffer;
-	u32 *cycle_before_sample = (u32 *)&buffer[1];
-	u32 *cycle_after_sample = ((u32 *)&buffer[2]) ;
-	u32 *misc_config_data = &buffer[2];
+	u32 *cycle_between_sample = st->pru_frequency_config;
+	u16 *cycle_before_sample = (u16 *)&st->pru_frequency_config[1];
+	u16 *cycle_after_sample = ((u16*)&st->pru_frequency_config[1])+1;
 	u32 time_period_ns;
 	u32 pru_cycles;
-	u32 extra;
+	u32 remainder;
+	u32 ret;
 
-	log_debug("get_pru_config");
+	log_debug("set_pru_sampling_frequency");
 
-	if (read_mode == RAW_READ){
-		buffer[0] =0x00000000;
-		buffer[1] =0x00000000;
-		buffer[2] =0x00000000;
-		return 0;
+	time_period_ns = 1000000000/(*val);
+	pru_cycles = time_period_ns/5;
+	pru_cycles -= 5;
+	remainder = pru_cycles%4;
+	pru_cycles = pru_cycles/4;
+	*cycle_between_sample = 2*pru_cycles + (remainder == 3 ? 3 : 1 );
+	if (pru_cycles%2){
+		*cycle_after_sample = pru_cycles;
+		*cycle_before_sample = pru_cycles;
+	}else{
+		*cycle_after_sample = pru_cycles+1;
+		*cycle_before_sample = pru_cycles-1;
 	}
 
-	*misc_config_data = MISC_PRU_CONFIG_BLOCK_READ;
+	 ret = 1000000000/((*cycle_between_sample +
+			   *cycle_before_sample +
+			   *cycle_after_sample + 5) * 5);
+	 pr_debug("Requested sampling freqeuency %u\n",*val);
+	 pr_debug("Available sampling freqeuency %u\n",ret);
 
-	//pr_err("asked for - %u", sampl_freq->val); time_period_ns = 100000000000/(sampl_freq->val);
-	pr_err("asked for - %u", tmp); time_period_ns = 100000000000/(tmp);
-	pr_err("time_perio_ns - %u",time_period_ns);
-	pru_cycles = time_period_ns/5;
-	pr_err("pru cycles - %u",pru_cycles);
-	pru_cycles -= 500;
-	extra = pru_cycles%4;
-	pru_cycles = pru_cycles/4;
-	pru_cycles = pru_cycles/100;
-	pr_err("pru cycles - %u",pru_cycles);
-	//pru_cycles = pru_cycles/100;
-	*cycle_between_sample = 2*pru_cycles + 1;
-	*cycle_after_sample = pru_cycles%2?pru_cycles:pru_cycles+1;
-	*cycle_before_sample = pru_cycles%2?pru_cycles:pru_cycles-1;
-	tmp = 1000000000/((*cycle_between_sample +
-					   *cycle_before_sample +
-					   *cycle_after_sample + 5) * 5);
-	pr_err("actuall - %u, between - %u, after - %u, before - %u \n",
-	       tmp ,*cycle_between_sample,*cycle_before_sample,
-	       *cycle_after_sample);
-	return 0;
+	return ret;
 }
+
+static bool get_beaglescope_read_mode(struct beaglescope_state *st)
+{
+	return *((bool *)&st->pru_config[3]);
+}
+
+static void set_pru_read_mode(struct beaglescope_state *st, bool read_mode)
+{
+	bool *config_pru_read_mode = (bool *)st->pru_config[3];
+	bool *config_pru_enable_bit = ((bool *)st->pru_config[3]) + 31;
+
+	log_debug("set_pru_read_mode");
+	*config_pru_read_mode = read_mode;
+	*config_pru_enable_bit = true;
+	printk(KERN_DEBUG "misc_config_data = %02X\n",st->pru_config[3]);
+}
+
 
 /**
  * beaglescope_raw_read_from_pru() - function to read a single sample data
@@ -199,7 +204,6 @@ static int beaglescope_read_raw(struct iio_dev *indio_dev,
 	       return IIO_VAL_INT;
 	case IIO_CHAN_INFO_SAMP_FREQ:
 	       *val = st->sampling_frequency.val;
-	       *val2 = st->sampling_frequency.val2;
 	       return IIO_VAL_INT;
         default:
                 return -EINVAL;
@@ -220,8 +224,8 @@ static int beaglescope_write_raw(struct iio_dev *indio_dev,
 
 	switch (mask){
 	case IIO_CHAN_INFO_SAMP_FREQ:
-		st->sampling_frequency.val = val;
-		st->sampling_frequency.val2 = val2;
+		st->sampling_frequency.val = set_pru_sampling_frequency(st,
+									&val);
 		return 0;
 	default:
 		return -EINVAL;
@@ -434,7 +438,7 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpdev)
 		goto error_remove_buffer;
 	}
 
-	get_pru_config();
+	//get_pru_config();
 
 	init_waitqueue_head(&st->wait_list);
 	return 0;
