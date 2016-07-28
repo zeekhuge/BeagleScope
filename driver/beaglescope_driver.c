@@ -134,6 +134,49 @@ static void set_beaglescope_sampling_frequency(struct beaglescope_state *st,
 
 }
 
+
+/*
+ * set_beaglescope_read_mode - To set read mode into the configuration data
+ *
+ * @st			current beaglescope state instance
+ * @read_mode		which has to be set
+ *
+ * Description - The function maps the appropriate pointers to the configuration
+ * buffer and uses them to place set the read mode in which the pru need to be
+ * activated. The function uses and configures last 32bits of the buffer. It
+ * sets the read mode in the first bit of the those 32 bits and then sets the
+ * enable bit, ie, the last bit in those 32bits.
+ */
+static void set_beaglescope_read_mode(struct beaglescope_state *st,
+				      bool read_mode)
+{
+	bool *config_pru_read_mode = (bool *)&st->pru_config[2];
+	bool *config_pru_enable_bit = ((bool *)&st->pru_config[2]) + 31;
+
+	log_debug("set_pru_read_mode");
+	st->pru_config[2]=0;
+	*config_pru_read_mode = read_mode;
+	*config_pru_enable_bit = 1;
+	st->pru_config[2] |= 1<<31;
+	printk(KERN_DEBUG "misc_config_data = %u\n",st->pru_config[2]);
+}
+
+/*
+ * get_beaglescope_read_mode - To get the read mode of the current beaglescope
+ * device instance
+ *
+ * @st		The current instance of the beaglescope state strcuture
+ *
+ * Description - The function returns the read mode to which the beaglescop is
+ * set. This is basically done by reading the associated bit of the pru_config
+ * buffer. It returns boolean value.
+ */
+static bool get_beaglescope_read_mode(struct beaglescope_state *st)
+{
+	return *((bool *)&st->pru_config[3]);
+}
+
+
 /**
  * beaglescope_raw_read_from_pru() - function to read a single sample data
  *
