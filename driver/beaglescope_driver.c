@@ -51,9 +51,6 @@ struct beaglescope_state {
 	u32 raw_data;
 	bool got_raw;
 	bool read_mode;
-	struct kfifo data_fifo;
-	int data_idx;
-	u32 data_length[MAX_BLOCKS_IN_FIFO];
 	wait_queue_head_t wait_list;
 };
 
