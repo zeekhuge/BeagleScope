@@ -65,7 +65,8 @@ static const struct iio_chan_spec beaglescope_adc_channels[] = {
 		.channel = 0,
 		.info_mask_separate = BIT(IIO_CHAN_INFO_RAW) |
 					BIT(IIO_CHAN_INFO_SCALE)|
-					BIT(IIO_CHAN_INFO_OFFSET),
+					BIT(IIO_CHAN_INFO_OFFSET)|
+					BIT(IIO_CHAN_INFO_SAMP_FREQ),
 		.scan_index =0,
 		.scan_type = {
 			.sign = 'u',
@@ -302,8 +303,12 @@ static int beaglescope_stop_sampling_pru(struct iio_dev *indio_dev )
  */
 static int beaglescope_buffer_postenable(struct iio_dev *indio_dev)
 {
+	struct beaglescope_state *st;
+	st = iio_priv(indio_dev);
+	set_beaglescope_read_mode(st, BLOCK_READ);
+	beaglescope_read_from_pru(indio_dev);
 	log_debug("postenable");
-	return beaglescope_block_read_from_pru(indio_dev);
+	return 0;
 }
 
 /*
@@ -327,7 +332,7 @@ static int beaglescope_read_raw(struct iio_dev *indio_dev,
                int *val2,
                long mask)
 {
-       u32 regval = 0;
+       int ret;
        struct beaglescope_state *st;
        log_debug("read_raw");
 
@@ -335,8 +340,13 @@ static int beaglescope_read_raw(struct iio_dev *indio_dev,
 
        switch (mask) {
        case IIO_CHAN_INFO_RAW:
-	       beaglescope_raw_read_from_pru(indio_dev, &regval);
-	       *val = regval;
+		set_beaglescope_read_mode(st, RAW_READ);
+		ret = beaglescope_read_from_pru(indio_dev);
+		if (ret){
+			dev_err(st->dev, "Couldnt read raw data\n");
+			return -EINVAL;
+		}
+	       *val = st->raw_data;
 	       return IIO_VAL_INT;
 	case IIO_CHAN_INFO_SCALE:
 	       *val = 1;
@@ -397,7 +407,7 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 	indio_dev = dev_get_drvdata(&rpdev->dev);
 	st = iio_priv(indio_dev);
 
-	if (st->read_mode == RAW_READ){
+	if (get_beaglescope_read_mode(st) == RAW_READ){
 		st->raw_data=*((u32 *)data);
 		st->got_raw = 1;
 		wake_up_interruptible(&st->wait_list);
