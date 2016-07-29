@@ -125,11 +125,12 @@ static void set_beaglescope_sampling_frequency(struct beaglescope_state *st,
 
 static bool get_beaglescope_read_mode(struct beaglescope_state *st)
 {
-	return *((bool *)&st->pru_config[3]);
+	return *((bool *)&st->pru_config[2]);
 }
 
 
-static void set_beaglescope_read_mode(struct beaglescope_state *st, bool read_mode)
+static void set_beaglescope_read_mode(struct beaglescope_state *st,
+				      bool read_mode)
 {
 	bool *config_pru_read_mode = (bool *)&st->pru_config[2];
 	bool *config_pru_enable_bit = ((bool *)&st->pru_config[2]) + 31;
@@ -160,17 +161,21 @@ static int beaglescope_read_from_pru(struct iio_dev *indio_dev)
 
 	st = iio_priv(indio_dev);
 
+	log_debug("here 1V");
 	ret = rpmsg_send(st->rpdev, (void *)st->pru_config,
 			    3*sizeof(u32));
 	if (ret)
 		dev_err(st->dev, "Failed sending config info to PRUs\n");
 
-	if(get_beaglescope_read_mode(st) == RAW_READ){
+	log_debug("here 2");
+	if (get_beaglescope_read_mode(st) == RAW_READ) {
+	log_debug("here 3");
 		ret = wait_event_interruptible(st->wait_list, st->got_raw);
 		if (ret)
 			return -EINTR;
 	}
 
+	log_debug("here 4");
 	return 0;
 }
 
@@ -191,7 +196,7 @@ static int beaglescope_read_raw(struct iio_dev *indio_dev,
        switch (mask) {
 
        case IIO_CHAN_INFO_RAW:
-		set_pru_read_mode(st, RAW_READ);
+		set_beaglescope_read_mode(st, RAW_READ);
 		ret = beaglescope_read_from_pru(indio_dev);
 		if (ret){
 			dev_err(st->dev, "Couldnt read raw data\n");
@@ -303,7 +308,7 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 	struct iio_dev *indio_dev;
 	int count;
 
-	//log_debug("callback - ");
+	log_debug("callback - ");
 
 	indio_dev = dev_get_drvdata(&rpdev->dev);
 	st = iio_priv(indio_dev);
@@ -314,7 +319,7 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 		log_debug("raw reading");
 		wake_up_interruptible(&st->wait_list);
 	}else{
-	//	log_debug("pushing to buffer");
+		log_debug("pushing to buffer");
 	//	pr_err("len = %d",len);
 		for (count =0; count < len; count++) {
 	//		log_debug("pxxxxx");
@@ -364,7 +369,7 @@ static int beaglescope_buffer_postenable(struct iio_dev *indio_dev)
 {
 	struct beaglescope_state *st;
 	st = iio_priv(indio_dev);
-	set_pru_read_mode(st, BLOCK_READ);
+	set_beaglescope_read_mode(st, BLOCK_READ);
 	beaglescope_read_from_pru(indio_dev);
 	log_debug("postenable");
 	return 0;
