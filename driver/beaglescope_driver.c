@@ -51,7 +51,6 @@ struct beaglescope_state {
 	u32 pru_config[3];
 	u32 raw_data;
 	bool got_raw;
-	bool read_mode;
 	int sampling_frequency ;
 	wait_queue_head_t wait_list;
 };
@@ -85,15 +84,15 @@ static const struct iio_chan_spec beaglescope_adc_channels[] = {
  * @st			current beaglescope state instance
  * @*val		pointer to the required sampling frequency
  *
- * Description - The function maps 3 pointers to the differne reqions of the
- * pru_config buffer. It then store the configuration data into apropriately
+ * Description - The function maps 3 pointers to the different regions of the
+ * pru_config buffer. It then store the configuration data into appropriately
  * pointed regions. The frequency value is converted into:
  * the time period then to
  * number of pru cycles
  * it is then divided into 3 parts, 2 of which are use for the clock on time
  * (cycle_after/before_sample) and the other (cycle_between_sample) is used for
  * clock off time.
- * These 3 values need to be odd (this is PRUs requeirement). Finally the the
+ * These 3 values need to be odd (this is PRU's requirement). Finally the
  * resultant configuration value is used to get the resultant frequency, as the
  * pru cant attain all the frequencies but a large number of frequencies. This
  * resultant frequency is what saved in the current state of the beaglescope
@@ -166,7 +165,7 @@ static void set_beaglescope_read_mode(struct beaglescope_state *st,
  * get_beaglescope_read_mode - To get the read mode of the current beaglescope
  * device instance
  *
- * @st		The current instance of the beaglescope state strcuture
+ * @st		The current instance of the beaglescope state structure
  *
  * Description - The function returns the read mode to which the beaglescop is
  * set. This is basically done by reading the associated bit of the pru_config
@@ -180,7 +179,7 @@ static bool get_beaglescope_read_mode(struct beaglescope_state *st)
 /*
  * beaglescope_read_from_pru - To start the PRUs in the required reading mode
  *
- * @indio_dev	pointer to the instantce of iio device
+ * @indio_dev	pointer to the instance of iio device
  *
  * Description - The function starts the PRUs by sending the configuration data
  * that has been prepared by call to set_beaglescope_sampling_frequency() and
@@ -214,69 +213,6 @@ static int beaglescope_read_from_pru(struct iio_dev *indio_dev)
 	}
 
 	return 0;
-}
-
-/**
- * beaglescope_raw_read_from_pru() - function to read a single sample data
- *
- * The function writes necessary configuration data to the PRUs and waits for
- * the pru to provide back with the data. The configuration brings the PRUs in
- * single sample mode.
- *
- */
-static int beaglescope_raw_read_from_pru(struct iio_dev *indio_dev, u32
-					  *raw_data)
-{
-	int ret;
-	struct beaglescope_state *st;
-	static u32 beaglescope_config_raw_read[]={
-		BEAGLESCOPE_CONFIG_RAW_READ_0,
-		BEAGLESCOPE_CONFIG_RAW_READ_1,
-		BEAGLESCOPE_CONFIG_RAW_READ_2};
-
-
-	log_debug("raw_read_from_pru");
-
-	st = iio_priv(indio_dev);
-
-	ret = rpmsg_send(st->rpdev, (void *)beaglescope_config_raw_read,
-			    sizeof(u32));
-	if (ret)
-		dev_err(st->dev, "beaglescope raw read from pru configuration failed\n");
-
-	ret = wait_event_interruptible(st->wait_list, st->got_raw);
-	if (ret)
-		return -EINTR;
-
-	*raw_data = st->raw_data;
-
-	return ret;
-}
-
-/*
- * beaglescope_start_pru_block_read - to configure the PRUs to BLOCK_READ mode
- * and start sampling.
- */
-static int beaglescope_block_read_from_pru (struct iio_dev *indio_dev )
-{
-	int ret;
-	struct beaglescope_state *st;
-	static u32 beaglescope_config_raw_read[]={
-		BEAGLESCOPE_CONFIG_RANDOM_BLOCK_READ_0,
-		BEAGLESCOPE_CONFIG_RANDOM_BLOCK_READ_1,
-		BEAGLESCOPE_CONFIG_RANDOM_BLOCK_READ_2};
-
-	log_debug("raw_read_from_pru");
-
-	st = iio_priv(indio_dev);
-
-	st->read_mode = BLOCK_READ;
-	ret = rpmsg_send(st->rpdev, (void *)beaglescope_config_raw_read,
-			    3*sizeof(u32));
-	if (ret)
-		dev_err(st->dev, "beaglescope raw read from pru configuration failed\n");
-
-	return ret;
 }
 
 /*
