@@ -176,6 +176,44 @@ static bool get_beaglescope_read_mode(struct beaglescope_state *st)
 	return *((bool *)&st->pru_config[3]);
 }
 
+/*
+ * beaglescope_read_from_pru - To start the PRUs in the required reading mode
+ *
+ * @indio_dev	pointer to the instantce of iio device
+ *
+ * Description - The function starts the PRUs by sending the configuration data
+ * that has been prepared by call to set_beaglescope_sampling_frequency() and
+ * set_pru_read_mode() function calls. The message is then dispatched by the
+ * rpmsg callback method.
+ * In case the read_mode is RAW_READ, this function waits for the callback to
+ * interrupt, by using the wait_list and returns only after the data from the
+ * callback has been saved into the raw_data field of the current
+ * beaglescope_state structure.
+ * If the read_mode is BLOCK_READ, the function just configures the PRUs and
+ * returns. The rpmsg callback method then pushes the data onto the iio_buffer.
+ */
+static int beaglescope_read_from_pru(struct iio_dev *indio_dev)
+{
+	int ret;
+	struct beaglescope_state *st;
+
+	log_debug("beaglescope_read_from_pru");
+
+	st = iio_priv(indio_dev);
+
+	ret = rpmsg_send(st->rpdev, (void *)st->pru_config,
+			    3*sizeof(u32));
+	if (ret)
+		dev_err(st->dev, "Failed sending config info to PRUs\n");
+
+	if (get_beaglescope_read_mode(st) == RAW_READ) {
+		ret = wait_event_interruptible(st->wait_list, st->got_raw);
+		if (ret)
+			return -EINTR;
+	}
+
+	return 0;
+}
 
 /**
  * beaglescope_raw_read_from_pru() - function to read a single sample data
