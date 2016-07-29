@@ -328,8 +328,10 @@ static int beaglescope_read_raw(struct iio_dev *indio_dev,
                long mask)
 {
        u32 regval = 0;
-
+       struct beaglescope_state *st;
        log_debug("read_raw");
+
+       st = iio_priv(indio_dev);
 
        switch (mask) {
        case IIO_CHAN_INFO_RAW:
@@ -342,15 +344,39 @@ static int beaglescope_read_raw(struct iio_dev *indio_dev,
 	case IIO_CHAN_INFO_OFFSET:
 	       *val = - OFFSET_REF_VDD;
 	       return IIO_VAL_INT;
+	case IIO_CHAN_INFO_SAMP_FREQ:
+	       *val = st->sampling_frequency;
+	       return IIO_VAL_INT;
         default:
                 return -EINVAL;
        }
 
 }
 
+static int beaglescope_write_raw(struct iio_dev *indio_dev,
+			       struct iio_chan_spec const *chan,
+			       int val,
+			       int val2,
+			       long mask)
+{
+	struct beaglescope_state *st;
+	st = iio_priv(indio_dev);
+
+	log_debug("write_raw");
+
+	switch (mask){
+	case IIO_CHAN_INFO_SAMP_FREQ:
+		set_beaglescope_sampling_frequency(st, &val);
+		return 0;
+	default:
+		return -EINVAL;
+	}
+}
+
 /* beaglescope_info - Structure contains constant data about the driver */
 static const struct iio_info beaglescope_info = {
 	.read_raw = beaglescope_read_raw,
+	.write_raw = beaglescope_write_raw,
 	.driver_module = THIS_MODULE,
 };
 
