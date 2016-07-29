@@ -174,7 +174,7 @@ static void set_beaglescope_read_mode(struct beaglescope_state *st,
  */
 static bool get_beaglescope_read_mode(struct beaglescope_state *st)
 {
-	return *((bool *)&st->pru_config[3]);
+	return *((bool *)&st->pru_config[2]);
 }
 
 /*
