@@ -338,12 +338,11 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 	struct iio_dev *indio_dev;
 	int count;
 
-	log_debug("callback");
-
 	indio_dev = dev_get_drvdata(&rpdev->dev);
 	st = iio_priv(indio_dev);
 
 	if (get_beaglescope_read_mode(st) == RAW_READ){
+		log_debug("callback - raw mode");
 		st->raw_data=*((u32 *)data);
 		st->got_raw = 1;
 		wake_up_interruptible(&st->wait_list);
