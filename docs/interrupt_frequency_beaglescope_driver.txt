@@ -90,7 +90,7 @@ START:
 - Sampling frequency was set
 - Initial number of interrupts was noted.
 - buffered capture was started using :
-	$ echo 1 > buffer/enable && sleep 100 & echo 0 > buffer/enable
+	$ echo 1 > buffer/enable && sleep 3 & echo 0 > buffer/enable
 - Final number of interrupts was noted.
 
 goto START;
