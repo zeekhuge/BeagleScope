@@ -10,6 +10,11 @@
 	.cdecls "main_pru1.c"
 
 
+
+DEBUG	.macro val
+	;LDI32 UNUSED_FOR_NOW_0, val
+	.endm
+
 ;********************************************************************
 ; BLINK is just for debugging purpose while developing the code.
 ;
@@ -277,18 +282,46 @@ SAMPLE_CYCLE_8	.macro BANK_ID
 		;****** SC1 loop starts
 $SC1?:
 		CLK_TOGGLE
+		
+		DEBUG 0x01
+
 		THE_DELAY CYCLE_BEFORE_SAMPLE
+		
+		DEBUG 0x02
+
 		MVIB 	*MVI_POINTER++, R31.b0
+
+		DEBUG 0x03
+
 		THE_DELAY CYCLE_AFTER_SAMPLE
+
+		DEBUG 0x04
+
 		CLK_TOGGLE
+
+		DEBUG 0x05
+
 		CHECK_INT
+
+		DEBUG 0x06
+
 		THE_DELAY CYCLE_BTWN_SAMPLE
+
+		DEBUG 0x07
+
 		ADD	COUNTER_REG, COUNTER_REG, 1
+
+		DEBUG 0x08
+
 		QBNE 	$SC1?, COUNTER_REG, 44-2
 		;****** SC1 loop ends
 
 		;****** Separate sample taking step 1 starts
+
 		CLK_TOGGLE
+		
+		DEBUG 0x09
+
 		THE_DELAY CYCLE_BEFORE_SAMPLE
 		MOV	BYTE_43, R31.b0
 		THE_DELAY CYCLE_AFTER_SAMPLE
@@ -297,9 +330,17 @@ $SC1?:
 		LDI	COUNTER_REG, 0
 		LDI	MVI_POINTER, &DATA_START_REGISTER
 		THE_DELAY CYCLE_BTWN_SAMPLE
+
+
+		DEBUG 0x10
+
 		;****** Separate sample taking step 1 ends
 
 		;****** Separate sample taking step 2 starts
+		
+
+		DEBUG 0x11
+
 		CLK_TOGGLE
 		THE_DELAY CYCLE_BEFORE_SAMPLE
 		MOV	BYTE_44, R31.b0
@@ -308,6 +349,8 @@ $SC1?:
 		THE_DELAY CYCLE_BTWN_SAMPLE
 		CHECK_INT
 		TRANSFER_AND_TELL SP_BANK_0
+
+		DEBUG 0x12
 		;****** Separate sample taking step 2 ends
 
 		;****** SC2 loop starts
