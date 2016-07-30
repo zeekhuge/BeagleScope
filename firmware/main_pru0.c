@@ -17,6 +17,8 @@
 #include "resource_table_pru0.h"
 #include "common_pru_defs.h"
 
+#define PRU_RPMSG_MSG_ADDED 123
+
 /* The value written by kernel into the status field of rpmsg.vdev
  * structure, indicating that the rpmsg device is accepted by the
  * virtio bus
@@ -49,6 +51,68 @@ uint32_t msg_from_kernel[RPMSG_BUF_SIZE/4];
 struct data_from_pru1{
 	uint8_t input_data[DATA_SIZE];
 }sampled_data;
+
+
+uint16_t counter;
+struct pru_rpmsg_hdr	*msg;
+uint32_t		msg_len;
+int16_t			head;
+struct pru_virtqueue	*virtqueue;
+
+struct pru_rpmsg_hdr {
+	uint32_t	src;
+	uint32_t	dst;
+	uint32_t	reserved;
+	uint16_t	len;
+	uint16_t	flags;
+	uint8_t	data[0];
+};
+
+
+int16_t pru_rpmsg_send_large_buffer(
+    struct pru_rpmsg_transport	*transport,
+    uint32_t					src,
+    uint32_t					dst,
+    void					*data,
+    uint16_t					len
+)
+{
+
+	/*
+	 * The length of our payload is larger than the maximum RPMsg buffer size
+	 * allowed
+	 */
+
+	if (counter == 0) {
+		virtqueue = &transport->virtqueue0;
+		head = pru_virtqueue_get_avail_buf(virtqueue, (void **)&msg, &msg_len);
+
+		if (head < 0)
+			return PRU_RPMSG_NO_BUF_AVAILABLE;
+	}
+
+	/* Copy local data buffer to the descriptor buffer address */
+	if ((counter + len) <= 440) {
+		memcpy(msg->data + counter, data, len);
+		counter += len;
+		return PRU_RPMSG_MSG_ADDED;
+	}
+
+	msg->len = counter;
+	msg->dst = dst;
+	msg->src = src;
+	msg->flags = 0;
+	msg->reserved = 0;
+
+	/* Add the used buffer */
+	if (pru_virtqueue_add_used_buf(virtqueue, head, msg_len) < 0)
+		return PRU_RPMSG_INVALID_HEAD;
+
+	/* Kick the ARM host */
+	pru_virtqueue_kick(virtqueue);
+	counter = 0;
+	return PRU_RPMSG_SUCCESS;
+}
 
 
 /* main */
@@ -261,7 +325,7 @@ void main(void)
 
 				bank_to_use = (bank_to_use == SP_BANK_2) ? SP_BANK_0 : bank_to_use + 1  ;
 
-				pru_rpmsg_send(&transport,
+				pru_rpmsg_send_large_buffer(&transport,
 					       dst, src,
 					       sampled_data.input_data,
 					       sizeof(sampled_data));
