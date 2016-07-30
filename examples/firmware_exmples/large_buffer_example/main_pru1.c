@@ -77,11 +77,17 @@ volatile register uint32_t __R31;
  * muxed to P8_45.
  */
 #define CHECK_BIT	0x0001
-
+#define PRU_RPMSG_MSG_ADDED 123
 
 
 uint8_t payload[RPMSG_BUF_SIZE];
 
+
+uint16_t counter;
+struct pru_rpmsg_hdr	*msg;
+uint32_t				msg_len;
+int16_t				head;
+struct pru_virtqueue	*virtqueue;
 
 struct pru_rpmsg_hdr {
 	uint32_t	src;
@@ -93,6 +99,50 @@ struct pru_rpmsg_hdr {
 };
 
 
+int16_t pru_rpmsg_send_large_buffer(
+    struct pru_rpmsg_transport	*transport,
+    uint32_t					src,
+    uint32_t					dst,
+    void						*data,
+    uint16_t					len
+)
+{
+
+	/*
+	 * The length of our payload is larger than the maximum RPMsg buffer size
+	 * allowed
+	 */
+
+	if (counter == 0) {
+		virtqueue = &transport->virtqueue0;
+		head = pru_virtqueue_get_avail_buf(virtqueue, (void **)&msg, &msg_len);
+
+		if (head < 0)
+			return PRU_RPMSG_NO_BUF_AVAILABLE;
+	}
+
+	/* Copy local data buffer to the descriptor buffer address */
+	if ((counter + len) <= 440) {
+		memcpy(msg->data + counter, data, len);
+		counter += len;
+		return PRU_RPMSG_MSG_ADDED;
+	}
+
+	msg->len = counter;
+	msg->dst = dst;
+	msg->src = src;
+	msg->flags = 0;
+	msg->reserved = 0;
+
+	/* Add the used buffer */
+	if (pru_virtqueue_add_used_buf(virtqueue, head, msg_len) < 0)
+		return PRU_RPMSG_INVALID_HEAD;
+
+	/* Kick the ARM host */
+	pru_virtqueue_kick(virtqueue);
+	counter = 0;
+	return PRU_RPMSG_SUCCESS;
+}
 
 
 /*
@@ -103,12 +153,9 @@ void main(void)
 	struct pru_rpmsg_transport transport;
 	uint16_t src, dst, len;
 	volatile uint8_t *status;
-
-	struct pru_rpmsg_hdr *msg;
-	uint32_t msg_len;
-	int16_t	head;
-	uint8_t data_to_transfer = 0x23;
-	int16_t counter =0;
+	uint8_t payload_data = 0x43;
+	int ret=PRU_RPMSG_NO_KICK;
+	counter =0;
 
 	/* allow OCP master port access by the PRU so the PRU can read external memories */
 	CT_CFG.SYSCFG_bit.STANDBY_INIT = 0;
@@ -133,37 +180,19 @@ void main(void)
 		if (__R31 & HOST_INT) {
 			/* Clear the event status */
 			CT_INTC.SICR_bit.STS_CLR_IDX = FROM_ARM_HOST;
+			ret=PRU_RPMSG_NO_KICK;
 			/* Receive all available messages, multiple messages can be sent per kick */
 			while (pru_rpmsg_receive(&transport, &src, &dst, payload, &len) == PRU_RPMSG_SUCCESS) {	
-
-
-			//pru_rpmsg_send_large_buffer(&transport, dst, src, "CHANGED\n", sizeof("CHANGED\n"));
-
-
-			/* Get an available buffer */
-			head = pru_virtqueue_get_avail_buf(&transport.virtqueue0, (void **)&msg, &msg_len);
-
-			if(head <0 )
-				break;
-
-			for(counter =0; counter < 440; counter++) {
-				memcpy(msg->data + counter, &data_to_transfer , sizeof(data_to_transfer));
+			
+			while (ret != PRU_RPMSG_SUCCESS){
+			ret = pru_rpmsg_send_large_buffer(&transport, dst, src,
+						    &payload_data,
+							    sizeof(payload_data));
 			}
 
-			msg->len = counter*sizeof(data_to_transfer);
-			msg->dst = src;
-			msg->src = dst;
-			msg->flags = 0;
-			msg->reserved = 0;
-
-			if (pru_virtqueue_add_used_buf(&transport.virtqueue0, head, msg_len) < 0)
-				break;
-			/* Kick the ARM host */
-			pru_virtqueue_kick(&transport.virtqueue0);
-
 			}
+
 		}
 	}
 }
-
 
