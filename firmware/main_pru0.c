@@ -48,12 +48,10 @@ volatile register uint32_t __R31;
 uint32_t msg_from_kernel[RPMSG_BUF_SIZE/4];
 
 /* Data structure to save data that is send by pru1 to pru0 */
-struct data_from_pru1{
-	uint8_t input_data[DATA_SIZE];
-}sampled_data;
+uint8_t sampled_data[DATA_SIZE];
 
 
-uint16_t counter;
+uint16_t counter=0;
 struct pru_rpmsg_hdr	*msg;
 uint32_t		msg_len;
 int16_t			head;
@@ -92,7 +90,7 @@ int16_t pru_rpmsg_send_large_buffer(
 	}
 
 	/* Copy local data buffer to the descriptor buffer address */
-	if ((counter + len) <= 440) {
+	if ((counter + len) <= 44) {
 		memcpy(msg->data + counter, data, len);
 		counter += len;
 		return PRU_RPMSG_MSG_ADDED;
@@ -166,6 +164,8 @@ void main(void)
 	uint32_t raw_data;
 	uint8_t bank_to_use = SP_BANK_0;
 	int32_t *ptr_to_shared_mem = (int32_t *) SHARED_MEM_ADDR;
+	uint8_t temp_sampled_data[44] = {0xff};
+	int ret = 2323;
 
 	/*
 	 * Register initialization
@@ -187,6 +187,10 @@ void main(void)
 	CT_CFG.SYSCFG_bit.STANDBY_INIT = 0;
 	CT_INTC.EISR_bit.EN_SET_IDX = INT_P1_to_P0;
 
+
+	/*clear status of interrupts*/
+	CT_INTC.SICR_bit.STS_CLR_IDX = INT_ARM_to_P0;
+	CT_INTC.SICR_bit.STS_CLR_IDX = INT_P1_to_P0;
 	/*
 	 * Wait for the kernel to confirm that the device can be handled by the
 	 * kernel virtio bus.
@@ -268,6 +272,8 @@ void main(void)
 
 				__R31 = R31_P0_to_P1;
 				bank_to_use = SP_BANK_0;
+
+				ret = 2323;
 			}
 		}
 		/* Part of the code that gets executed when INT_P1_to_P0
@@ -324,11 +330,11 @@ void main(void)
 				}
 
 				bank_to_use = (bank_to_use == SP_BANK_2) ? SP_BANK_0 : bank_to_use + 1  ;
-
-				pru_rpmsg_send_large_buffer(&transport,
+				if (ret != PRU_RPMSG_SUCCESS)
+				ret = pru_rpmsg_send_large_buffer(&transport,
 					       dst, src,
-					       sampled_data.input_data,
-					       sizeof(sampled_data));
+					       temp_sampled_data,
+					       44);
 			}
 		}
 	}
