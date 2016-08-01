@@ -121,6 +121,11 @@ void main(void)
 	CT_CFG.SYSCFG_bit.STANDBY_INIT = 0;
 	CT_INTC.EISR_bit.EN_SET_IDX = INT_P1_to_P0;
 
+	/* Clear the status of the registers that will be used in this programs
+	   As they have been un-serviced in the last software tun */
+	CT_INTC.SICR_bit.STS_CLR_IDX = INT_ARM_to_P0;
+	CT_INTC.SICR_bit.STS_CLR_IDX = INT_P1_to_P0;
+
 	/*
 	 * Wait for the kernel to confirm that the device can be handled by the
 	 * kernel virtio bus.
