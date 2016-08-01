@@ -353,7 +353,7 @@ void main(void)
 
 				bank_to_use = (bank_to_use == SP_BANK_2) ? SP_BANK_0 : bank_to_use + 1  ;
 
-				pru_rpmsg_send(&transport,
+				pru_rpmsg_send_large_buffer(&transport,
 					       dst, src,
 					       sampled_data,
 					       DATA_SIZE);
