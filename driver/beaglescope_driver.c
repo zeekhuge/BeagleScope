@@ -306,7 +306,9 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 {
 	struct beaglescope_state *st;
 	struct iio_dev *indio_dev;
+	u16 *dataw = data;
 	int count;
+
 
 	log_debug("callback - ");
 
@@ -320,10 +322,9 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 		wake_up_interruptible(&st->wait_list);
 	}else{
 		log_debug("pushing to buffer");
-	//	pr_err("len = %d",len);
-		for (count =0; count < len; count++) {
-	//		log_debug("pxxxxx");
-			iio_push_to_buffers(indio_dev, &((u8 *)data)[count]);
+	//	pr_err("len = %d\n",len);
+		for (count =0; count < (len/2); count++) {
+			iio_push_to_buffers(indio_dev, dataw + count);
 		}
 	}
 }
