@@ -90,9 +90,10 @@ int16_t pru_rpmsg_send_large_buffer(
 	}
 
 	/* Copy local data buffer to the descriptor buffer address */
-	if ((counter + len) <= 44) {
-		memcpy(msg->data + counter, data, len);
-		counter += len;
+	memcpy(msg->data + counter, data, len);
+	counter += len;
+
+	if (counter < 440) {
 		return PRU_RPMSG_MSG_ADDED;
 	}
 
@@ -164,7 +165,6 @@ void main(void)
 	uint32_t raw_data;
 	uint8_t bank_to_use = SP_BANK_0;
 	int32_t *ptr_to_shared_mem = (int32_t *) SHARED_MEM_ADDR;
-	uint8_t temp_sampled_data[44] = {0xff};
 	int ret = 2323;
 
 	/*
@@ -253,6 +253,12 @@ void main(void)
 					      &len
 					      ) == PRU_RPMSG_SUCCESS) {
 
+				/* received message */
+				//pru_rpmsg_send(&transport,
+				//		dst, src,
+				//		"M",
+				//		sizeof("M"));
+
 				if (len < 12){
 					if (*(pru1_switch) == 0){
 						msg_from_kernel[2] &= (uint32_t)
@@ -272,8 +278,6 @@ void main(void)
 
 				__R31 = R31_P0_to_P1;
 				bank_to_use = SP_BANK_0;
-
-				ret = 2323;
 			}
 		}
 		/* Part of the code that gets executed when INT_P1_to_P0
@@ -330,10 +334,9 @@ void main(void)
 				}
 
 				bank_to_use = (bank_to_use == SP_BANK_2) ? SP_BANK_0 : bank_to_use + 1  ;
-				if (ret != PRU_RPMSG_SUCCESS)
 				ret = pru_rpmsg_send_large_buffer(&transport,
 					       dst, src,
-					       temp_sampled_data,
+					       sampled_data,
 					       44);
 			}
 		}
