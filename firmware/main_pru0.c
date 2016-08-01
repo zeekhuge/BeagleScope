@@ -45,10 +45,8 @@ volatile register uint32_t __R31;
 /* Buffer to save data send by kernel to PRU0 using RPMsg*/
 uint32_t msg_from_kernel[RPMSG_BUF_SIZE/4];
 
-/* Data structure to save data that is send by pru1 to pru0 */
-struct data_from_pru1{
-	uint8_t input_data[DATA_SIZE];
-}sampled_data;
+/* Buffer array to save data that is send by pru1 to pru0 */
+uint8_t sampled_data[DATA_SIZE];
 
 
 /* main */
@@ -263,8 +261,8 @@ void main(void)
 
 				pru_rpmsg_send(&transport,
 					       dst, src,
-					       sampled_data.input_data,
-					       sizeof(sampled_data));
+					       sampled_data,
+					       DATA_SIZE);
 			}
 		}
 	}
