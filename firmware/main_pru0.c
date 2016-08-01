@@ -38,6 +38,13 @@
 #define RPMSG_CHAN_PORT			30
 #define RPMSG_CHAN_DESC			"Channel 30"
 
+/*
+ * The Constant return value used to indicate that a 44 bytes
+ * block of data has has been written to the 440 byte buffer,
+ * but no kick has yet been generated.
+ */
+#define PRU_RPMSG_MSG_ADDED	123
+
 volatile register uint32_t __R30;
 volatile register uint32_t __R31;
 
@@ -47,6 +54,88 @@ uint32_t msg_from_kernel[RPMSG_BUF_SIZE/4];
 
 /* Buffer array to save data that is send by pru1 to pru0 */
 uint8_t sampled_data[DATA_SIZE];
+
+/*
+ * The variables that are used by pru_rpmsg_send_large_buffer()
+ * but are declared globally so as to retain their value between
+ * various repeated calls to the pru_rpmsg_send_large_buffer()
+ */
+uint16_t counter=0;
+struct pru_rpmsg_hdr   *msg;
+uint32_t               msg_len;
+int16_t                head;
+struct pru_virtqueue   *virtqueue;
+
+/*
+ * The pru_rpmsg_hdr structure to store information about the
+ * message related to its source and destination.
+ * The definition of the structure has been taken from the
+ * implementation of the pru_rpmsg_send()
+ */
+struct pru_rpmsg_hdr {
+       uint32_t        src;
+       uint32_t        dst;
+       uint32_t        reserved;
+       uint16_t        len;
+       uint16_t        flags;
+       uint8_t data[0];
+};
+
+/*
+ * The pru_rpmsg_send_large_buffer()
+ * The function writes '*data' to the buffer which ultimately gets kicked
+ * to the main processing unit. Data to this buffer is written in blocks of
+ * 'len' bytes and the buffer gets kicked as soon as the written data size
+ * increases or equals 440 bytes.
+ * The function is actually derived from the implementation of
+ * pru_rpmsg_send() function.
+ */
+int16_t pru_rpmsg_send_large_buffer(
+    struct pru_rpmsg_transport *transport,
+    uint32_t                                   src,
+    uint32_t                                   dst,
+    void                                       *data,
+    uint16_t                                   len
+)
+{
+
+       /*
+        * The length of our payload is larger than the maximum RPMsg buffer si
+e
+        * allowed
+        */
+
+       if (counter == 0) {
+               virtqueue = &transport->virtqueue0;
+               head = pru_virtqueue_get_avail_buf(virtqueue, (void **)&msg, &msg_len);
+
+               if (head < 0)
+                       return PRU_RPMSG_NO_BUF_AVAILABLE;
+       }
+
+       /* Copy local data buffer to the descriptor buffer address */
+       memcpy(msg->data + counter, data, len);
+       counter += len;
+
+       if (counter < 440) {
+               return PRU_RPMSG_MSG_ADDED;
+       }
+
+       msg->len = counter;
+       msg->dst = dst;
+       msg->src = src;
+       msg->flags = 0;
+       msg->reserved = 0;
+
+       /* Add the used buffer */
+       if (pru_virtqueue_add_used_buf(virtqueue, head, msg_len) < 0)
+               return PRU_RPMSG_INVALID_HEAD;
+
+       /* Kick the ARM host */
+       pru_virtqueue_kick(virtqueue);
+       counter = 0;
+       return PRU_RPMSG_SUCCESS;
+}
 
 
 /* main */
