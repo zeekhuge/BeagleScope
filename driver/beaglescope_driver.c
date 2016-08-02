@@ -336,6 +336,7 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 {
 	struct beaglescope_state *st;
 	struct iio_dev *indio_dev;
+	u16 *dataw = data;
 	int count;
 
 	indio_dev = dev_get_drvdata(&rpdev->dev);
@@ -347,8 +348,8 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 		st->got_raw = 1;
 		wake_up_interruptible(&st->wait_list);
 	}else{
-		for (count =0; count < len; count++) {
-			iio_push_to_buffers(indio_dev, &((u8 *)data)[count]);
+		for (count =0; count < len/2; count++) {
+			iio_push_to_buffers(indio_dev, dataw + count);
 		}
 	}
 }
