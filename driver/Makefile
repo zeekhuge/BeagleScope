@@ -5,6 +5,7 @@
 #
 
 obj-m += beaglescope_driver.o
+obj-m += parallel_interface.o
 
 KDIR?=/lib/modules/$(shell uname -r)/build
 INSTALL?=/lib/modules/$(shell uname -r)/kernel/drivers/testing
