@@ -11,11 +11,22 @@
 #include <linux/fs.h>
 #include <linux/init.h>
 #include <linux/module.h>
+#include "parallel_interface.h"
 
 /*
  * macro to print debug info easily
  */
 #define log_debug(msg) printk(KERN_DEBUG "%s: %s\n", __FILE__, msg);
+
+static int parallel_interface_probe(struct rpmsg_channel *rpdev)
+{
+	int ret;
+	struct pi_device *pidev;
+
+	pidev = devm_kzalloc(&rpdev->dev, sizeof(*pidev), GFP_KERNEL);
+	if (!pidev)
+		return -ENOMEM;
+}
 
 static const struct rpmsg_device_id parallel_interface_id[] = {
 		{ .name = "parallel-interface" },
@@ -28,9 +39,9 @@ static struct rpmsg_driver parallel_interface_driver= {
 	.drv.name	= KBUILD_MODNAME,
 	.drv.owner	= THIS_MODULE,
 	.id_table	= parallel_interface_id,
-//	.probe		= parallel_interface_probe,
+	.probe		= parallel_interface_probe,
 //	.callback	= parallel_interface_cb,
-//	.remove		= parallel_interface_remove,
+	.remove		= parallel_interface_remove,
 };
 
 

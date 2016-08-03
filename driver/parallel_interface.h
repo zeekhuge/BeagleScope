@@ -5,11 +5,29 @@
  * under the terms of the GNU General Public License version 2 as published by
  * the Free Software Foundation.
  */
-//
-//struct parallel_interface {
-//
-//
-//struct parallel_interface_ops {
-//	struct device_driver drv;
-//	void (*callback)(struct parallel_interface *, void *, int, void *, u32);
-//}
+
+//struct pi_device_id {}
+
+
+struct pi_device {
+	struct device		dev;
+}
+
+static inline void pi_set_drvdata( struct pi_device *pidev, void *data )
+{
+	dev_set_drvdata(&spi->dev, data);
+}
+
+static inline void *pi_get_drvdata(struct pi_device *pidev)
+{
+	return dev_get_drvdata(&pidev->dev);
+}
+
+
+struct pi_driver {
+	//const struct pi_device_id *id_table;
+	int (*probe)(struct pi_device *pidev);
+	int (*remove)(struct pi_device *pidev);
+	void (*shutdown)(struct pi_device *pidev);
+	struct device_driver driver;
+};
