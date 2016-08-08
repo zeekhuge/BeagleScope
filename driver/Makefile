@@ -4,42 +4,39 @@
 #
 #
 
-obj-m += beaglescope_driver.o
 obj-m += parallel_interface.o
+obj-m += beaglescope_driver.o
 
 KDIR?=/lib/modules/$(shell uname -r)/build
 INSTALL?=/lib/modules/$(shell uname -r)/kernel/drivers/testing
 OP=$(patsubst %.o,%.ko,$(obj-m))
 MODNAME=$(patsubst %.o,%,$(obj-m))
 
-.PHONY: all driver testing
-all: driver testing
+.PHONY: all driver
+all: driver
 
 driver:
 	@make -C $(KDIR) M=$(PWD) modules
 
-testing:
-	@cd testing && $(MAKE)
+.PHONY: install
 
-.PHONY: install install-driver install-testing
-install: install-driver install-testing
-
-install-driver: driver
+install: all
 	@mkdir -p $(INSTALL)
-	@echo "  -	copying $(OP) driver to $(INSTALL)"
-	@cp $(OP) $(INSTALL)
+	@for file in $(OP) ; do					 \
+	echo "  -	copying $$file driver to $(INSTALL)"    ; \
+	cp $$file $(INSTALL)					; \
+	done
 	@echo "  -	executing depmod -a"
 	@depmod -a
 
-install-testing: testing
-	@cd testing && $(MAKE) install
-
 .PHONY: load
-load: install-driver
-	@echo "  -	rmmod beaglescope_driver"
-	@rmmod beaglescope_driver | true
-	@echo "  -	modprobe beaglescope_driver"
-	@modprobe beaglescope_driver
+load: install
+	@for file in $(MODNAME) ; do		  \
+	echo "  -	rmmod $$file"		; \
+	rmmod $$file | true			; \
+	echo "  -	modprobe $$file"	; \
+	modprobe $$file				; \
+	done
 
 .PHONY: clean
 clean:

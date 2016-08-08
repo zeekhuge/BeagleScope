@@ -9,25 +9,32 @@
 //struct pi_device_id {}
 
 
+struct spi_device_id {
+	char name[SPI_NAME_SIZE];
+	kernel_ulong_t driver_data;	/* Data private to the driver */
+};
+
 struct pi_device {
 	struct device		dev;
-}
-
-static inline void pi_set_drvdata( struct pi_device *pidev, void *data )
-{
-	dev_set_drvdata(&spi->dev, data);
-}
-
-static inline void *pi_get_drvdata(struct pi_device *pidev)
-{
-	return dev_get_drvdata(&pidev->dev);
-}
-
+};
+//
+//static inline void pi_set_drvdata( struct pi_device *pidev, void *data )
+//{
+//	dev_set_drvdata(&spi->dev, data);
+//}
+//
+//static inline void *pi_get_drvdata(struct pi_device *pidev)
+//{
+//	return dev_get_drvdata(&pidev->dev);
+//}
+//
+//
 
 struct pi_driver {
-	//const struct pi_device_id *id_table;
+	const struct pi_device_id *id_table;
 	int (*probe)(struct pi_device *pidev);
 	int (*remove)(struct pi_device *pidev);
-	void (*shutdown)(struct pi_device *pidev);
 	struct device_driver driver;
 };
+
+extern int pi_register_driver(struct pi_driver *pidrv);

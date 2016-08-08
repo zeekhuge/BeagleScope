@@ -21,11 +21,15 @@
 #include <linux/iio/kfifo_buf.h>
 #include <linux/iio/triggered_buffer.h>
 #include <linux/iio/trigger_consumer.h>
-
+#include "parallel_interface.h"
 /*
  * macro to print debug info easily
  */
-#define log_debug(msg) printk(KERN_DEBUG "%s: %s\n", __FILE__, msg);
+#define log_debug() printk(KERN_DEBUG "[%s] %s\n", __this_module.name, \
+			      __FUNCTION__);
+
+#define log_debug_msg(msg) printk(KERN_DEBUG "[%s - %s] - %s \n", \
+				  __this_module.name, __FUNCTION__, msg);
 
 #define RPMSG_BUF_SIZE		(512)
 #define MAX_BLOCKS_IN_FIFO	(32)
@@ -108,7 +112,7 @@ static void set_beaglescope_sampling_frequency(struct beaglescope_state *st,
 	u32 pru_cycles;
 	u32 remainder;
 
-	log_debug("set_pru_sampling_frequency");
+	log_debug();
 
 	time_period_ns = 1000000000/(*val);
 	pru_cycles = time_period_ns/5;
@@ -153,7 +157,7 @@ static void set_beaglescope_read_mode(struct beaglescope_state *st,
 	bool *config_pru_read_mode = (bool *)&st->pru_config[2];
 	bool *config_pru_enable_bit = ((bool *)&st->pru_config[2]) + 31;
 
-	log_debug("set_pru_read_mode");
+	log_debug();
 	st->pru_config[2]=0;
 	*config_pru_read_mode = read_mode;
 	*config_pru_enable_bit = 1;
@@ -173,6 +177,7 @@ static void set_beaglescope_read_mode(struct beaglescope_state *st,
  */
 static bool get_beaglescope_read_mode(struct beaglescope_state *st)
 {
+	log_debug();
 	return *((bool *)&st->pru_config[2]);
 }
 
@@ -197,7 +202,7 @@ static int beaglescope_read_from_pru(struct iio_dev *indio_dev)
 	int ret;
 	struct beaglescope_state *st;
 
-	log_debug("beaglescope_read_from_pru");
+	log_debug();
 
 	st = iio_priv(indio_dev);
 
@@ -223,6 +228,7 @@ static int beaglescope_stop_sampling_pru(struct iio_dev *indio_dev )
 	int ret;
 	char stop_val = 0;
 	struct beaglescope_state *st;
+	log_debug();
 
 	st = iio_priv(indio_dev);
 
@@ -240,10 +246,11 @@ static int beaglescope_stop_sampling_pru(struct iio_dev *indio_dev )
 static int beaglescope_buffer_postenable(struct iio_dev *indio_dev)
 {
 	struct beaglescope_state *st;
+	log_debug();
+
 	st = iio_priv(indio_dev);
 	set_beaglescope_read_mode(st, BLOCK_READ);
 	beaglescope_read_from_pru(indio_dev);
-	log_debug("postenable");
 	return 0;
 }
 
@@ -253,7 +260,7 @@ static int beaglescope_buffer_postenable(struct iio_dev *indio_dev)
  */
 static int beaglescope_buffer_predisable(struct iio_dev *indio_dev)
 {
-	log_debug("predisable");
+	log_debug();
 	return beaglescope_stop_sampling_pru(indio_dev);
 }
 
@@ -270,7 +277,7 @@ static int beaglescope_read_raw(struct iio_dev *indio_dev,
 {
        int ret;
        struct beaglescope_state *st;
-       log_debug("read_raw");
+       log_debug();
 
        st = iio_priv(indio_dev);
 
@@ -308,7 +315,7 @@ static int beaglescope_write_raw(struct iio_dev *indio_dev,
 	struct beaglescope_state *st;
 	st = iio_priv(indio_dev);
 
-	log_debug("write_raw");
+	log_debug();
 
 	switch (mask){
 	case IIO_CHAN_INFO_SAMP_FREQ:
@@ -338,12 +345,13 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 	struct iio_dev *indio_dev;
 	u16 *dataw = data;
 	int count;
+	log_debug();
 
 	indio_dev = dev_get_drvdata(&rpdev->dev);
 	st = iio_priv(indio_dev);
 
 	if (get_beaglescope_read_mode(st) == RAW_READ){
-		log_debug("callback - raw mode");
+		log_debug();
 		st->raw_data=*((u32 *)data);
 		st->got_raw = 1;
 		wake_up_interruptible(&st->wait_list);
@@ -372,7 +380,7 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpdev)
 	struct iio_buffer *buffer;
 
 
-	log_debug("probe");
+	log_debug();
 
 	indio_dev = devm_iio_device_alloc(&rpdev->dev, sizeof(*st));
 	if (!indio_dev) {
@@ -430,6 +438,7 @@ static void beaglescope_driver_remove(struct rpmsg_channel *rpdev)
 {
 	struct iio_dev *indio_dev;
 	struct beaglescope_state *st;
+	log_debug();
 
 	indio_dev = dev_get_drvdata(&rpdev->dev);
 	st = iio_priv(indio_dev);
@@ -454,9 +463,16 @@ static struct rpmsg_driver beaglescope_driver= {
 	.drv.owner	= THIS_MODULE,
 	.id_table	= beaglescope_id,
 	.probe		= beaglescope_driver_probe,
-	.callback	= beaglescope_driver_cb,
 	.remove		= beaglescope_driver_remove,
 };
+
+static struct pi_driver beaglescope_pi_driver= {
+	.driver.name	= KBUILD_MODNAME,
+	.driver.owner	= THIS_MODULE,
+	.probe		= beaglescope_driver_probe,
+	.remove		= beaglescope_driver_remove,
+};
+
 
 /**
  * beaglescope_driver_init() : driver driver registration
@@ -468,14 +484,15 @@ static struct rpmsg_driver beaglescope_driver= {
 static int __init beaglescope_driver_init(void)
 {
 	int ret;
+	log_debug();
 
-	ret = register_rpmsg_driver(&beaglescope_driver);
+	ret = pi_register_driver(&beaglescope_driver);
 	if (ret){
-		pr_err("Failed to register beaglescope driver on rpmsg_bus\n");
+		pr_err("Failed to register beaglescope driver on  parallel_interface\n");
 		return ret;
 	}
 
-	pr_debug("Successfully registered to rpmsg_bus\n");
+	log_debug_msg("Successfully registered to rpmsg_bus");
 
 	return 0;
 }
@@ -485,6 +502,7 @@ static int __init beaglescope_driver_init(void)
  */
 static void __exit beaglescope_driver_exit(void)
 {
+	log_debug();
 	unregister_rpmsg_driver (&beaglescope_driver);
 }
 
