@@ -7,6 +7,7 @@
  */
 
 #include <linux/kernel.h>
+#include <linux/device.h>
 #include <linux/rpmsg.h>
 #include <linux/fs.h>
 #include <linux/init.h>
@@ -20,15 +21,42 @@
 			      __FUNCTION__);
 
 
-static int __init parallel_interface_driver_init(void)
+static int pi_bus_probe (struct device *dev)
 {
 	log_debug();
 	return 0;
 }
 
-static void __exit parallel_interface_driver_exit(void)
+static int pi_bus_match (struct device *dev, struct device_driver *drv)
 {
 	log_debug();
+	return 0;
+}
+
+struct  bus_type pi_bus_type = {
+	.name = "parallel_interface",
+	.match = pi_bus_match,
+	.probe = pi_bus_probe,
+};
+
+static int __init parallel_interface_driver_init(void)
+{
+	int ret;
+
+	log_debug();
+	ret = bus_register(&pi_bus_type);
+	if (ret) {
+		pr_err("parallel_interface: couldnt register bus type");
+		return ret;
+	}
+
+	return 0;
+}
+
+static void __exit parallel_interface_driver_exit(void)
+{
+	log_debug()
+	bus_unregister(&pi_bus_type);
 }
 
 module_init(parallel_interface_driver_init);
