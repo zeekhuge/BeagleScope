@@ -34,6 +34,7 @@ static int pi_bus_match (struct device *dev, struct device_driver *drv)
 	return 0;
 }
 
+
 struct  bus_type pi_bus_type = {
 	.name = "parallel_interface",
 	.match = pi_bus_match,
@@ -43,7 +44,6 @@ struct  bus_type pi_bus_type = {
 static void pi_release (struct device *dev)
 {
 	log_debug();
-	kfree(dev);
 }
 
 static struct device pi_bus = {
