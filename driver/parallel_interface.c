@@ -47,20 +47,20 @@ static void pi_release (struct device *dev)
 	put_device(dev);
 }
 
-static struct device pi_bus = {
-	.init_name = "parallel_bus",
-	.release = pi_release,
-};
 
 static int pi_rpmsg_probe (struct rpmsg_channel *rpdev)
 {
 	int ret;
+	struct device *pi_bus;
 	log_debug();
-
-	ret = device_register(&pi_bus);
+	pi_bus = kzalloc(sizeof(*pi_bus),GFP_KERNEL);
+	pi_bus->release = pi_release;
+	pi_bus->init_name = "parallel_interface";
+	dev_set_drvdata(&rpdev->dev, pi_bus);
+	ret = device_register(pi_bus);
 	if (ret){
 		pr_err("parallel_interface: couldnt register bus type");
-		put_device(&pi_bus);
+		put_device(pi_bus);
 		return ret;
 	}
 
@@ -69,8 +69,10 @@ static int pi_rpmsg_probe (struct rpmsg_channel *rpdev)
 
 static void pi_rpmsg_remove (struct rpmsg_channel *rpdev)
 {
+	struct device *pi_bus;
 	log_debug();
-	device_unregister(&pi_bus);
+	pi_bus = dev_get_drvdata(&rpdev->dev);
+	device_unregister(pi_bus);
 }
 
 static const struct rpmsg_device_id pi_rpmsg_id[] = {
