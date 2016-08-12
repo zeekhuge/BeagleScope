@@ -44,6 +44,7 @@ struct  bus_type pi_bus_type = {
 static void pi_release (struct device *dev)
 {
 	log_debug();
+	put_device(dev);
 }
 
 static struct device pi_bus = {
