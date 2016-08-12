@@ -9,7 +9,7 @@
 /dts-v1/;
 /plugin/;
 
-/ {
+/{
     compatible = "ti,beaglebone", "ti,beaglebone-black";
     part-number = "BEAGLESCOPE";
     version = "00A0";
@@ -17,15 +17,14 @@
     /* identification */
 
 	fragment@0 {
-/*		target = <&ocp>;
+		target = <&ocp>;
 		__overlay__ {
 			parallel_interface {
-				 parallel_interface 
 				status="okay";
 				compatible = "ti,parallel_interface";
 			};
 
-		};*/
+		};
 
 	};
 };
