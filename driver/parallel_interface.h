@@ -13,7 +13,6 @@ struct pi_device {
 };
 
 struct pi_driver {
-	struct module *module;
 	struct device_driver driver;
 	int (*probe)(struct pi_device *dev);
 	void (*remove)(struct pi_device *dev);
