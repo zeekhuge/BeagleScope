@@ -23,11 +23,15 @@ struct pi_driver {
 #define to_pi_driver(drv)\
 	container_of(drv, struct pi_driver, driver);
 
-extern void pi_unregister_driver (struct pi_driver *pidrv);
-extern int __pi_register_driver (struct module *owner, struct pi_driver *pidrv);
+static inline void pi_unregister_driver (struct pi_driver *pidrv){
+	driver_unregister(&pidrv->driver);
+}
+
+extern int __pi_register_driver (char *name, struct module *owner,
+				 struct pi_driver *pidrv);
 
 #define pi_register_driver(drv) \
-	__pi_register_driver (THIS_MODULE, drv)
+	__pi_register_driver (KBUILD_MODNAME ,THIS_MODULE, drv)
 
 #define module_pi_driver(__pi_driver) \
 	module_driver(__pi_driver, pi_register_driver, pi_unregister_driver)
