@@ -41,6 +41,23 @@ struct  bus_type pi_bus_type = {
 	.probe = pi_bus_probe,
 };
 
+int __pi_register_driver (char *name, struct module *owner,
+				 struct pi_driver *pidrv)
+{
+	int ret = 0;
+
+	log_debug();
+	pidrv->driver.name = name;
+	pidrv->driver.owner = owner;
+	pidrv->driver.bus = &pi_bus_type;
+	ret = driver_register(&pidrv->driver);
+	if (ret)
+		pr_err("parallel_interface : couldnt register device driver");
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(__pi_register_driver);
+
 static void pi_release (struct device *dev)
 {
 	log_debug();
@@ -52,11 +69,15 @@ static int pi_rpmsg_probe (struct rpmsg_channel *rpdev)
 {
 	int ret;
 	struct device *pi_bus;
+
 	log_debug();
-	pi_bus = kzalloc(sizeof(*pi_bus),GFP_KERNEL);
+
+	pi_bus = devm_kzalloc(&rpdev->dev, sizeof(*pi_bus), GFP_KERNEL);
 	pi_bus->release = pi_release;
 	pi_bus->init_name = "parallel_interface";
+
 	dev_set_drvdata(&rpdev->dev, pi_bus);
+
 	ret = device_register(pi_bus);
 	if (ret){
 		pr_err("parallel_interface: couldnt register bus type");
@@ -116,7 +137,7 @@ return ret;
 
 static void __exit parallel_interface_driver_exit(void)
 {
-	log_debug()
+	log_debug();
 	bus_unregister(&pi_bus_type);
 	unregister_rpmsg_driver(&pi_rpmsg_driver);
 }
