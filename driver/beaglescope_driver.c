@@ -429,7 +429,7 @@ error_ret:
  * beaglescope_driver_remove() - function gets invoked when the rpmsg device is
  * removed
  */
-static void beaglescope_driver_remove(struct rpmsg_channel *rpdev)
+static void beaglescope_driver_remove (struct rpmsg_channel *rpdev)
 {
 	struct iio_dev *indio_dev;
 	struct beaglescope_state *st;
@@ -451,14 +451,21 @@ static const struct rpmsg_device_id beaglescope_id[] = {
 };
 MODULE_DEVICE_TABLE(parallel_interface, beaglescope_id);
 
-/* beaglescope_driver - The structure containing the pointers to read/write
-   functions to send data to the pru */
-static struct rpmsg_driver beaglescope_driver= {
-	.drv.name	= KBUILD_MODNAME,
-	.drv.owner	= THIS_MODULE,
-	.id_table	= beaglescope_id,
-	.probe		= beaglescope_driver_probe,
-	.remove		= beaglescope_driver_remove,
+
+static int dc782a_probe (struct pi_device *dev)
+{
+	log_debug();
+	return 0;
+}
+
+static void dc782a_remove (struct pi_device *dev)
+{
+	log_debug();
+}
+
+static struct pi_driver dc782a_driver= {
+	.probe		= dc782a_probe,
+	.remove		= dc782a_remove,
 };
 
 /**
@@ -473,13 +480,12 @@ static int __init beaglescope_driver_init(void)
 	int ret;
 
 	log_debug();
-	ret = register_rpmsg_driver(&beaglescope_driver);
+	ret = pi_register_driver(&dc782a_driver);
 	if (ret){
-		pr_err("Failed to register beaglescope driver on rpmsg_bus\n");
+		pr_err("Failed to register beaglescope driver\n");
 		return ret;
 	}
 
-	pr_debug("Successfully registered to rpmsg_bus\n");
 
 	return 0;
 }
@@ -489,7 +495,8 @@ static int __init beaglescope_driver_init(void)
  */
 static void __exit beaglescope_driver_exit(void)
 {
-	unregister_rpmsg_driver (&beaglescope_driver);
+	log_debug();
+	pi_unregister_driver (&dc782a_driver);
 }
 
 module_init(beaglescope_driver_init);
