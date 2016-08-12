@@ -34,7 +34,7 @@
  *
  * RPMSG_CHAN_DESC : description of the rpmsg channel.
  */
-#define RPMSG_CHAN_NAME			"beaglescope"
+#define RPMSG_CHAN_NAME			"parallel_interface"
 #define RPMSG_CHAN_PORT			30
 #define RPMSG_CHAN_DESC			"Channel 30"
 

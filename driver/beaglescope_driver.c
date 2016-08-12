@@ -449,7 +449,7 @@ static const struct rpmsg_device_id beaglescope_id[] = {
 		{ .name = "beaglescope" },
 		{ },
 };
-MODULE_DEVICE_TABLE(rpmsg, beaglescope_id);
+MODULE_DEVICE_TABLE(parallel_interface, beaglescope_id);
 
 /* beaglescope_driver - The structure containing the pointers to read/write
    functions to send data to the pru */
@@ -458,7 +458,6 @@ static struct rpmsg_driver beaglescope_driver= {
 	.drv.owner	= THIS_MODULE,
 	.id_table	= beaglescope_id,
 	.probe		= beaglescope_driver_probe,
-	.callback	= beaglescope_driver_cb,
 	.remove		= beaglescope_driver_remove,
 };
 
