@@ -58,14 +58,14 @@ int __pi_register_driver (char *name, struct module *owner,
 }
 EXPORT_SYMBOL_GPL(__pi_register_driver);
 
-static void pi_release (struct device *dev)
+static void pi_release(struct device *dev)
 {
 	log_debug();
 	put_device(dev);
 }
 
 
-static int pi_rpmsg_probe (struct rpmsg_channel *rpdev)
+static int pi_rpmsg_probe(struct rpmsg_channel *rpdev)
 {
 	int ret;
 	struct device *pi_bus;
@@ -88,7 +88,7 @@ static int pi_rpmsg_probe (struct rpmsg_channel *rpdev)
 	return 0;
 }
 
-static void pi_rpmsg_remove (struct rpmsg_channel *rpdev)
+static void pi_rpmsg_remove(struct rpmsg_channel *rpdev)
 {
 	struct device *pi_bus;
 	log_debug();
@@ -96,19 +96,6 @@ static void pi_rpmsg_remove (struct rpmsg_channel *rpdev)
 	device_unregister(pi_bus);
 }
 
-static const struct rpmsg_device_id pi_rpmsg_id[] = {
-		{ .name = "parallel_interface" },
-		{ },
-};
-MODULE_DEVICE_TABLE(rpmsg, pi_rpmsg_id);
-
-static struct rpmsg_driver pi_rpmsg_driver= {
-	.drv.name	= KBUILD_MODNAME,
-	.drv.owner	= THIS_MODULE,
-	.id_table	= pi_rpmsg_id,
-	.probe		= pi_rpmsg_probe,
-	.remove		= pi_rpmsg_remove,
-};
 
 static int __init parallel_interface_driver_init(void)
 {
@@ -116,30 +103,20 @@ static int __init parallel_interface_driver_init(void)
 
 	log_debug();
 
-	ret = register_rpmsg_driver(&pi_rpmsg_driver);
+	ret = bus_register(&pi_bus_type);
 	if (ret) {
 		pr_err("parallel_interface: couldnt register bus type");
 		return ret;
 	}
 
-	ret = bus_register(&pi_bus_type);
-	if (ret) {
-		pr_err("parallel_interface: couldnt register bus type");
-		goto remove_rpmsg_registration;
-	}
-
 	return 0;
 
-remove_rpmsg_registration:
-unregister_rpmsg_driver(&pi_rpmsg_driver);
-return ret;
 }
 
 static void __exit parallel_interface_driver_exit(void)
 {
 	log_debug();
 	bus_unregister(&pi_bus_type);
-	unregister_rpmsg_driver(&pi_rpmsg_driver);
 }
 
 module_init(parallel_interface_driver_init);
