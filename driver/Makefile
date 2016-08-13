@@ -4,7 +4,19 @@
 #
 #
 
+# The drivers should be arranged from down to bottom
+# hierarchy order.
+# The arrangement of the modules is as:
+#
+# [beaglescope_driver]
+#        \
+#         \       [pi_bus]
+#          \      /
+#	   \/    \/
+#	[parallel_interface]
+#
 obj-m += beaglescope_driver.o
+obj-m += pi_bus.o
 obj-m += parallel_interface.o
 
 KDIR?=/lib/modules/$(shell uname -r)/build
