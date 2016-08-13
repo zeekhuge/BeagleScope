@@ -35,7 +35,7 @@ static int pi_bus_match (struct device *dev, struct device_driver *drv)
 }
 
 
-struct  bus_type pi_bus_type = {
+struct bus_type pi_bus_type = {
 	.name = "parallel_interface",
 	.match = pi_bus_match,
 	.probe = pi_bus_probe,
