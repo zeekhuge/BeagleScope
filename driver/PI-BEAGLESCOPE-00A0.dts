@@ -14,14 +14,22 @@
     part-number = "BEAGLESCOPE";
     version = "00A0";
 
+	aliases {
+		pi0 = &pi0;
+	};
+
     /* identification */
 
 	fragment@0 {
 		target = <&ocp>;
 		__overlay__ {
-			parallel_interface {
+			pi0: pi0@f00 {
 				status="okay";
-				compatible = "ti,parallel_interface";
+				compatible = "ti,pi-bus";
+				adc: adc@f00 {
+					status="okay";
+					compatible = "ti,adc-beaglescope";
+				};
 			};
 
 		};
