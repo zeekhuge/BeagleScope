@@ -9,8 +9,6 @@
 /*
  * macro to print debug info easily
  */
-#define log_debug() printk(KERN_DEBUG "[%s] %s\n", __this_module.name, \
-			      __FUNCTION__)
 
 #include <linux/kernel.h>
 #include <linux/device.h>
@@ -19,15 +17,61 @@
 #include <linux/init.h>
 #include <linux/slab.h>
 #include <linux/module.h>
+#include <linux/platform_device.h>
 #include "parallel_interface.h"
 
-static int pi_bus_rpmsg_probe (struct rpmsg_channel *rpdev)
+#define log_debug() printk(KERN_DEBUG "[%s] %s\n", __this_module.name, \
+			      __FUNCTION__)
+
+static int pibus_platform_probe(struct platform_device *pdrv)
 {
 	log_debug();
+
 	return 0;
 }
 
-static void pi_bus_rpmsg_remove (struct rpmsg_channel *rpdev)
+static int pibus_platform_remove(struct platform_device *pdrv)
+{
+	log_debug();
+
+	return 0;
+}
+
+static struct of_device_id pibus_of_id[] = {
+		{ .compatible = "ti,pibus0" },
+		{ },
+};
+MODULE_DEVICE_TABLE(of, pibus_of_id);
+
+static int pi_bus_rpmsg_probe(struct rpmsg_channel *rpdev)
+{
+	int ret;
+	struct platform_driver *pibus_pdrv;
+	log_debug();
+
+	pibus_pdrv = devm_kzalloc(&rpdev->dev, sizeof(*pibus_pdrv), GFP_KERNEL);
+	if (!pibus_pdrv){
+		pr_err("pibus : failed to zalloc memmory");
+		return -ENOMEM;
+	}
+
+	pibus_pdrv->driver.name = "pibus";
+	pibus_pdrv->driver.owner = THIS_MODULE;
+	pibus_pdrv->driver.mod_name = KBUILD_MODNAME;
+	pibus_pdrv->driver.of_match_table = pibus_of_id;
+	pibus_pdrv->probe = pibus_platform_probe;
+	pibus_pdrv->remove = pibus_platform_remove;
+
+	ret = platform_driver_register(pibus_pdrv);
+	if (ret){
+		pr_err("pibus : unable to register platform driver");
+		return ret;
+	}
+
+	return 0;
+}
+
+static void pi_bus_rpmsg_remove(struct rpmsg_channel *rpdev)
 {
 	log_debug();
 }
@@ -38,7 +82,7 @@ static const struct rpmsg_device_id pi_bus_rpmsg_id[] = {
 };
 MODULE_DEVICE_TABLE(rpmsg, pi_bus_rpmsg_id);
 
-static struct rpmsg_driver pi_bus_rpmsg_driver= {
+static struct rpmsg_driver pi_bus_rpmsg_driver = {
 	.drv.name	= KBUILD_MODNAME,
 	.drv.owner	= THIS_MODULE,
 	.id_table	= pi_bus_rpmsg_id,
