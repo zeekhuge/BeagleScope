@@ -10,6 +10,8 @@
 #include <linux/device.h>
 #include <linux/rpmsg.h>
 #include <linux/fs.h>
+#include <linux/of.h>
+#include <linux/of_device.h>
 #include <linux/init.h>
 #include <linux/slab.h>
 #include <linux/module.h>
@@ -19,8 +21,8 @@
  * macro to print debug info easily
  */
 #define log_debug() printk(KERN_DEBUG "[%s] %s\n", __this_module.name, \
-			      __FUNCTION__);
-
+			      __FUNCTION__)
+#define log_debug_msg(...) printk(KERN_DEBUG __VA_ARGS__ );
 
 static int pi_bus_probe (struct device *dev)
 {
@@ -34,12 +36,71 @@ static int pi_bus_match (struct device *dev, struct device_driver *drv)
 	return 0;
 }
 
-
 struct bus_type pi_bus_type = {
 	.name = "parallel_interface",
 	.match = pi_bus_match,
 	.probe = pi_bus_probe,
 };
+
+static void pi_core_dev_release(struct device *dev)
+{
+	log_debug();
+	kfree(dev);
+}
+
+static struct pi_device *pi_core_register_node_pidev(struct device *parent,
+						struct device_node *pidev_node)
+{
+	int ret;
+	struct pi_device *pidev;
+	//struct pi_bus_ctrlr *pibusctrlr;
+
+	log_debug();
+	log_debug_msg("Registerging node %s as pidevice\n",
+		      pidev_node->full_name);
+
+	pidev = devm_kzalloc(parent, sizeof(*pidev), GFP_KERNEL);
+
+	//pidev->pibusctrlr = pibusctrlr;
+	pidev->dev.parent = parent;
+	pidev->dev.bus = &pi_bus_type;
+	pidev->dev.release = pi_core_dev_release;
+	pidev->dev.of_node = of_node_get(pidev_node);
+	pidev->dev.init_name = "pidev";
+
+	ret = device_register(&pidev->dev);
+	if(ret){
+		dev_err(parent,"Couldn't register device\n");
+		return NULL;
+	}
+
+	return pidev;
+}
+
+int pi_core_register_devices(struct pi_bus_ctrlr *pibusctrlr)
+{
+	struct pi_device *pidev;
+	struct device_node *node;
+
+	log_debug();
+
+	if (!pibusctrlr->dev->of_node)
+		return -EINVAL;
+
+	for_each_available_child_of_node(pibusctrlr->dev->of_node, node) {
+		if (of_node_test_and_set_flag(node, OF_POPULATED))
+			continue;
+
+		pidev = pi_core_register_node_pidev(pibusctrlr->dev, node);
+		if (IS_ERR(pidev)){
+			log_debug_msg("Couldnt register pidev\n");
+			return -EINVAL;
+		}
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(pi_core_register_devices);
 
 int __pi_register_driver (char *name, struct module *owner,
 				 struct pi_driver *pidrv)
@@ -110,7 +171,6 @@ static int __init parallel_interface_driver_init(void)
 	}
 
 	return 0;
-
 }
 
 static void __exit parallel_interface_driver_exit(void)
