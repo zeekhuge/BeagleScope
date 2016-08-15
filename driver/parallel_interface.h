@@ -8,12 +8,10 @@
 #ifndef __PARALLEL_INTERFACE__
 #define __PARALLEL_INTERFACE__
 
-struct pi_bus_ctrlr {
-	int dev_count;
-	struct platform_device *pdev;
-	struct device *dev;
+struct pi_bus_host {
+	struct device dev;
 };
-#define to_pi_bus_ctrlr(_dev)\
+#define to_pi_bus_host(_dev)\
 	container_of(_dev, struct pi_bus_ctrlr, dev);
 
 struct pi_device {
@@ -45,5 +43,8 @@ extern int __pi_register_driver (char *name, struct module *owner,
 #define module_pi_driver(__pi_driver) \
 	module_driver(__pi_driver, pi_register_driver, pi_unregister_driver)
 
-extern int pi_core_register_devices(struct pi_bus_ctrlr *);
+extern int pi_core_register_devices(struct pi_bus_host *);
+extern struct pi_bus_host *pi_core_register_host(struct device *dev);
+
+
 #endif /*__PARALLEL_INTERFACE__*/
