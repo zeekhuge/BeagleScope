@@ -15,7 +15,7 @@ struct pi_bus_host {
 	container_of(_dev, struct pi_bus_ctrlr, dev);
 
 struct pi_device {
-	struct pi_bus_ctrlr *pibusctrlr;
+	struct pi_bus_host *pibushost;
 	struct device dev;
 };
 #define to_pi_device(_dev)\
@@ -45,6 +45,7 @@ extern int __pi_register_driver (char *name, struct module *owner,
 
 extern int pi_core_register_devices(struct pi_bus_host *);
 extern struct pi_bus_host *pi_core_register_host(struct device *dev);
+extern int pi_core_unregister_host (struct pi_bus_host *pibushost);
 
 
 #endif /*__PARALLEL_INTERFACE__*/
