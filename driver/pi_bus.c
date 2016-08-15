@@ -35,6 +35,7 @@ static int pibus_platform_probe(struct platform_device *pdev)
 		dev_err(&pdev->dev, "Couldnt register pi-host\n");
 		return -EINVAL;
 	}
+	platform_set_drvdata(pdev, pibushost);
 	ret = pi_core_register_devices(pibushost);
 	if (ret){
 		dev_err(&pdev->dev, "Couldnt register device\n");
@@ -45,9 +46,12 @@ static int pibus_platform_probe(struct platform_device *pdev)
 
 static int pibus_platform_remove(struct platform_device *pdev)
 {
+	struct pi_bus_host * pibushost;
 	log_debug();
 
-	put_device(&pdev->dev);
+	pibushost = platform_get_drvdata(pdev);
+	pi_core_unregister_host(pibushost);
+
 	return 0;
 }
 
