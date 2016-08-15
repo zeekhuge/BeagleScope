@@ -27,17 +27,17 @@
 static int pibus_platform_probe(struct platform_device *pdev)
 {
 	int ret;
-	struct pi_bus_ctrlr *pibusctrlr;
+	struct pi_bus_host *pibushost;
 
 	log_debug();
-
-	pibusctrlr = kzalloc(sizeof(*pibusctrlr), GFP_KERNEL);
-	pibusctrlr->pdev = pdev;
-	pibusctrlr->dev = &pdev->dev;
-
-	ret = pi_core_register_devices(pibusctrlr);
+	pibushost = pi_core_register_host(&pdev->dev);
+	if (IS_ERR(pibushost)) {
+		dev_err(&pdev->dev, "Couldnt register pi-host\n");
+		return -EINVAL;
+	}
+	ret = pi_core_register_devices(pibushost);
 	if (ret){
-		dev_err(&pdev->dev, "Couldnt register device on pi-core\n");
+		dev_err(&pdev->dev, "Couldnt register device\n");
 		return ret;
 	}
 	return 0;
@@ -47,7 +47,7 @@ static int pibus_platform_remove(struct platform_device *pdev)
 {
 	log_debug();
 
-
+	put_device(&pdev->dev);
 	return 0;
 }
 
