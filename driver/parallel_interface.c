@@ -42,6 +42,34 @@ struct bus_type pi_bus_type = {
 	.probe = pi_bus_probe,
 };
 
+static int pi_core_unregister_pidev (struct device *dev, void *null)
+{
+	log_debug();
+	of_node_clear_flag(dev->of_node, OF_POPULATED);
+	put_device(dev);
+	device_unregister(dev);
+
+	return 0;
+}
+
+int pi_core_unregister_host (struct pi_bus_host *pibushost)
+{
+	int ret;
+
+	log_debug();
+	ret = device_for_each_child(&pibushost->dev, NULL,
+				    pi_core_unregister_pidev);
+	if (ret){
+		dev_err(&pibushost->dev, "Couldnt unregister all childs\n");
+		return ret;
+	}
+	put_device(&pibushost->dev);
+	device_unregister(&pibushost->dev);
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(pi_core_unregister_host);
+
 static void pi_core_pidev_release(struct device *dev)
 {
 	log_debug();
