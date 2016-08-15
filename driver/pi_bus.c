@@ -22,17 +22,31 @@
 
 #define log_debug() printk(KERN_DEBUG "[%s] %s\n", __this_module.name, \
 			      __FUNCTION__)
+#define log_debug_msg(...) printk(KERN_DEBUG __VA_ARGS__ )
 
-static int pibus_platform_probe(struct platform_device *pdrv)
+static int pibus_platform_probe(struct platform_device *pdev)
 {
+	int ret;
+	struct pi_bus_ctrlr *pibusctrlr;
+
 	log_debug();
 
+	pibusctrlr = kzalloc(sizeof(*pibusctrlr), GFP_KERNEL);
+	pibusctrlr->pdev = pdev;
+	pibusctrlr->dev = &pdev->dev;
+
+	ret = pi_core_register_devices(pibusctrlr);
+	if (ret){
+		dev_err(&pdev->dev, "Couldnt register device on pi-core\n");
+		return ret;
+	}
 	return 0;
 }
 
-static int pibus_platform_remove(struct platform_device *pdrv)
+static int pibus_platform_remove(struct platform_device *pdev)
 {
 	log_debug();
+
 
 	return 0;
 }
@@ -55,6 +69,7 @@ static int pi_bus_rpmsg_probe(struct rpmsg_channel *rpdev)
 		return -ENOMEM;
 	}
 
+	dev_set_drvdata(&rpdev->dev, pibus_pdrv);
 	pibus_pdrv->driver.name = "pibus";
 	pibus_pdrv->driver.owner = THIS_MODULE;
 	pibus_pdrv->driver.mod_name = KBUILD_MODNAME;
@@ -73,7 +88,11 @@ static int pi_bus_rpmsg_probe(struct rpmsg_channel *rpdev)
 
 static void pi_bus_rpmsg_remove(struct rpmsg_channel *rpdev)
 {
+	struct platform_driver *pibus_pdrv;
+
 	log_debug();
+	pibus_pdrv = dev_get_drvdata(&rpdev->dev);
+	platform_driver_unregister(pibus_pdrv);
 }
 
 static const struct rpmsg_device_id pi_bus_rpmsg_id[] = {
