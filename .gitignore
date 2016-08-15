@@ -3,7 +3,9 @@ new_example/
 
 
 tags
+*.vim
 .*.swp
+.*.swo
 *.dwo
 *.ko
 *.ko.cmd
