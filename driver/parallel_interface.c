@@ -22,7 +22,7 @@
  */
 #define log_debug() printk(KERN_DEBUG "[%s] %s\n", __this_module.name, \
 			      __FUNCTION__)
-#define log_debug_msg(...) printk(KERN_DEBUG __VA_ARGS__ );
+#define log_debug_msg(...) printk(KERN_DEBUG __VA_ARGS__ )
 
 static int pi_bus_probe (struct device *dev)
 {
@@ -42,18 +42,19 @@ struct bus_type pi_bus_type = {
 	.probe = pi_bus_probe,
 };
 
-static void pi_core_dev_release(struct device *dev)
+static void pi_core_pidev_release(struct device *dev)
 {
 	log_debug();
-	kfree(dev);
+	put_device(dev);
+	device_unregister(dev);
+
 }
 
-static struct pi_device *pi_core_register_node_pidev(struct device *parent,
+static struct pi_device* pi_core_register_node_pidev(struct device *parent,
 						struct device_node *pidev_node)
 {
 	int ret;
 	struct pi_device *pidev;
-	//struct pi_bus_ctrlr *pibusctrlr;
 
 	log_debug();
 	log_debug_msg("Registerging node %s as pidevice\n",
@@ -61,10 +62,9 @@ static struct pi_device *pi_core_register_node_pidev(struct device *parent,
 
 	pidev = devm_kzalloc(parent, sizeof(*pidev), GFP_KERNEL);
 
-	//pidev->pibusctrlr = pibusctrlr;
 	pidev->dev.parent = parent;
 	pidev->dev.bus = &pi_bus_type;
-	pidev->dev.release = pi_core_dev_release;
+	pidev->dev.release = pi_core_pidev_release;
 	pidev->dev.of_node = of_node_get(pidev_node);
 	pidev->dev.init_name = "pidev";
 
@@ -77,21 +77,21 @@ static struct pi_device *pi_core_register_node_pidev(struct device *parent,
 	return pidev;
 }
 
-int pi_core_register_devices(struct pi_bus_ctrlr *pibusctrlr)
+int pi_core_register_devices(struct pi_bus_host *pibushost)
 {
 	struct pi_device *pidev;
 	struct device_node *node;
 
 	log_debug();
 
-	if (!pibusctrlr->dev->of_node)
+	if (!pibushost->dev.of_node)
 		return -EINVAL;
 
-	for_each_available_child_of_node(pibusctrlr->dev->of_node, node) {
+	for_each_available_child_of_node(pibushost->dev.of_node, node) {
 		if (of_node_test_and_set_flag(node, OF_POPULATED))
 			continue;
 
-		pidev = pi_core_register_node_pidev(pibusctrlr->dev, node);
+		pidev = pi_core_register_node_pidev(&pibushost->dev, node);
 		if (IS_ERR(pidev)){
 			log_debug_msg("Couldnt register pidev\n");
 			return -EINVAL;
@@ -101,6 +101,48 @@ int pi_core_register_devices(struct pi_bus_ctrlr *pibusctrlr)
 	return 0;
 }
 EXPORT_SYMBOL_GPL(pi_core_register_devices);
+
+static void pi_core_host_release(struct device *dev)
+{
+	log_debug();
+	put_device(dev);
+	device_unregister(dev);
+}
+
+struct pi_bus_host *pi_core_register_host(struct device *dev)
+{
+	int error;
+	struct pi_bus_host *pibushost;
+
+	log_debug();
+
+	pibushost = devm_kzalloc(dev, sizeof(*pibushost), GFP_KERNEL);
+	if (IS_ERR(pibushost)){
+		dev_err(dev, "Failed to allocate pibushost\n");
+		goto return_from_register_host;
+	}
+
+	dev_set_drvdata(dev, pibushost);
+	pibushost->dev.init_name = "pi-0";
+	pibushost->dev.bus = &pi_bus_type;
+	pibushost->dev.parent = dev;
+	pibushost->dev.of_node = dev->of_node;
+	pibushost->dev.release = pi_core_host_release;
+
+	error = device_register(&pibushost->dev);
+	if (error) {
+		dev_err(dev, "Failed to register the host\n");
+		goto free_host;
+	}
+	return pibushost;
+
+free_host:
+put_device(&pibushost->dev);
+kfree(&pibushost);
+return_from_register_host:
+return NULL;
+}
+EXPORT_SYMBOL_GPL(pi_core_register_host);
 
 int __pi_register_driver (char *name, struct module *owner,
 				 struct pi_driver *pidrv)
