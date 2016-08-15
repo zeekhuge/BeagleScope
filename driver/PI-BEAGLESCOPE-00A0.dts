@@ -25,7 +25,7 @@
 		__overlay__ {
 			pi0: pi0@f00 {
 				status="okay";
-				compatible = "ti,pi-bus";
+				compatible = "ti,pibus0";
 				adc: adc@f00 {
 					status="okay";
 					compatible = "ti,adc-beaglescope";
