@@ -46,7 +46,6 @@ static int pi_core_unregister_pidev (struct device *dev, void *null)
 {
 	log_debug();
 	of_node_clear_flag(dev->of_node, OF_POPULATED);
-	put_device(dev);
 	device_unregister(dev);
 
 	return 0;
@@ -63,7 +62,6 @@ int pi_core_unregister_host (struct pi_bus_host *pibushost)
 		dev_err(&pibushost->dev, "Couldnt unregister all childs\n");
 		return ret;
 	}
-	put_device(&pibushost->dev);
 	device_unregister(&pibushost->dev);
 
 	return 0;
@@ -74,8 +72,6 @@ static void pi_core_pidev_release(struct device *dev)
 {
 	log_debug();
 	put_device(dev);
-	device_unregister(dev);
-
 }
 
 static struct pi_device* pi_core_register_node_pidev(struct device *parent,
@@ -134,7 +130,6 @@ static void pi_core_host_release(struct device *dev)
 {
 	log_debug();
 	put_device(dev);
-	device_unregister(dev);
 }
 
 struct pi_bus_host *pi_core_register_host(struct device *dev)
