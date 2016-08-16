@@ -445,11 +445,11 @@ static void beaglescope_driver_remove (struct rpmsg_channel *rpdev)
 
 /* beaglescope_id - Structure that holds the channel name for which this driver
    should be probed */
-static struct of_device_id dc782a_id[] = {
-		{ .compatible = "ti,adc-beaglescope" },
-		{ },
+static const struct pi_device_id dc782a_id[] = {
+	{"dc782a", 0},
+	{}
 };
-MODULE_DEVICE_TABLE(of, dc782a_id);
+MODULE_DEVICE_TABLE(pi, dc782a_id);
 
 static int dc782a_probe (struct pi_device *dev)
 {
@@ -464,8 +464,10 @@ static void dc782a_remove (struct pi_device *dev)
 
 static struct pi_driver dc782a_driver= {
 	.driver = {
-		.of_match_table = &dc782a_id,
+		.name = KBUILD_MODNAME,
+		.owner = THIS_MODULE,
 	},
+	.id_table	= dc782a_id,
 	.probe		= dc782a_probe,
 	.remove		= dc782a_remove,
 };
