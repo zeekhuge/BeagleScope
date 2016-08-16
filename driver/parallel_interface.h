@@ -35,7 +35,7 @@ struct pi_device {
 	container_of(__dev, struct pi_device, dev);
 
 struct pi_driver {
-	struct pi_device_id *id_table;
+	const struct pi_device_id *id_table;
 	struct device_driver driver;
 	int (*probe)(struct pi_device *dev);
 	void (*remove)(struct pi_device *dev);
