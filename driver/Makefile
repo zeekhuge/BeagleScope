@@ -15,7 +15,7 @@
 #	   \/    \/
 #	[parallel_interface]
 #
-#obj-m += beaglescope_driver.o
+obj-m += beaglescope_driver.o
 obj-m += pi_bus.o
 obj-m += parallel_interface.o
 
