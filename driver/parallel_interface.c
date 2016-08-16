@@ -15,6 +15,7 @@
 #include <linux/init.h>
 #include <linux/slab.h>
 #include <linux/module.h>
+#include <linux/string.h>
 #include "parallel_interface.h"
 
 /*
@@ -24,22 +25,62 @@
 			      __FUNCTION__)
 #define log_debug_msg(...) printk(KERN_DEBUG __VA_ARGS__ )
 
-static int pi_bus_probe (struct device *dev)
+static int pi_core_bus_remove (struct device *dev)
 {
 	log_debug();
 	return 0;
 }
 
-static int pi_bus_match (struct device *dev, struct device_driver *drv)
+static int pi_core_bus_probe (struct device *dev)
 {
 	log_debug();
+	return 0;
+}
+
+static int pi_driver_match_device (struct pi_device *pidev,
+					      struct pi_driver *pidrv)
+{
+	struct pi_device_id *id;
+	log_debug();
+
+	id = pidrv->id_table;
+	if(id)
+		while(id->name[0]){
+			if(!strcmp(pidev->modalias, id->name)){
+				return 1;
+			}
+			id++;
+		}
+
+	return (strcmp(pidev->modalias, pidrv->driver.name) == 0);
+
+	return 0;
+}
+
+static int pi_core_bus_match (struct device *dev, struct device_driver *drv)
+{
+	struct pi_device *pidev;
+	struct pi_driver *pidrv;
+
+	log_debug();
+	//log_debug_msg("dev = %s \n drv = %s",dev->init_name, drv->name);
+
+	pidrv = to_pi_driver(drv);
+	pidev = to_pi_device(dev);
+
+	if(pi_driver_match_device(pidev, pidrv)){
+		log_debug_msg("Found match\n");
+		return 1;
+	}
+
 	return 0;
 }
 
 struct bus_type pi_bus_type = {
 	.name = "parallel_interface",
-	.match = pi_bus_match,
-	.probe = pi_bus_probe,
+	.match = pi_core_bus_match,
+	.probe = pi_core_bus_probe,
+	.remove = pi_core_bus_remove,
 };
 
 static int pi_core_unregister_pidev (struct device *dev, void *null)
@@ -86,6 +127,13 @@ static struct pi_device* pi_core_register_node_pidev(struct device *parent,
 
 	pidev = devm_kzalloc(parent, sizeof(*pidev), GFP_KERNEL);
 
+	ret = of_modalias_node(pidev_node, pidev->modalias,
+			       sizeof(pidev->modalias));
+	if(ret){
+		dev_err(parent,"Couldn't get modalias\n");
+		goto free_alloc_pidev;
+	}
+
 	pidev->dev.parent = parent;
 	pidev->dev.bus = &pi_bus_type;
 	pidev->dev.release = pi_core_pidev_release;
@@ -95,10 +143,16 @@ static struct pi_device* pi_core_register_node_pidev(struct device *parent,
 	ret = device_register(&pidev->dev);
 	if(ret){
 		dev_err(parent,"Couldn't register device\n");
-		return NULL;
+		goto put_device_and_free;
 	}
 
 	return pidev;
+
+put_device_and_free:
+put_device(&pidev->dev);
+free_alloc_pidev:
+devm_kfree(parent, pidev);
+return NULL;
 }
 
 int pi_core_register_devices(struct pi_bus_host *pibushost)
