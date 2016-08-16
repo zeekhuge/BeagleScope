@@ -28,7 +28,7 @@
 				compatible = "ti,pibus0";
 				adc: adc@f00 {
 					status="okay";
-					compatible = "ti,adc-beaglescope";
+					compatible = "ti,dc782a";
 				};
 			};
 
