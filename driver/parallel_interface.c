@@ -27,20 +27,39 @@
 
 static int pi_core_bus_remove (struct device *dev)
 {
+	struct pi_driver *pidrv;
+	struct pi_device *pidev;
 	log_debug();
+
+	pidrv = to_pi_driver(dev->driver);
+	pidev = to_pi_device(dev);
+
+	pidrv->remove(pidev);
 	return 0;
 }
 
 static int pi_core_bus_probe (struct device *dev)
 {
+	int ret;
+	struct pi_driver *pidrv;
+	struct pi_device *pidev;
 	log_debug();
+
+	pidrv = to_pi_driver(dev->driver);
+	pidev = to_pi_device(dev);
+
+	ret = pidrv->probe(pidev);
+	if (ret) {
+		dev_err(dev, "pidrv probe failed\n");
+		return ret;
+	}
 	return 0;
 }
 
 static int pi_driver_match_device (struct pi_device *pidev,
 					      struct pi_driver *pidrv)
 {
-	struct pi_device_id *id;
+	const struct pi_device_id *id;
 	log_debug();
 
 	id = pidrv->id_table;
@@ -70,6 +89,7 @@ static int pi_core_bus_match (struct device *dev, struct device_driver *drv)
 
 	if(pi_driver_match_device(pidev, pidrv)){
 		log_debug_msg("Found match\n");
+		dev->driver = drv;
 		return 1;
 	}
 
