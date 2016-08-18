@@ -194,7 +194,7 @@ int pi_core_unregister_host (struct pi_bus_host *pibushost)
 	ret = device_for_each_child(&pibushost->dev, NULL,
 				    pi_core_unregister_pidev);
 	if (ret){
-		dev_err(&pibushost->dev, "Couldnt unregister all childs\n");
+		dev_err(&pibushost->dev, "Couldnt unregister all child\n");
 		return ret;
 	}
 	device_unregister(&pibushost->dev);
@@ -238,7 +238,7 @@ static struct pi_device* pi_core_register_node_pidev(struct device *parent,
 	struct pi_device *pidev;
 
 	log_debug();
-	log_debug_msg("Registerging node %s as pi-device\n",
+	log_debug_msg("Registering node %s as pi-device\n",
 		      pidev_node->full_name);
 
 	pidev = devm_kzalloc(parent, sizeof(*pidev), GFP_KERNEL);

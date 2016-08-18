@@ -108,7 +108,7 @@ static int pi_bus_rpmsg_probe(struct rpmsg_channel *rpdev)
 
 	pibus_pdrv = devm_kzalloc(&rpdev->dev, sizeof(*pibus_pdrv), GFP_KERNEL);
 	if (!pibus_pdrv){
-		pr_err("pibus : failed to zalloc memmory");
+		pr_err("pibus : failed to zalloc memory");
 		return -ENOMEM;
 	}
 
