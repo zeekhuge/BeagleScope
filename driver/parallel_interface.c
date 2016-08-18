@@ -399,53 +399,6 @@ int __pi_register_driver (char *name, struct module *owner,
 }
 EXPORT_SYMBOL_GPL(__pi_register_driver);
 
-/*
-   Function no longer used, will be removed shortly
-*/
-static void pi_release(struct device *dev)
-{
-	log_debug();
-	put_device(dev);
-}
-
-
-/*
-   Function no longer used, will be removed shortly
-*/
-static int pi_rpmsg_probe(struct rpmsg_channel *rpdev)
-{
-	int ret;
-	struct device *pi_bus;
-
-	log_debug();
-
-	pi_bus = devm_kzalloc(&rpdev->dev, sizeof(*pi_bus), GFP_KERNEL);
-	pi_bus->release = pi_release;
-	pi_bus->init_name = "parallel_interface";
-
-	dev_set_drvdata(&rpdev->dev, pi_bus);
-
-	ret = device_register(pi_bus);
-	if (ret){
-		pr_err("parallel_interface: couldnt register bus type");
-		put_device(pi_bus);
-		return ret;
-	}
-
-	return 0;
-}
-
-/*
-   Function no longer used, will be removed shortly
-*/
-static void pi_rpmsg_remove(struct rpmsg_channel *rpdev)
-{
-	struct device *pi_bus;
-	log_debug();
-	pi_bus = dev_get_drvdata(&rpdev->dev);
-	device_unregister(pi_bus);
-}
-
 /**
  * parallel_interface_driver_init	The __init function for this driver
  *
