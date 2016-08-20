@@ -27,4 +27,7 @@ struct pi_bus_host {
 #define to_pi_bus_host(__dev)\
 	container_of(__dev, struct pi_bus_ctrlr, dev);
 
+extern struct pi_bus_host *pi_core_register_host(struct device *dev);
+extern int pi_core_unregister_host (struct pi_bus_host *pibushost);
+
 #endif /*__PARALLEL_INTERFACE__*/
