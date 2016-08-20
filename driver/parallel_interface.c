@@ -9,6 +9,8 @@
 #include <linux/module.h>
 #include <linux/device.h>
 #include <linux/fs.h>
+#include <linux/of.h>
+#include <linux/of_device.h>
 #include <linux/init.h>
 #include <linux/slab.h>
 #include <linux/module.h>
@@ -46,6 +48,15 @@ struct bus_type pi_bus_type = {
 	.probe = pi_core_bus_probe,
 	.remove = pi_core_bus_remove,
 };
+
+static int pi_core_unregister_pidev (struct device *dev, void *null)
+{
+	log_debug();
+	of_node_clear_flag(dev->of_node, OF_POPULATED);
+	device_unregister(dev);
+
+	return 0;
+}
 
 static void pi_core_host_release(struct device *dev)
 {
