@@ -20,16 +20,60 @@
 			      __FUNCTION__)
 #define log_debug_msg(...) printk(KERN_DEBUG __VA_ARGS__ )
 
-static int pi_bus_rpmsg_probe(struct rpmsg_channel *rpdev)
+static int pibus_platform_probe(struct platform_device *pdev)
 {
 	log_debug();
+	return 0;
+}
+
+static int pibus_platform_remove(struct platform_device *pdev)
+{
+	log_debug();
+	return 0;
+}
+
+static struct of_device_id pibus_of_id[] = {
+		{ .compatible = "ti,pibus0" },
+		{ },
+};
+MODULE_DEVICE_TABLE(of, pibus_of_id);
+
+static int pi_bus_rpmsg_probe(struct rpmsg_channel *rpdev)
+{
+	int ret;
+	struct platform_driver *pibus_pdrv;
+	log_debug();
+
+	pibus_pdrv = devm_kzalloc(&rpdev->dev, sizeof(*pibus_pdrv), GFP_KERNEL);
+	if (!pibus_pdrv){
+		pr_err("pibus : failed to zalloc memory");
+		return -ENOMEM;
+	}
+
+	dev_set_drvdata(&rpdev->dev, pibus_pdrv);
+	pibus_pdrv->driver.name = "pibus";
+	pibus_pdrv->driver.owner = THIS_MODULE;
+	pibus_pdrv->driver.mod_name = KBUILD_MODNAME;
+	pibus_pdrv->driver.of_match_table = pibus_of_id;
+	pibus_pdrv->probe = pibus_platform_probe;
+	pibus_pdrv->remove = pibus_platform_remove;
+
+	ret = platform_driver_register(pibus_pdrv);
+	if (ret){
+		pr_err("pibus : unable to register platform driver");
+		return ret;
+	}
 
 	return 0;
 }
 
 static void pi_bus_rpmsg_remove(struct rpmsg_channel *rpdev)
 {
+	struct platform_driver *pibus_pdrv;
+
 	log_debug();
+	pibus_pdrv = dev_get_drvdata(&rpdev->dev);
+	platform_driver_unregister(pibus_pdrv);
 }
 
 static const struct rpmsg_device_id pi_bus_rpmsg_id[] = {
