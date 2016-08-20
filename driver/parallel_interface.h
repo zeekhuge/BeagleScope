@@ -9,4 +9,22 @@
 #define __PARALLEL_INTERFACE__
 
 
+/**
+ * pi_bus_host		The structure to be used for bus host device.
+ *
+ * @dev		The device member of the structure.
+ */
+struct pi_bus_host {
+	struct device dev;
+};
+
+/**
+ * to_pi_bus_host	Helper macro to get the pi_bus_host device from its
+ *			member device object.
+ *
+ * @__dev	Pointer to the device associated with a pi_bus_host device.
+ */
+#define to_pi_bus_host(__dev)\
+	container_of(__dev, struct pi_bus_ctrlr, dev);
+
 #endif /*__PARALLEL_INTERFACE__*/
