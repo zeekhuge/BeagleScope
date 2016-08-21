@@ -269,6 +269,35 @@ return NULL;
 EXPORT_SYMBOL_GPL(pi_core_register_host);
 
 /**
+ * __pi_register_driver		Function to register a device driver for a
+ *				device that would be on pi bus.
+ *
+ * @name	Char string name of the driver.
+ * @owner	The owner module.
+ * @pidrv	The pi-bus specific device-driver structure.
+ *
+ * The function allocates a pi_bus_host object and initializes it with required
+ * data. It further registers the device. The function returns a pointer to the
+ * pi_bus_host object if successfully registered. It returns NULL otherwise.
+ */
+int __pi_register_driver (char *name, struct module *owner,
+				 struct pi_driver *pidrv)
+{
+	int ret = 0;
+
+	log_debug();
+	pidrv->driver.name = name;
+	pidrv->driver.owner = owner;
+	pidrv->driver.bus = &pi_bus_type;
+	ret = driver_register(&pidrv->driver);
+	if (ret)
+		pr_err("parallel_interface : couldnt register device driver");
+
+	return ret;
+}
+EXPORT_SYMBOL_GPL(__pi_register_driver);
+
+/**
  * parallel_interface_driver_init	The __init function for this driver
  *
  * The function registers this driver as a bus driver.

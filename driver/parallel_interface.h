@@ -82,6 +82,31 @@ struct pi_driver {
 #define to_pi_driver(__drv)\
 	container_of(__drv, struct pi_driver, driver);
 
+/**
+ * pi_unregister_driver		Function that can be used to unregister an
+ *				already registered device driver.
+ *
+ * @pidrv	The pi_driver structure associated with the device driver.
+ */
+static inline void pi_unregister_driver (struct pi_driver *pidrv){
+	driver_unregister(&pidrv->driver);
+}
+
+extern int __pi_register_driver (char *name, struct module *owner,
+				 struct pi_driver *pidrv);
+
+/**
+ * pi_register_driver	Helper macro to register the device driver onto the
+ *			pi-bus. The macro should only be called when there is
+ *			something else to be done in the driver __init
+ *			function. In simpler cases, the macro module_pi_driver
+ *			can be used.
+ *
+ * @__drv	The pi_driver associated with the device driver.
+ */
+#define pi_register_driver(__drv) \
+	__pi_register_driver (KBUILD_MODNAME ,THIS_MODULE, __drv)
+
 extern int pi_core_register_devices(struct pi_bus_host *);
 extern struct pi_bus_host *pi_core_register_host(struct device *dev);
 extern int pi_core_unregister_host (struct pi_bus_host *pibushost);
