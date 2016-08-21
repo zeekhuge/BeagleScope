@@ -108,6 +108,12 @@ int pi_core_unregister_host (struct pi_bus_host *pibushost)
 }
 EXPORT_SYMBOL_GPL(pi_core_unregister_host);
 
+static void pi_core_pidev_release(struct device *dev)
+{
+	log_debug();
+	put_device(dev);
+}
+
 static struct pi_device* pi_core_register_node_pidev(struct device *parent,
 						struct device_node *pidev_node)
 {
@@ -128,6 +134,7 @@ static struct pi_device* pi_core_register_node_pidev(struct device *parent,
 	}
 
 	pidev->dev.parent = parent;
+	pidev->dev.release = pi_core_pidev_release;
 	pidev->dev.bus = &pi_bus_type;
 	pidev->dev.of_node = of_node_get(pidev_node);
 	pidev->dev.init_name = "pidev";
