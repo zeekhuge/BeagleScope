@@ -42,6 +42,10 @@ static int pi_core_bus_match (struct device *dev, struct device_driver *drv)
 	return 0;
 }
 
+/**
+ * pi_bus_type	The bus_type structure that will be used to register this
+ *		driver as a bus.
+ */
 struct bus_type pi_bus_type = {
 	.name = "parallel_interface",
 	.match = pi_core_bus_match,
@@ -49,6 +53,15 @@ struct bus_type pi_bus_type = {
 	.remove = pi_core_bus_remove,
 };
 
+/**
+ * pi_core_unregister_pidev	Function to unregister the given device.
+ *
+ * @dev		The device that needs to be unregistered.
+ * @null	Any other data that needs to be given.
+ *
+ * The function clears the OF_POPULATED flag in the given device and then
+ * unregisters it.
+ */
 static int pi_core_unregister_pidev (struct device *dev, void *null)
 {
 	log_debug();
@@ -58,12 +71,36 @@ static int pi_core_unregister_pidev (struct device *dev, void *null)
 	return 0;
 }
 
+/**
+ * pi_core_host_release		Function that will serve as the 'release'
+ *				member function for all the pi_bus_host devices.
+ *
+ * @dev		The device that needs to be released.
+ *
+ * The function puts back the given device object, as it is always required
+ * before the device is unregistered.
+ */
 static void pi_core_host_release(struct device *dev)
 {
 	log_debug();
 	put_device(dev);
 }
 
+/**
+ * pi_core_register_host	Function that will serve as the 'release'
+ *				member function for all the pi_bus_host
+ *				devices.
+ *
+ * @dev		The device element of the platform device that was detected by
+ *		by the platform-bus driver.
+ *
+ * The function allocates a pi_bus_host object and initializes it with required
+ * data. It further registers the device. The function returns a pointer to the
+ * pi_bus_host object if successfully registered. It returns NULL otherwise.
+ *
+ * TODO: Add support to add more than one host device if more than one
+ * compatible device tree nodes are present.
+ */
 struct pi_bus_host *pi_core_register_host(struct device *dev)
 {
 	int error;
@@ -99,6 +136,14 @@ return NULL;
 }
 EXPORT_SYMBOL_GPL(pi_core_register_host);
 
+/**
+ * pi_core_unregister_host	Function to unregister the pi-host device.
+ *
+ * @pibushost	The pi_bus_host device that needs to be unregistered.
+ *
+ * The function unregister the pi bus host device.
+ * The function returns 0.
+ */
 int pi_core_unregister_host (struct pi_bus_host *pibushost)
 {
 	log_debug();
@@ -108,12 +153,34 @@ int pi_core_unregister_host (struct pi_bus_host *pibushost)
 }
 EXPORT_SYMBOL_GPL(pi_core_unregister_host);
 
+/**
+ * pi_core_pidev_release	Function that will serve as the 'release'
+ *				member function for all the pi_device devices.
+ *
+ * @dev		The device that needs to be released.
+ *
+ * The function puts back the given device object, as it is always required
+ * before the device is unregistered.
+ */
 static void pi_core_pidev_release(struct device *dev)
 {
 	log_debug();
 	put_device(dev);
 }
 
+/**
+ * pi_core_register_node_pidev	The function to register child device from the
+ * 				given child device_node.
+ *
+ * @parent	The device object that needs to be set as parent to the device
+ *		that will be associated with the given device_node.
+ * @pidev_node	The device_node for which the device is to be created.
+ *
+ * The function allocates a pi_device object, associates it with the given
+ * device_node and sets the given parent as its parent device. The function
+ * then returns the created device if its successfully created. It returns a
+ * NULL pointer otherwise.
+ */
 static struct pi_device* pi_core_register_node_pidev(struct device *parent,
 						struct device_node *pidev_node)
 {
@@ -154,6 +221,11 @@ devm_kfree(parent, pidev);
 return NULL;
 }
 
+/**
+ * parallel_interface_driver_init	The __init function for this driver
+ *
+ * The function registers this driver as a bus driver.
+ */
 static int __init parallel_interface_driver_init(void)
 {
 	int ret;
@@ -169,6 +241,12 @@ static int __init parallel_interface_driver_init(void)
 	return 0;
 }
 
+/**
+ * parallel_interface_driver_exit	The __exit function for this driver
+ *
+ * The function undoes whatever is done by the corresponding __init function.
+ * For this driver, it unregisters the driver as a bus driver.
+ */
 static void __exit parallel_interface_driver_exit(void)
 {
 	log_debug();
