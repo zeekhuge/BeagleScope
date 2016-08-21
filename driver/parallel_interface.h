@@ -52,6 +52,36 @@ struct pi_device {
 #define to_pi_device(__dev)\
 	container_of(__dev, struct pi_device, dev);
 
+/**
+ * pi_driver	The structure to be used by the device-driver to register
+ *		itself as a device driver onto the pi-bus.
+ *
+ * @id_table	The table containing ids of the device supported by the device
+ *		driver.
+ * @driver	The device_driver member of the pi_driver structure.
+ * @probe	The device driver probe method.
+ * @remove	The device driver remove method.
+ * @callback	The device driver callback method that will be called when
+ *		there is some data from the device for the driver.
+ */
+struct pi_driver {
+	const struct pi_device_id *id_table;
+	struct device_driver driver;
+	int (*probe)(struct pi_device *dev);
+	void (*remove)(struct pi_device *dev);
+	void (*callback)(struct pi_device *, void *, int, void *, u32);
+};
+
+/**
+ * to_pi_driver		Helper macro to get the pi_driver object from its
+ *			member device_driver object.
+ *
+ * @__drv	Pointer to the device_driver associated with a pi_driver
+ *		object.
+ */
+#define to_pi_driver(__drv)\
+	container_of(__drv, struct pi_driver, driver);
+
 extern int pi_core_register_devices(struct pi_bus_host *);
 extern struct pi_bus_host *pi_core_register_host(struct device *dev);
 extern int pi_core_unregister_host (struct pi_bus_host *pibushost);
