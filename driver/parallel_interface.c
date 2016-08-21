@@ -24,15 +24,57 @@
 			      __FUNCTION__)
 #define log_debug_msg(...) printk(KERN_DEBUG __VA_ARGS__ )
 
+/**
+ * pi_core_bus_remove	Function to serve as the 'remove' function for this bus
+ *			driver.
+ *
+ * @dev		The device that is to be removed from the pi-bus.
+ *
+ * The function retrieves the associated pi_device and pi_driver from the given
+ * device, and invokes the remove member function of the pi_driver.
+ */
 static int pi_core_bus_remove (struct device *dev)
 {
+	struct pi_driver *pidrv;
+	struct pi_device *pidev;
 	log_debug();
+
+	pidrv = to_pi_driver(dev->driver);
+	pidev = to_pi_device(dev);
+
+	pidrv->remove(pidev);
+
 	return 0;
 }
 
+/**
+ * pi_core_bus_probe	Function to serve as the 'probe' function for this bus
+ *			driver.
+ *
+ * @dev		The device that is connected to the bus and matches with one of
+ *		the driver.
+ *
+ * The function retrieves the associated pi_device and pi_driver from the given
+ * device, and invokes the probe member function of the pi_driver. The function
+ * returns 0 if the probe to the pi_driver was successful. It returns the error
+ * number otherwise.
+ */
 static int pi_core_bus_probe (struct device *dev)
 {
+	int ret;
+	struct pi_driver *pidrv;
+	struct pi_device *pidev;
 	log_debug();
+
+	pidrv = to_pi_driver(dev->driver);
+	pidev = to_pi_device(dev);
+
+	ret = pidrv->probe(pidev);
+	if (ret) {
+		dev_err(dev, "pidrv probe failed\n");
+		return ret;
+	}
+
 	return 0;
 }
 
