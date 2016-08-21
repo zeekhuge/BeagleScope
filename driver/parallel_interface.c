@@ -72,71 +72,6 @@ static int pi_core_unregister_pidev (struct device *dev, void *null)
 }
 
 /**
- * pi_core_host_release		Function that will serve as the 'release'
- *				member function for all the pi_bus_host devices.
- *
- * @dev		The device that needs to be released.
- *
- * The function puts back the given device object, as it is always required
- * before the device is unregistered.
- */
-static void pi_core_host_release(struct device *dev)
-{
-	log_debug();
-	put_device(dev);
-}
-
-/**
- * pi_core_register_host	Function that will serve as the 'release'
- *				member function for all the pi_bus_host
- *				devices.
- *
- * @dev		The device element of the platform device that was detected by
- *		by the platform-bus driver.
- *
- * The function allocates a pi_bus_host object and initializes it with required
- * data. It further registers the device. The function returns a pointer to the
- * pi_bus_host object if successfully registered. It returns NULL otherwise.
- *
- * TODO: Add support to add more than one host device if more than one
- * compatible device tree nodes are present.
- */
-struct pi_bus_host *pi_core_register_host(struct device *dev)
-{
-	int error;
-	struct pi_bus_host *pibushost;
-
-	log_debug();
-
-	pibushost = devm_kzalloc(dev, sizeof(*pibushost), GFP_KERNEL);
-	if (IS_ERR(pibushost)){
-		dev_err(dev, "Failed to allocate pibushost\n");
-		goto return_from_register_host;
-	}
-
-	dev_set_drvdata(dev, pibushost);
-	pibushost->dev.init_name = "pi-0";
-	pibushost->dev.bus = &pi_bus_type;
-	pibushost->dev.parent = dev;
-	pibushost->dev.of_node = dev->of_node;
-	pibushost->dev.release = pi_core_host_release;
-
-	error = device_register(&pibushost->dev);
-	if (error) {
-		dev_err(dev, "Failed to register the host\n");
-		goto free_host;
-	}
-	return pibushost;
-
-free_host:
-put_device(&pibushost->dev);
-kfree(&pibushost);
-return_from_register_host:
-return NULL;
-}
-EXPORT_SYMBOL_GPL(pi_core_register_host);
-
-/**
  * pi_core_unregister_host	Function to unregister the pi-host device.
  *
  * @pibushost	The pi_bus_host device that needs to be unregistered.
@@ -267,6 +202,71 @@ int pi_core_register_devices(struct pi_bus_host *pibushost)
 	return 0;
 }
 EXPORT_SYMBOL_GPL(pi_core_register_devices);
+
+/**
+ * pi_core_host_release		Function that will serve as the 'release'
+ *				member function for all the pi_bus_host devices.
+ *
+ * @dev		The device that needs to be released.
+ *
+ * The function puts back the given device object, as it is always required
+ * before the device is unregistered.
+ */
+static void pi_core_host_release(struct device *dev)
+{
+	log_debug();
+	put_device(dev);
+}
+
+/**
+ * pi_core_register_host	Function that will serve as the 'release'
+ *				member function for all the pi_bus_host
+ *				devices.
+ *
+ * @dev		The device element of the platform device that was detected by
+ *		by the platform-bus driver.
+ *
+ * The function allocates a pi_bus_host object and initializes it with required
+ * data. It further registers the device. The function returns a pointer to the
+ * pi_bus_host object if successfully registered. It returns NULL otherwise.
+ *
+ * TODO: Add support to add more than one host device if more than one
+ * compatible device tree nodes are present.
+ */
+struct pi_bus_host *pi_core_register_host(struct device *dev)
+{
+	int error;
+	struct pi_bus_host *pibushost;
+
+	log_debug();
+
+	pibushost = devm_kzalloc(dev, sizeof(*pibushost), GFP_KERNEL);
+	if (IS_ERR(pibushost)){
+		dev_err(dev, "Failed to allocate pibushost\n");
+		goto return_from_register_host;
+	}
+
+	dev_set_drvdata(dev, pibushost);
+	pibushost->dev.init_name = "pi-0";
+	pibushost->dev.bus = &pi_bus_type;
+	pibushost->dev.parent = dev;
+	pibushost->dev.of_node = dev->of_node;
+	pibushost->dev.release = pi_core_host_release;
+
+	error = device_register(&pibushost->dev);
+	if (error) {
+		dev_err(dev, "Failed to register the host\n");
+		goto free_host;
+	}
+	return pibushost;
+
+free_host:
+put_device(&pibushost->dev);
+kfree(&pibushost);
+return_from_register_host:
+return NULL;
+}
+EXPORT_SYMBOL_GPL(pi_core_register_host);
 
 /**
  * parallel_interface_driver_init	The __init function for this driver
