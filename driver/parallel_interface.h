@@ -8,6 +8,25 @@
 #ifndef __PARALLEL_INTERFACE__
 #define __PARALLEL_INTERFACE__
 
+#include <linux/types.h>
+#include <linux/uuid.h>
+
+#define PI_NAME_SIZE	32
+#define PI_MODULE_PREFIX "pi:"
+
+/**
+ * pi_device_id		Structure to be used in a device-driver to supply the
+ *			device id used to match a device.
+ *
+ * @name		The name of the device that needs to be matched with
+ *			the driver.
+ * @driver_data		The device specific data that will be needed by the
+ *			device driver once its matched.
+ */
+struct pi_device_id {
+	char name[PI_NAME_SIZE];
+	kernel_ulong_t driver_data;
+};
 
 /**
  * pi_bus_host		The structure to be used for bus host device.
@@ -27,7 +46,7 @@ struct pi_bus_host {
 #define to_pi_bus_host(__dev)\
 	container_of(__dev, struct pi_bus_ctrlr, dev);
 
-#define PI_MODALIAS_LENGTH	32
+#define PI_MODALIAS_LENGTH	PI_NAME_SIZE
 
 /**
  * pi_device	The structure to be used for a client device on the pi bus.
