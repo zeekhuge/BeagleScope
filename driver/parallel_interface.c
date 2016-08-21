@@ -108,6 +108,45 @@ int pi_core_unregister_host (struct pi_bus_host *pibushost)
 }
 EXPORT_SYMBOL_GPL(pi_core_unregister_host);
 
+static struct pi_device* pi_core_register_node_pidev(struct device *parent,
+						struct device_node *pidev_node)
+{
+	int ret;
+	struct pi_device *pidev;
+
+	log_debug();
+	log_debug_msg("Registering node %s as pi-device\n",
+		      pidev_node->full_name);
+
+	pidev = devm_kzalloc(parent, sizeof(*pidev), GFP_KERNEL);
+
+	ret = of_modalias_node(pidev_node, pidev->modalias,
+			       sizeof(pidev->modalias));
+	if(ret){
+		dev_err(parent,"Couldn't get modalias\n");
+		goto free_alloc_pidev;
+	}
+
+	pidev->dev.parent = parent;
+	pidev->dev.bus = &pi_bus_type;
+	pidev->dev.of_node = of_node_get(pidev_node);
+	pidev->dev.init_name = "pidev";
+
+	ret = device_register(&pidev->dev);
+	if(ret){
+		dev_err(parent,"Couldn't register device\n");
+		goto put_device_and_free;
+	}
+
+	return pidev;
+
+put_device_and_free:
+put_device(&pidev->dev);
+free_alloc_pidev:
+devm_kfree(parent, pidev);
+return NULL;
+}
+
 static int __init parallel_interface_driver_init(void)
 {
 	int ret;
