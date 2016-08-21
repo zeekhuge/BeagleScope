@@ -519,30 +519,8 @@ static struct pi_driver dc782a_driver= {
 	.probe		= dc782a_probe,
 	.remove		= dc782a_remove,
 };
+module_pi_driver(dc782a_driver);
 
-static int __init dc782a_driver_init(void)
-{
-	int ret;
-
-	log_debug("driver init");
-	ret = pi_register_driver(&dc782a_driver);
-	if (ret){
-		pr_err("Failed to register beaglescope driver\n");
-		return ret;
-	}
-
-
-	return 0;
-}
-
-static void __exit dc782a_driver_exit(void)
-{
-	log_debug("driver init");
-	pi_unregister_driver (&dc782a_driver);
-}
-
-module_init(dc782a_driver_init);
-module_exit(dc782a_driver_exit);
 MODULE_AUTHOR("Zubeen Tolani <ZeekHuge - zeekhuge@gmail.com>");
 MODULE_DESCRIPTION("BeagleScope Driver");
 MODULE_LICENSE("GPL v2");

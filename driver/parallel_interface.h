@@ -126,6 +126,19 @@ extern int __pi_register_driver (char *name, struct module *owner,
 #define pi_register_driver(__drv) \
 	__pi_register_driver (KBUILD_MODNAME ,THIS_MODULE, __drv)
 
+/**
+ * module_pi_driver	Helper macro for drivers that don't do anything special
+ *			in module init/exit. This eliminates a lot of
+ *			boilerplate. Each module may only use this macro once,
+ *			and calling it replaces module_init() and
+ *			module_exit().
+ *
+ * @__pi_driver		the pi-bus specific device driver structure of
+ *			pi_driver type.
+ */
+#define module_pi_driver(__pi_driver) \
+	module_driver(__pi_driver, pi_register_driver, pi_unregister_driver)
+
 extern int pi_core_register_devices(struct pi_bus_host *);
 extern struct pi_bus_host *pi_core_register_host(struct device *dev);
 extern int pi_core_unregister_host (struct pi_bus_host *pibushost);
