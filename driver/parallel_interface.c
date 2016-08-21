@@ -36,9 +36,69 @@ static int pi_core_bus_probe (struct device *dev)
 	return 0;
 }
 
+/**
+ * pi_driver_match_device	Function to match given pi_device with the
+ *				given pi_driver and output result if the driver
+ *				can handle the device.
+ *
+ * @pidev	The pi-client-device that needs to be matched against given
+ *		pi-client-driver.
+ * @pidrv	The pi-device-driver that needs to be matched against given
+ *		pi-client-device.
+ *
+ * The function compares the id of the given pi_driver against the modalias
+ * value of the given pi_device. It further compares the name of the pi_driver
+ * with the modalias of the given pi_device. If any of the match is found, the
+ * function returns 1. It returns 0 otherwise.
+ */
+static int pi_driver_match_device (struct pi_device *pidev,
+				   struct pi_driver *pidrv)
+{
+	const struct pi_device_id *id;
+	log_debug();
+
+	id = pidrv->id_table;
+	if(id)
+		while(id->name[0]){
+			if(!strcmp(pidev->modalias, id->name)){
+				return 1;
+			}
+			id++;
+		}
+
+	return (strcmp(pidev->modalias, pidrv->driver.name) == 0);
+
+	return 0;
+}
+
+/**
+ * pi_core_bus_match	Function that servers as the 'match' function for this
+ *			bus driver.
+ *
+ * @dev		The device that needs to be matched against given driver.
+ * @drv		The driver that needs to be matched against given device.
+ *
+ * The function retrieves the associated pi_device and the pi_driver the given
+ * dev and drv, and then using pi_driver_match_device function, checks if the
+ * given driver can handle the given device. It returns 1 if the device can be
+ * handled, and 0 otherwise.
+ */
 static int pi_core_bus_match (struct device *dev, struct device_driver *drv)
 {
+	struct pi_device *pidev;
+	struct pi_driver *pidrv;
+
 	log_debug();
+
+	pidrv = to_pi_driver(drv);
+	pidev = to_pi_device(dev);
+
+	if(pi_driver_match_device(pidev, pidrv)){
+		log_debug_msg("Found match\n");
+		dev->driver = drv;
+		return 1;
+	}
+
 	return 0;
 }
 
