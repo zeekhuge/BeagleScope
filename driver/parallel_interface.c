@@ -141,12 +141,23 @@ EXPORT_SYMBOL_GPL(pi_core_register_host);
  *
  * @pibushost	The pi_bus_host device that needs to be unregistered.
  *
- * The function unregister the pi bus host device.
- * The function returns 0.
+ * The function iterates over all the child device of the given pi_bus_host
+ * device, unregisters each of them. It further unregisters the pibushost
+ * pibushost device.
+ * The function returns 0 if all of the child device and the host device are
+ * successfully unregistered, otherwise returns the error code.
  */
 int pi_core_unregister_host (struct pi_bus_host *pibushost)
 {
+	int ret;
+
 	log_debug();
+	ret = device_for_each_child(&pibushost->dev, NULL,
+				    pi_core_unregister_pidev);
+	if (ret){
+		dev_err(&pibushost->dev, "Couldnt unregister all child\n");
+		return ret;
+	}
 	device_unregister(&pibushost->dev);
 
 	return 0;
@@ -220,6 +231,42 @@ free_alloc_pidev:
 devm_kfree(parent, pidev);
 return NULL;
 }
+
+/**
+ * pi_core_register_devices	The function to register all the child devices.
+ *
+ * @pibushost	The pi_bus_host device whose child device needs to be
+ *		registered.
+ *
+ * The function allocates a pi_device object, associates it with the given
+ * device_node and sets the given parent as its parent device. The function
+ * then returns the 0 if all the child devices are registered successfully, and
+ * 0 otherwise.
+ */
+int pi_core_register_devices(struct pi_bus_host *pibushost)
+{
+	struct pi_device *pidev;
+	struct device_node *node;
+
+	log_debug();
+
+	if (!pibushost->dev.of_node)
+		return -EINVAL;
+
+	for_each_available_child_of_node(pibushost->dev.of_node, node) {
+		if (of_node_test_and_set_flag(node, OF_POPULATED))
+			continue;
+
+		pidev = pi_core_register_node_pidev(&pibushost->dev, node);
+		if (IS_ERR(pidev)){
+			log_debug_msg("Couldnt register pidev\n");
+			return -EINVAL;
+		}
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL_GPL(pi_core_register_devices);
 
 /**
  * parallel_interface_driver_init	The __init function for this driver
