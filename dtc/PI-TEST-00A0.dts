@@ -26,6 +26,10 @@
 			pi0: pi0@f00 {
 				status="okay";
 				compatible = "ti,pibus0";
+				adc: adc@f00 {
+					status="okay";
+					compatible = "ti,dc782a";
+				};
 			};
 
 		};
