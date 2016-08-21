@@ -20,15 +20,56 @@
 			      __FUNCTION__)
 #define log_debug_msg(...) printk(KERN_DEBUG __VA_ARGS__ )
 
+/**
+ * pibus_platform_probe	Function to serve as the probe function for platform
+ *			driver registered by this module.
+ *
+ * @pdev	the platform device that gets matched with the compatible
+ *		string of the of_device_id structure.
+ *
+ * This probe function registers the pi_bus_host device by calling the
+ * pi_core_register_host API and uses it to further register the child device
+ * by calling pi_core_register_devices API.
+ */
 static int pibus_platform_probe(struct platform_device *pdev)
 {
+	int ret;
+	struct pi_bus_host *pibushost;
+
 	log_debug();
+	pibushost = pi_core_register_host(&pdev->dev);
+	if (IS_ERR(pibushost)) {
+		dev_err(&pdev->dev, "Couldnt register pi-host\n");
+		return -EINVAL;
+	}
+	platform_set_drvdata(pdev, pibushost);
+	ret = pi_core_register_devices(pibushost);
+	if (ret){
+		dev_err(&pdev->dev, "Couldnt register device\n");
+		return ret;
+	}
 	return 0;
 }
 
+/**
+ * pibus_platform_remove	Function to serve as the remove function for
+ *				the platform driver registered by this module.
+ *
+ * @pdev	The platform device that gets matched with the compatible
+ *		string of the of_device_id structure.
+ *
+ * The function unregisters the host device by using APIs exported by the core
+ * bus driver. Before the host is unregistered, it should be the responsibility
+ * of the core driver to unregister all its child devices.
+ */
 static int pibus_platform_remove(struct platform_device *pdev)
 {
+	struct pi_bus_host * pibushost;
 	log_debug();
+
+	pibushost = platform_get_drvdata(pdev);
+	pi_core_unregister_host(pibushost);
+
 	return 0;
 }
 
