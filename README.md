@@ -123,6 +123,8 @@ To use a release you will have to compile its source.
 
 **If you want to cross compile the source, rather than compiling it on the baord itself, most of the things remain same and you can use the 'Kernel Development' section of [this post](https://www.zeekhuge.me/post/a_handfull_of_commands_and_scripts_to_get_started_with_beagleboneblack/) for the setup part.**
 
+---
+
 ## Want this fast ? Help me develope it.
 See the [Quickstart](https://github.com/ZeekHuge/BeagleScope/blob/port_to_4.4.12-ti-r31%2B/quickstart.md) to get started quickly and contribute to the project.
 
