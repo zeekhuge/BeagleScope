@@ -5,7 +5,7 @@ The examples are based on the pru-software-support-package provided by TI. These
 ### -firmware_examples
 Contains examples that are only related to the firmware code for both or one of the PRUs.
 ###### -pru_blinky
-Its the most basic program. This program directory contains ''deploy.sh'' script that compiles the code, copies the firmware to /lib/firmware/am335x-pru1(0)-fw, and reboots pru1(0)-core. To get blinky on a particular pin:
+Its the most basic program. A good post related to this example can be found [here](https://www.zeekhuge.me/post/ptp_blinky/). This program directory contains ''deploy.sh'' script that compiles the code, copies the firmware to /lib/firmware/am335x-pru1(0)-fw, and reboots pru1(0)-core. To get blinky on a particular pin:
 1. Find the name of the board output pin, its muxed to, let say P8_46
 2. Find the pru-core the pin is connected to. P8_46 is connected to pru1.
 3. Open ''deploy.sh'' and you would see:
