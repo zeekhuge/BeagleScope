@@ -52,7 +52,35 @@ This branch has the code that works with kernel later than 4.4.12-ti-r31. To get
 
 ---
 
-## Get started:
+## Build the source
+
+- Clone this repo.
+
+    `$ git clone https://github.com/ZeekHuge/BeagleScope.git`
+- Install linux header files
+
+    `$ suod apt-get install linux-headers-$(uname -r)`
+- Enter into BeagleScope directory
+    
+    `$ cd BeagleScope`
+    - To compile firmwae, enter into firmware directory
+        
+        `$ cd firmware`
+        - To compile the firmware
+            
+            `$ make`
+        - To boot the PRUs with this firmware
+            
+            `$ make install`
+    - To compiel drivers, enter into the driver directory
+        
+        `$ cd driver`
+        - To compile the drivers
+            
+            `$ make`
+        - To load the drivers
+
+            `$ make load`
 
 ---
 
@@ -61,7 +89,7 @@ This branch has the code that works with kernel later than 4.4.12-ti-r31. To get
 ___
 
 ## Want this fast ? Help me develope it
-See the [Quickstart]() to get started quickly.
+See the [Quickstart]() to get started quickly and contribute to the project
 
 ---
 ## License
