@@ -8,7 +8,7 @@ Once the blinky example works, the firmware side can be.
 ### Compile the Source
 - To compile source look into the [build section](https://github.com/ZeekHuge/BeagleScope#build-the-source) of the readme.
 
-### Understand - Working
+### Understand orking
 To understand the working, you can
 
 - Look into the [project wiki](https://github.com/ZeekHuge/BeagleScope/wiki).
