@@ -4,12 +4,14 @@
 
 [![Travis](https://travis-ci.org/ZeekHuge/BeagleScope.svg)](https://travis-ci.org/ZeekHuge/BeagleScope)
 
-    
+
 
 # BeagleScope
 The official repository for the GSoC-2016 project - [BeagleScope](https://zeekhuge.github.io/beaglescope.html). An introductory video to the project - [video](https://youtu.be/tdanTRSmq4E).
 
 (Just a side note - You'll probably like https://www.zeekhuge.me)
+
+---
 
 ## What is BeagleScope ?
 The project, as the part of GSoC-2016, aims to provide with software support to deploy the PRUSS subsystem on AM33xx processors, as a fast and parallel data acquisition units.The PRU cores being highly optimized for I/O operations and single cycle instruction execution (mostly), are an appropriate choice for bit-banging and offloading tasks. BeagleScope uses this very feature of PRUs to offload the parallel data transactions and fast data acquisition. This project provides:
@@ -19,15 +21,49 @@ The project, as the part of GSoC-2016, aims to provide with software support to 
 
 The overall software stack would allow developers to use PRUs for many cool applications. One of such applications is an Oscilloscope. This can be achieved using a fast ADC along with the developed software. This project will also try to develop a 20MHz oscilloscope as a test for the developed code. 
 
+---
+
 ## This Branch - "port_to_4.4.12-ti-r31+" 
-In kernel version 4.4.12-ti-r31, the RPMsg framework used ARM INTC in place of Mailboxes to generate kicks from, and to PRUs. This was a significant change and the code needed to be modified to work with this new RPMsg framework.
+This is the main branch for now. In kernel version 4.4.12-ti-r31, the RPMsg framework used ARM INTC in place of Mailboxes to generate kicks from, and to PRUs. This was a significant change and the code needed to be modified to work with this new RPMsg framework.
 This branch has the code that works with kernel later than 4.4.12-ti-r31. To get examples for older version, checkout the [master branch](https://github.com/ZeekHuge/BeagleScope/tree/master).
 
-## firmware/
-firmware directory contains BeagleScope firmware code for PRUs (under developement).
-BeagleScope uses these two PRU cores to sample data and transfer it to the Main Processing Unit (MPU).
+---
 
+## Contents
 
+- #### docs/
+    The direcotry contains the documents and notes that have been used or created along the main development process.
+
+- #### driver/
+    The directory contains all the kernel linux related code for the main project. It contains following driver source
+        
+    1. parallel_interface
+    2. pi-bus 
+    3. beaglescope_driver
+
+- #### dtc/
+    The directory contains the source for the device tree overlays that need to be loaded for the software stack to work correctly.
+
+- #### examples/
+    Directory that contains the examples that have been developed while learning PRU programming.
+
+- #### firmware/
+    The directory contains the PRU firmware that needs to be compiled and installed to booted onto the PRUs to serve as a parallel interfacing bus.
+
+---
+
+## Get started:
+
+---
+
+## Available for use:
+
+___
+
+## Want this fast ? Help me develope it
+See the [Quickstart]() to get started quickly.
+
+---
 ## License
 The kernel code is released under the [GPLv2](https://opensource.org/licenses/GPL-2.0/) license.
 
