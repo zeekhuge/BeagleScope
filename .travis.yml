@@ -42,8 +42,8 @@ before_script:
   # and
   # Combined .config link will be = "http://rcn-ee.net/deb/jessie-armhf/v$SOURCE_VERSION/defconfig"
  
-  - export SOURCE_BRANCH="4.4.8"
-  - export SOURCE_VERSION="ti-r22"
+  - export SOURCE_BRANCH="4.4.12"
+  - export SOURCE_VERSION="ti-r31"
   - export SOURCE_REPO="linux-stable-rcn-ee"
   - export SOURCE_LOCATION="https://github.com/RobertCNelson"
   
