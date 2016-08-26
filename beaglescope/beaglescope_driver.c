@@ -21,7 +21,6 @@
 #include <linux/iio/kfifo_buf.h>
 #include <linux/iio/triggered_buffer.h>
 #include <linux/iio/trigger_consumer.h>
-#include "parallel_interface.h"
 
 /*
  * macro to print debug info easily
@@ -489,37 +488,8 @@ static void __exit beaglescope_driver_exit(void)
 	unregister_rpmsg_driver (&beaglescope_driver);
 }
 
-
-/*****************************************************************************/
-/**************************** TESTing below **********************************/
-
-static const struct pi_device_id dc782a_id[] = {
-	{"dc782a", 0},
-	{}
-};
-MODULE_DEVICE_TABLE(pi, dc782a_id);
-
-static int dc782a_probe (struct pi_device *dev)
-{
-	log_debug("dc782a_probe");
-	return 0;
-}
-
-static void dc782a_remove (struct pi_device *dev)
-{
-	log_debug("dc782a_probe");
-}
-
-static struct pi_driver dc782a_driver= {
-	.driver = {
-		.name = KBUILD_MODNAME,
-		.owner = THIS_MODULE,
-	},
-	.id_table	= dc782a_id,
-	.probe		= dc782a_probe,
-	.remove		= dc782a_remove,
-};
-module_pi_driver(dc782a_driver);
+module_init(beaglescope_driver_init);
+module_exit(beaglescope_driver_exit);
 
 MODULE_AUTHOR("Zubeen Tolani <ZeekHuge - zeekhuge@gmail.com>");
 MODULE_DESCRIPTION("BeagleScope Driver");

@@ -4,20 +4,7 @@
 #
 #
 
-# The drivers should be arranged from down to bottom
-# hierarchy order.
-# The arrangement of the modules is as:
-#
-# [beaglescope_driver]
-#        \
-#         \       [pi_bus]
-#          \      /
-#	   \/    \/
-#	[parallel_interface]
-#
-obj-m += dc782a.o
-obj-m += pi-bus.o
-obj-m += parallel_interface.o
+obj-m += beaglescope_driver.o
 
 KDIR?=/lib/modules/$(shell uname -r)/build
 INSTALL?=/lib/modules/$(shell uname -r)/kernel/drivers/testing
