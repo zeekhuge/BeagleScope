@@ -27,23 +27,12 @@
  */
 #define log_debug(msg) printk(KERN_DEBUG "%s: %s\n", __FILE__, msg);
 
-#define RPMSG_BUF_SIZE		(512)
-#define MAX_BLOCKS_IN_FIFO	(32)
-#define FIFO_BLOCK_SIZE		RPMSG_BUF_SIZE
-
 /* Configuration data, needed to be send to PRUs to get a raw sample */
-#define BEAGLESCOPE_CONFIG_RAW_READ_0	0x00000000
-#define BEAGLESCOPE_CONFIG_RAW_READ_1	0x00000000
-#define BEAGLESCOPE_CONFIG_RAW_READ_2	0x00000000
 
-#define BEAGLESCOPE_CONFIG_RANDOM_BLOCK_READ_0 0x00989681
-#define BEAGLESCOPE_CONFIG_RANDOM_BLOCK_READ_1 0xabcd0103
-#define BEAGLESCOPE_CONFIG_RANDOM_BLOCK_READ_2 0x80000001
+#define BEAGLESCOPE_OFFSET_REF_VDD 2
 
-#define OFFSET_REF_VDD 2
-
-#define RAW_READ 0
-#define BLOCK_READ 1
+#define BEAGLESCOPE_RAW_READ 0
+#define BEAGLESCOPE_BLOCK_READ 1
 
 struct beaglescope_state {
 	struct rpmsg_channel *rpdev;
@@ -185,12 +174,13 @@ static bool get_beaglescope_read_mode(struct beaglescope_state *st)
  * that has been prepared by call to set_beaglescope_sampling_frequency() and
  * set_pru_read_mode() function calls. The message is then dispatched by the
  * rpmsg callback method.
- * In case the read_mode is RAW_READ, this function waits for the callback to
- * interrupt, by using the wait_list and returns only after the data from the
- * callback has been saved into the raw_data field of the current
+ * In case the read_mode is BEAGLESCOPE_RAW_READ, this function waits for the
+ * callback to interrupt, by using the wait_list and returns only after the
+ * data from the callback has been saved into the raw_data field of the current
  * beaglescope_state structure.
- * If the read_mode is BLOCK_READ, the function just configures the PRUs and
- * returns. The rpmsg callback method then pushes the data onto the iio_buffer.
+ * If the read_mode is BEAGLESCOPE_BLOCK_READ, the function just configures the
+ * PRUs and returns. The rpmsg callback method then pushes the data onto the
+ * iio_buffer.
  */
 static int beaglescope_read_from_pru(struct iio_dev *indio_dev)
 {
@@ -206,7 +196,7 @@ static int beaglescope_read_from_pru(struct iio_dev *indio_dev)
 	if (ret)
 		dev_err(st->dev, "Failed sending config info to PRUs\n");
 
-	if (get_beaglescope_read_mode(st) == RAW_READ) {
+	if (get_beaglescope_read_mode(st) == BEAGLESCOPE_RAW_READ) {
 		ret = wait_event_interruptible(st->wait_list, st->got_raw);
 		if (ret)
 			return -EINTR;
@@ -241,7 +231,7 @@ static int beaglescope_buffer_postenable(struct iio_dev *indio_dev)
 {
 	struct beaglescope_state *st;
 	st = iio_priv(indio_dev);
-	set_beaglescope_read_mode(st, BLOCK_READ);
+	set_beaglescope_read_mode(st, BEAGLESCOPE_BLOCK_READ);
 	beaglescope_read_from_pru(indio_dev);
 	log_debug("postenable");
 	return 0;
@@ -276,7 +266,7 @@ static int beaglescope_read_raw(struct iio_dev *indio_dev,
 
        switch (mask) {
        case IIO_CHAN_INFO_RAW:
-		set_beaglescope_read_mode(st, RAW_READ);
+		set_beaglescope_read_mode(st, BEAGLESCOPE_RAW_READ);
 		ret = beaglescope_read_from_pru(indio_dev);
 		if (ret){
 			dev_err(st->dev, "Couldnt read raw data\n");
@@ -288,7 +278,7 @@ static int beaglescope_read_raw(struct iio_dev *indio_dev,
 	       *val = 1;
 	       return IIO_VAL_INT;
 	case IIO_CHAN_INFO_OFFSET:
-	       *val = - OFFSET_REF_VDD;
+	       *val = - BEAGLESCOPE_OFFSET_REF_VDD;
 	       return IIO_VAL_INT;
 	case IIO_CHAN_INFO_SAMP_FREQ:
 	       *val = st->sampling_frequency;
@@ -342,7 +332,7 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
 	indio_dev = dev_get_drvdata(&rpdev->dev);
 	st = iio_priv(indio_dev);
 
-	if (get_beaglescope_read_mode(st) == RAW_READ){
+	if (get_beaglescope_read_mode(st) == BEAGLESCOPE_RAW_READ){
 		log_debug("callback - raw mode");
 		st->raw_data=*((u32 *)data);
 		st->got_raw = 1;
