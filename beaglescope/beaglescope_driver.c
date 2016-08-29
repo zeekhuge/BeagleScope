@@ -174,6 +174,7 @@ static bool get_beaglescope_read_mode(struct beaglescope_state *st)
  * that has been prepared by call to set_beaglescope_sampling_frequency() and
  * set_pru_read_mode() function calls. The message is then dispatched by the
  * rpmsg callback method.
+ *
  * In case the read_mode is BEAGLESCOPE_RAW_READ, this function waits for the
  * callback to interrupt, by using the wait_list and returns only after the
  * data from the callback has been saved into the raw_data field of the current
@@ -230,6 +231,7 @@ static int beaglescope_stop_sampling_pru(struct iio_dev *indio_dev )
 static int beaglescope_buffer_postenable(struct iio_dev *indio_dev)
 {
 	struct beaglescope_state *st;
+
 	st = iio_priv(indio_dev);
 	set_beaglescope_read_mode(st, BEAGLESCOPE_BLOCK_READ);
 	beaglescope_read_from_pru(indio_dev);
@@ -366,8 +368,7 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpdev)
 
 	indio_dev = devm_iio_device_alloc(&rpdev->dev, sizeof(*st));
 	if (!indio_dev) {
-		ret = -ENOMEM;
-		goto error_ret;
+		return -ENOMEM;
 	}
 
 	id = &rpdev->id;
@@ -386,30 +387,23 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpdev)
 	indio_dev->channels = beaglescope_adc_channels;
 	indio_dev->num_channels = ARRAY_SIZE(beaglescope_adc_channels);
 
-	buffer = iio_kfifo_allocate();
+	buffer = devm_iio_kfifo_allocate(&indio_dev->dev);
 	if (!buffer) {
-		ret = -ENOMEM;
-		goto error_free_device;
+		return -ENOMEM;
 	}
 
 	iio_device_attach_buffer(indio_dev, buffer);
 
-	ret = devm_iio_device_register(&rpdev->dev, indio_dev);
+	init_waitqueue_head(&st->wait_list);
+
+	ret = iio_device_register(indio_dev);
 	if (ret < 0) {
 		pr_err("Failed to register with iio\n");
-		goto error_remove_buffer;
+		return ret;
 	}
-
-	init_waitqueue_head(&st->wait_list);
 
 	return 0;
 
-error_remove_buffer:
-	iio_kfifo_free(indio_dev->buffer);
-error_free_device:
-	devm_iio_device_free(&rpdev->dev, indio_dev);
-error_ret:
-	return ret;
 }
 
 /**
@@ -419,14 +413,10 @@ error_ret:
 static void beaglescope_driver_remove(struct rpmsg_channel *rpdev)
 {
 	struct iio_dev *indio_dev;
-	struct beaglescope_state *st;
 
 	indio_dev = dev_get_drvdata(&rpdev->dev);
-	st = iio_priv(indio_dev);
 
-	devm_iio_device_unregister(&rpdev->dev, indio_dev);
-	iio_kfifo_free(indio_dev->buffer);
-	devm_iio_device_free(&rpdev->dev, indio_dev);
+	iio_device_free(indio_dev);
 }
 
 /* beaglescope_id - Structure that holds the channel name for which this driver
