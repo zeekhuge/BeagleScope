@@ -173,7 +173,9 @@ static bool get_beaglescope_read_mode(struct beaglescope_state *st)
  * Description - The function starts the PRUs by sending the configuration data
  * that has been prepared by call to set_beaglescope_sampling_frequency() and
  * set_pru_read_mode() function calls. The message is then dispatched by the
- * rpmsg callback method.
+ * rpmsg callback method. This function also checks if the required rpmsg device
+ * has been released or not. If it has been released, the driver would return
+ * with an error.
  *
  * In case the read_mode is BEAGLESCOPE_RAW_READ, this function waits for the
  * callback to interrupt, by using the wait_list and returns only after the
@@ -191,6 +193,11 @@ static int beaglescope_read_from_pru(struct iio_dev *indio_dev)
 	log_debug("beaglescope_read_from_pru");
 
 	st = iio_priv(indio_dev);
+
+	if (st->rpdev){
+		dev_err(st->dev, "Required rpmsg device has been released\n");
+		return -EINVAL;
+	}
 
 	ret = rpmsg_send(st->rpdev, (void *)st->pru_config,
 			    3*sizeof(u32));
@@ -217,6 +224,11 @@ static int beaglescope_stop_sampling_pru(struct iio_dev *indio_dev )
 
 	st = iio_priv(indio_dev);
 
+	if (!st->rpdev){
+		dev_err(st->dev, "Required rpmsg device already released\n");
+		return -EINVAL;
+	}
+
 	ret = rpmsg_send(st->rpdev, (void *)&stop_val, sizeof(stop_val));
 	if (ret)
 		dev_err(st->dev, "failed to stop beaglescope sampling\n");
@@ -230,13 +242,14 @@ static int beaglescope_stop_sampling_pru(struct iio_dev *indio_dev )
  */
 static int beaglescope_buffer_postenable(struct iio_dev *indio_dev)
 {
+	int ret;
 	struct beaglescope_state *st;
 
 	st = iio_priv(indio_dev);
 	set_beaglescope_read_mode(st, BEAGLESCOPE_BLOCK_READ);
-	beaglescope_read_from_pru(indio_dev);
+	ret = beaglescope_read_from_pru(indio_dev);
 	log_debug("postenable");
-	return 0;
+	return ret;
 }
 
 /*
