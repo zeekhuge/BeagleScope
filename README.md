@@ -11,12 +11,15 @@ The official repository for the GSoC-2016 project - [BeagleScope](https://zeekhu
 
 **Note - The developed software has been tested on kernel version 4.4.12-ti-r31 and is expected to work on kernel version later than and equal to 4.4.12-ti-r31.**
 
+---
+**Poject has examples to explain use of remoteproc drivers and RPMSG framework for the PRUs.** :https://github.com/ZeekHuge/BeagleScope/tree/port_to_4.4.12-ti-r31%2B/examples
+
 (Just a side note - You'll probably like https://www.zeekhuge.me)
 
 ---
 
 ## What is BeagleScope ?
-The project, as the part of GSoC-2016, aims to provide with software support to deploy the PRUSS subsystem on AM33xx processors, as a fast and parallel data acquisition units.The PRU cores being highly optimized for I/O operations and single cycle instruction execution (mostly), are an appropriate choice for bit-banging and offloading tasks. BeagleScope uses this very feature of PRUs to offload the parallel data transactions and fast data acquisition. This project provides:
+The project, as the part of GSoC-2016, aims to provide with software support to deploy the PRUSS subsystem on AM33xx processors, as a fast and parallel data acquisition units. The project is a good example of using generic PRU-remoteproc drivers and the RPMSG framework for PRUs. The PRU cores being highly optimized for I/O operations and single cycle instruction execution (mostly), are an appropriate choice for bit-banging and offloading tasks. BeagleScope uses this very feature of PRUs to offload the parallel data transactions and fast data acquisition. This project provides:
 
 1. Kernel support :	Kernel support will be in the form of an offload subsystem and a kernel module that will expose PRUs as 'parallel I/O bus'. The subsystem would manage all the transactions of the I/O unit, while the parallel bus unit will manage communication with the PRU core.
 2. Firmware : The firmware will be the code for PRUs. The firmware would manage the communication on the PRU side and all the data I/O that PRU need to do. 
