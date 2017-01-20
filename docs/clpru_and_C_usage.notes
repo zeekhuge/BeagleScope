@@ -14,19 +14,6 @@ inside double parentheses. You can specify multiple attributes in a declaration 
 double parentheses or by immediately following an attribute declaration with another attribute declaration.
 
 
-In GNU C, you can use function attributes to declare certain things about functions called in your program which help the 
-compiler optimize calls and check your code more carefully. For example, you can use attributes to declare that a function 
-never returns (noreturn), returns a value depending only on its arguments (pure), or has printf-style arguments (format).
-
-You can also use attributes to control memory placement, code generation options or call/return conventions within the 
-function being annotated. Many of these attributes are target-specific. For example, many targets support attributes for 
-defining interrupt handler functions, which typically must follow special register usage and return conventions.
-
-Function attributes are introduced by the __attribute__ keyword on a declaration, followed by an attribute specification 
-inside double parentheses. You can specify multiple attributes in a declaration by separating them by commas within the 
-double parentheses or by immediately following an attribute declaration with another attribute declaration.
-
-
 ------------------------------
 
 *Data types*
