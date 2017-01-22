@@ -194,7 +194,7 @@ static int beaglescope_read_from_pru(struct iio_dev *indio_dev)
 
 	st = iio_priv(indio_dev);
 
-	if (st->rpdev){
+	if (!st->rpdev){
 		dev_err(st->dev, "Required rpmsg device has been released\n");
 		return -EINVAL;
 	}
