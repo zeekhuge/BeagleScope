@@ -4,6 +4,8 @@
 
 [![Travis](https://travis-ci.org/ZeekHuge/BeagleScope.svg)](https://travis-ci.org/ZeekHuge/BeagleScope)
 
+[![HitCount](http://hits.dwyl.io/zeekhuge/BeagleScope.svg)](http://hits.dwyl.io/zeekhuge/BeagleScope)
+
 
 
 # BeagleScope
