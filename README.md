@@ -66,7 +66,7 @@ This branch has the code that works with kernel later than 4.4.12-ti-r31. To get
     `$ git clone https://github.com/ZeekHuge/BeagleScope.git`
 - Install linux header files
 
-    `$ suod apt-get install linux-headers-$(uname -r)`
+    `$ sudo apt-get install linux-headers-$(uname -r)`
 - Enter into BeagleScope directory
     
     `$ cd BeagleScope`
