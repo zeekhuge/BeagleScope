@@ -1,5 +1,8 @@
 /*
- * Copyright (C) 2016 Texas Instruments Incorporated - http://www.ti.com/
+ * Source Modified by Zubeen Tolani < ZeekHuge - zeekhuge@gmail.com >
+ * Based on the examples distributed by TI
+ *
+ * Copyright (C) 2015 Texas Instruments Incorporated - http://www.ti.com/
  *
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,7 +40,7 @@
 #include <stddef.h>
 #include <rsc_types.h>
 #include "pru_virtio_ids.h"
-
+#include "pru_defs.h"
 /*
  * Sizes of the virtqueues (expressed in number of buffers supported,
  * and must be power of 2)
@@ -57,8 +60,10 @@
 #define HOST_UNUSED		255
 
 /* Mapping sysevts to a channel. Each pair contains a sysevt, channel. */
-struct ch_map pru_intc_map[] = { {18, 3},
-				 {19, 1},
+struct ch_map pru_intc_map[] = { {16, 2},
+				 {17, 0},
+				 {18, 1},
+
 };
 
 struct my_resource_table {
@@ -122,7 +127,7 @@ struct my_resource_table resourceTable = {
 		{ /* PRU_INTS version */
 			0x0000,
 			/* Channel-to-host mapping, 255 for unused */
-			HOST_UNUSED, 1, HOST_UNUSED, 3, HOST_UNUSED,
+			0, 1, 2, HOST_UNUSED, HOST_UNUSED,
 			HOST_UNUSED, HOST_UNUSED, HOST_UNUSED, HOST_UNUSED, HOST_UNUSED,
 			/* Number of evts being mapped to channels */
 			(sizeof(pru_intc_map) / sizeof(struct ch_map)),

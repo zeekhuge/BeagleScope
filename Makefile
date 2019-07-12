@@ -2,16 +2,17 @@
 # Makefile for the BeagleScop project
 ##################################################
 
-SUBDIRS= .travis_test/
+SUBDIRS=driver/
+
 KDIR?=/lib/modules/$(shell uname -r)/build
 
 .PHONY: all
-all: travis_test
-
+all: 
+	@cd $(SUBDIRS) && $(MAKE)
 
 .PHONY: clean
 clean:
-	cd $(SUBDIRS) && $(MAKE) clean
+	@cd $(SUBDIRS) && $(MAKE) clean
 
 travis_test: 
 	cd .travis_test && $(MAKE)

@@ -1,11 +1,11 @@
     
 ## **Examples** 
-The examples are based on the pru-software-support-package provided by TI. These examples were tested on 4.4.11-ti-r29 kernel version and are based on older version of RPMsg kernel module, that used mailboxes. The newer RPMsg, that uses ARM INTC in place of mailboxes, is available in kernel version 4.4.12-ti-r31 and later. For examples ported to the newer RPMsg please go to branch [port_to_4.4.12-ti-r31+](https://github.com/ZeekHuge/BeagleScope/tree/port_to_4.4.12-ti-r31+/examples)
+The examples are based on the pru-software-support-package provided by TI.(Please check the repo-tags to find available/supported versions)
 
 ### -firmware_examples
 Contains examples that are only related to the firmware code for both or one of the PRUs.
 ###### -pru_blinky
-Its the most basic program. This program directory contains ''deploy.sh'' script that compiles the code, copies the firmware to /lib/firmware/am335x-pru1(0)-fw, and reboots pru1(0)-core. To get blinky on a particular pin:
+Its the most basic program. A good post related to this example can be found [here](https://www.zeekhuge.me/post/ptp_blinky/). This program directory contains ''deploy.sh'' script that compiles the code, copies the firmware to /lib/firmware/am335x-pru1(0)-fw, and reboots pru1(0)-core. To get blinky on a particular pin:
 1. Find the name of the board output pin, its muxed to, let say P8_46
 2. Find the pru-core the pin is connected to. P8_46 is connected to pru1.
 3. Open ''deploy.sh'' and you would see:
@@ -53,13 +53,25 @@ To change the input and output pin, open the ''deploy.sh'' script and edit relat
 ###### -PRU_inline_asm_blinky 
 Blinky using in-line assembly code. The example is to show how we can use in-line assembly along with the C code to do time critical things.
 The main_pru1.c source file has a 'start' function that is defined inside the 'pru1-asm-blinky.asm' assembly file. The definition of this function is linked at compile time.
+
 There are following make targets:
 1. To compile code and generate the output firmware file in PRU_inline_asm_blinky/gen/ :
 
-        make 
+        $ make 
 2. To compile and install the firmware on pru-core 1 (note - you will still have to config the required pin as prout, demonstrated [here](https://zeekhuge.github.io/post/a_handfull_of_commands_and_scripts_to_get_started_with_beagleboneblack/#starters:01d25bfd2399ec47b9c04f156786eab8) ) : 
 
-        make install
+        $ make install
+
+###### -pru1_to_pru0_to_arm
+The example demonstrates use of interrupts for inter-PRU communication along with the use of RPMsg. In the example uses PRU-1 generates an interrupt in every one second. Whenever PRU-2 gets this interrupt it sends a string message - "Interrupted" to userspace. PRU-1 generates system event 18 mapped to channel 1 which is further mapped to HOST1. 
+
+There are following make targets:
+1. To compile code and generate the output firmware file in pru1_to_pru0_to_arm/gen/ :
+
+        $ make 
+2. To compile and install the firmware on pru:
+
+        $ make install
 
 
 ### -kernel_examples

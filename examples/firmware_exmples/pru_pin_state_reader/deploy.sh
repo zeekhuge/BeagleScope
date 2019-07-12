@@ -43,7 +43,7 @@ PRU_CORE=1
 
 echo "*******************************************************"
 echo "This must be compiled on the BEAGLEBONE BLACK itself"
-echo "It was tested on 4.4.11-ti-r29 kernel version"
+echo "It was tested on 4.4.12-ti-r31 kernel version"
 echo -e "The program makes PRU continously read P8_45 and output \"CHANGED\" if the state of pin changes"
 echo "The firmware source is based on pru-software-support-package by TI and can be cloned from"
 echo "git clone git://git.ti.com/pru-software-support-package/pru-software-support-package.git"

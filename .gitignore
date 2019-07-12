@@ -1,5 +1,6 @@
 gen/
-
+tags
+.*.swp
 *.dwo
 *.ko
 *.ko.cmd

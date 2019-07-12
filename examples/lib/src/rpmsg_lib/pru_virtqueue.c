@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Texas Instruments Incorporated - http://www.ti.com/
+ * Copyright (C) 2016 Texas Instruments Incorporated - http://www.ti.com/
  *
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,16 +41,27 @@
  */
 #include <pru_virtqueue.h>
 
+volatile register uint32_t __R31;
+
+/* bit 5 is the valid strobe to generate system events with __R31 */
+#define INT_ENABLE	(1 << 5)
+
+/* __R31[3:0] can generate 15-0 which maps to system events 31-16 
+ * e.g. to generate PRU-ICSS System Event 17 (pru_mst_intr[1])
+ * __R31 = (INT_ENABLE | (17 - INT_OFFSET));
+ */
+#define INT_OFFSET	16
+
 void pru_virtqueue_init(
-    struct pru_virtqueue		*vq,
-    struct fw_rsc_vdev_vring	*vring,
-    volatile uint32_t			*to_arm_mbx,
-    volatile uint32_t			*from_arm_mbx
+	struct pru_virtqueue 		*vq,
+	struct fw_rsc_vdev_vring 	*vring,
+	uint32_t 			to_arm_event,
+	uint32_t 			from_arm_event
 )
 {
 	vq->id = vring->notifyid;
-	vq->to_arm_mbx = to_arm_mbx;
-	vq->from_arm_mbx = from_arm_mbx;
+	vq->to_arm_event = to_arm_event;
+	vq->from_arm_event = from_arm_event;
 	vq->last_avail_idx = 0;
 
 	vring_init(&vq->vring, vring->num, (void*)vring->da, vring->align);
@@ -120,8 +131,8 @@ int16_t pru_virtqueue_kick(
 	if (vq->vring.avail->flags & VRING_AVAIL_F_NO_INTERRUPT)
 		return PRU_VIRTQUEUE_NO_KICK;
 
-	/* Kick mailbox with the notify id of the vring in use */
-	*((volatile unsigned int *) (vq->to_arm_mbx)) = vq->id;
+	/* Generate a system event to kick the ARM */
+	__R31 = (INT_ENABLE | (vq->to_arm_event - INT_OFFSET)); 
 
 	return PRU_VIRTQUEUE_SUCCESS;
 }

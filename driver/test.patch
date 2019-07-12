@@ -1,0 +1,27 @@
+diff --git a/driver/beaglescope_driver.c b/driver/beaglescope_driver.c
+index a189c54..255e943 100644
+--- a/driver/beaglescope_driver.c
++++ b/driver/beaglescope_driver.c
+@@ -58,12 +58,12 @@ static void beaglescope_driver_cb(struct rpmsg_channel *rpdev, void *data,
+ 	u32 length;
+ 	struct beaglescope_state *st;
+ 	struct iio_dev *indio_dev;
+-
++	dev_err(&rpdev->dev, "Callback called\n");
+ 	indio_dev = dev_get_drvdata(&rpdev->dev);
+ 	st = iio_priv(indio_dev);
+ 
+ 	if (st->data_idx == MAX_BLOCKS_IN_FIFO){
+-		dev_err(&rpdev->dev, "Data fifo is full, data will not be saved in fifo");
++		dev_err(&rpdev->dev, "Data fifo is full, data will not be saved	in fifo\n");
+ 		return;
+ 	}
+ 
+@@ -121,6 +121,7 @@ static int beaglescope_driver_probe (struct rpmsg_channel *rpdev)
+ 		goto error_device_register;
+ 	}
+ 
++	rpmsg_send(rpdev, "TEST", sizeof("TEST"));
+ 	return 0;
+ 
+ error_device_register:

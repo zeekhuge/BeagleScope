@@ -46,7 +46,7 @@ PRU_CORE=1
 
 echo "*******************************************************"
 echo "This must be compiled on the BEAGLEBONE BLACK itself"
-echo "It was tested on 4.4.11-ti-r29 kernel version"
+echo "It was tested on 4.4.12-ti-r31 kernel version"
 echo "The source code for blinky ie PRU_triggeredOutput is based on examples from"
 echo "pru-software-support-package which can be cloned from"
 echo "git clone git://git.ti.com/pru-software-support-package/pru-software-support-package.git"
