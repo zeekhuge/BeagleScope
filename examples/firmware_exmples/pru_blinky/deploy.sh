@@ -66,13 +66,15 @@ echo "-Configuring pinmux"
 echo "-Rebooting"
 	if [ $PRU_CORE -eq 0 ]
 	then
-		echo "Rebooting pru-core 0"
-		echo "4a334000.pru0" > /sys/bus/platform/drivers/pru-rproc/unbind 2>/dev/null
-		echo "4a334000.pru0" > /sys/bus/platform/drivers/pru-rproc/bind
+	    echo "Rebooting pru-core 0"
+	    echo 'stop' > /sys/class/remoteproc/remoteproc1/state 2>/dev/null
+	    echo "am335x-pru$PRU_CORE-fw" > /sys/class/remoteproc/remoteproc1/firmware
+	    echo 'start' > /sys/class/remoteproc/remoteproc1/state
 	else
-		echo "Rebooting pru-core 1"
-		echo "4a338000.pru1"  > /sys/bus/platform/drivers/pru-rproc/unbind 2> /dev/null
-		echo "4a338000.pru1" > /sys/bus/platform/drivers/pru-rproc/bind
+	    echo "Rebooting pru-core 1"
+	    echo 'stop' > /sys/class/remoteproc/remoteproc2/state 2>/dev/null
+	    echo "am335x-pru$PRU_CORE-fw" > /sys/class/remoteproc/remoteproc2/firmware
+	    echo 'start' > /sys/class/remoteproc/remoteproc2/state
 	fi
 
 echo "Done. Blikny must be up on pin $HEADER$PIN_NUMBER"
