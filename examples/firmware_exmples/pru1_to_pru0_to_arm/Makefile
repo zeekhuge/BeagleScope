@@ -113,14 +113,16 @@ copy_pru0_fw: $(PRU0_FW)
 
 reboot_pru1:
 	@echo '-	rebooting pru core 1'
-	$(shell echo "4a338000.pru1" > /sys/bus/platform/drivers/pru-rproc/unbind 2> /dev/null)
-	$(shell echo "4a338000.pru1" > /sys/bus/platform/drivers/pru-rproc/bind)
+	$(shell echo 'stop' > /sys/class/remoteproc/remoteproc2/state 2>/dev/null)
+	$(shell echo "am335x-pru1-fw" > /sys/class/remoteproc/remoteproc2/firmware)
+	$(shell echo 'start' > /sys/class/remoteproc/remoteproc2/state)
 	@echo "-	pru core 1 is now loaded with $(PRU1_FW)"
 
 reboot_pru0:
 	@echo '-	rebooting pru core 0'
-	$(shell echo "4a334000.pru0" > /sys/bus/platform/drivers/pru-rproc/unbind 2> /dev/null)
-	$(shell echo "4a334000.pru0" > /sys/bus/platform/drivers/pru-rproc/bind)
+	$(shell echo 'stop' > /sys/class/remoteproc/remoteproc1/state 2>/dev/null)
+	$(shell echo "am335x-pru0-fw" > /sys/class/remoteproc/remoteproc1/firmware)
+	$(shell echo 'start' > /sys/class/remoteproc/remoteproc1/state)
 	@echo "-	pru core 0 is now loaded with $(PRU0_FW)"
 
 
